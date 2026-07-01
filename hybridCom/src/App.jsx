@@ -4,6 +4,8 @@ import Vendor from "./pages/Vendor";
 import HomeUI from "./pages/HomeUI"
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function App() {
 
 
@@ -17,6 +19,7 @@ function App() {
         <Route path="/login" element={<Login/>}/>
         <Route path="/signup" element={<Signup/>}/>
       </Routes>
+      <ToastContainer />
        </div>
   );
 }
