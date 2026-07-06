@@ -14,32 +14,20 @@ export default function Signup() {
             return
         }
         // call api
-        console.log("calling api")
-const options = {
-  method: 'POST',
-  url: 'https://api.freeapi.app/api/v1/users/register',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  data: {
-    email: email,
-    password: password,
-    username: username
-  }
-}
-axios.request(options).then(function (response) {
-  if (response.data.success) {
+        try {
+            console.log("calling api")
+            const responce = await axios.post('https://api.freeapi.app/api/v1/users/register', { email, password, username })
 
-    toast.success("User created successfully")
-    navigate("/login", { replace: true, state: { from: "/signup", success: true } })
-  } else {
-    toast.error("User creation failed: " + response.data.message)
-  }
-}).catch(function (error) {
-  console.error(error);
- 
-  toast.error("User creation failed: " + error.message)
-});
+
+            if (responce.data.success) {
+                toast.success("Signup successful!")
+                navigate("/login")
+            } else {
+                toast.error(responce.data.message || "Signup failed")
+            }
+        } catch {
+            toast.error("An error occurred during signup")
+        }
     }
   return (
     <div className="h-dvh text-white p-6 flex flex-col justify-center items-center">

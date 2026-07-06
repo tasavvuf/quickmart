@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState } from 'react'
    export const LocationDataContext = createContext()
 function LocationContext(props) {
@@ -18,7 +19,6 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
   const [message, setMessage] = useState("Location is not fetched yet !!!");
-  const [isLogedin, setIsLogedin] = useState(false);
 const [products, setproducts] = useState([
   // Vendor 101: The Trendy Gym/Tech Hub (Nearby)
   {
@@ -108,8 +108,7 @@ const [products, setproducts] = useState([
     lng,
     setLng,
     calculateDistance,
-    isLogedin,
-    setIsLogedin,
+
   }} 
 >
      { props.children }

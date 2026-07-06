@@ -2,12 +2,11 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useState, useContext } from 'react'
 import { toast } from 'react-toastify'
-import { LocationDataContext } from '../context/LocationContext'
-
+import { UserContext } from '../context/UserContext'
 function Login() {
   const [username, setusername] = useState("")
   const [password, setpassword] = useState("")
-  const { setIsLogedin } = useContext(LocationDataContext)
+  const { setIsLoggedIn , setAccessToken, setRefreshToken ,setUser} = useContext(UserContext)
   const navigate = useNavigate()
   const signinapicall = async () => {
     if (!username || !password) {
@@ -27,7 +26,18 @@ function Login() {
 
       if (response.data.success) {
         toast.success("Login successful")
-        setIsLogedin(true)
+        localStorage.setItem('accessToken', JSON.stringify(response.data.data.accessToken));
+        localStorage.setItem('refreshToken', JSON.stringify(response.data.data.refreshToken));
+        setIsLoggedIn(true)
+        setAccessToken(response.data.data.accessToken)
+        setRefreshToken(response.data.data.refreshToken)
+        setUser({
+          username: response.data.data.username,
+          email: response.data.data.email,
+          role: response.data.data.role,
+          id: response.data.data.user._id,
+          avatar: response.data.data.user.avatar?.url || null
+        })
         navigate("/", { replace: true })
       } else { 
         toast.error(response.data.message || "Login failed")
