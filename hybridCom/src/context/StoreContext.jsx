@@ -7,14 +7,11 @@ export const StoreContext = createContext();
 export function StoreContextProvider({ children }) {
   const [stores, setStores] = useState(fakeStores);
 
-  const [selectedStore, setSelectedStore] = useState(null);
 
   const value = {
     stores,
     setStores,
 
-    selectedStore,
-    setSelectedStore,
   };
 
   return (

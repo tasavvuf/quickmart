@@ -2,10 +2,18 @@ import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import { StoreContext } from "../context/StoreContext";
 import { LocationDataContext } from "../context/LocationContext";
+import { CartContext } from "../context/CartContext";
 function Vendor() {
   const { stores } = useContext(StoreContext);
-  const { lat, lng , calculateDistance } = useContext(LocationDataContext);
-
+  const { lat, lng, calculateDistance } = useContext(LocationDataContext);
+  const {
+    addToCart,
+    removeFromCart,
+    increaseQuantity,
+    decreaseQuantity,
+    clearCart,
+    items
+  } = useContext(CartContext);
 
   const { vendorId } = useParams();
 
@@ -25,7 +33,7 @@ function Vendor() {
       <div className="relative mb-16">
         {vendor?.banner && (
           <img
-           loading="lazy"
+            loading="lazy"
             src={`${vendor.banner}?w=300&q=60&auto=format&fit=crop`}
             alt={vendor.name}
             className="w-full h-56 object-cover rounded-2xl"
@@ -35,7 +43,7 @@ function Vendor() {
         {vendor?.logo && (
           <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
             <img
-             loading="lazy"
+              loading="lazy"
               src={`${vendor.logo}?w=300&q=60&auto=format&fit=crop`}
               alt={vendor.name}
               className="w-28 h-28 object-cover rounded-full border-4 border-purple-500 bg-[#1b1b1d] shadow-xl shadow-purple-500/40"
@@ -58,7 +66,9 @@ function Vendor() {
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-amber-400 text-lg">★</span>
             <span className="text-zinc-200 font-semibold">{vendor.rating}</span>
-            <span className="text-zinc-500 text-sm">({vendor.totalReviews} reviews)</span>
+            <span className="text-zinc-500 text-sm">
+              ({vendor.totalReviews} reviews)
+            </span>
           </div>
         )}
         {vendor?.isOpen && (
@@ -69,11 +79,20 @@ function Vendor() {
         )}
         {vendor?.location && (
           <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="text-zinc-400 text-sm">{vendor.location.city}</span> |
-            <span className="text-zinc-400 text-sm">{vendor.location.address}</span> |
+            <span className="text-zinc-400 text-sm">
+              {vendor.location.city}
+            </span>{" "}
+            |
+            <span className="text-zinc-400 text-sm">
+              {vendor.location.address}
+            </span>{" "}
+            |
             {distance ? (
               <>
-                <span className="text-zinc-400 text-sm">{distance} km away</span> |
+                <span className="text-zinc-400 text-sm">
+                  {distance} km away
+                </span>{" "}
+                |
                 <span className="text-zinc-400 text-sm">
                   {Math.round(distance * 5)} mins to deliver
                 </span>
@@ -106,9 +125,7 @@ function Vendor() {
                 alt={elem.name}
                 className="w-full h-40 object-cover rounded-2xl"
               />
-              <h3 className="text-xl font-bold text-zinc-100">
-                {elem.name}
-              </h3>
+              <h3 className="text-xl font-bold text-zinc-100">{elem.name}</h3>
 
               <div className="bg-zinc-600 w-full h-px my-2" />
 
@@ -116,6 +133,19 @@ function Vendor() {
                 <span className="text-amber-400 font-mono text-lg">
                   ₹{elem.price}
                 </span>
+                {items.find((item) => item.id === elem.id) ? (
+                  <div className="px-4 py-1 bg-green-700/50 border-green-500 border-2 rounded-full cursor-pointer  active:scale-90 hover:bg-green-700 "  onClick={ ()=>{
+                    removeFromCart(elem.id)
+                  }}>remove from cart
+                  <button className="ml-2 text-xl font-bold text-zinc-100" onClick={()=>{increaseQuantity(elem.id)}}>+</button>
+                  <button className="ml-2 text-xl font-bold text-zinc-100" onClick={()=>{decreaseQuantity(elem.id)}}>-</button>
+                  </div>
+                ) : (
+                  <div className="px-4 py-1 bg-green-700/50 border-green-500 border-2 rounded-full cursor-pointer  active:scale-90 hover:bg-green-700 "  onClick={ ()=>{
+                    addToCart(elem.id, vendor.id)
+                    console.log('added to cart', elem.id, vendor.id, items);
+                  }}>add to cart</div>
+                )}
               </div>
             </div>
           </div>
