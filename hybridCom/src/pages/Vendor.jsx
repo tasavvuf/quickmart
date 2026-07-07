@@ -25,7 +25,8 @@ function Vendor() {
       <div className="relative mb-16">
         {vendor?.banner && (
           <img
-            src={vendor.banner}
+           loading="lazy"
+            src={`${vendor.banner}?w=300&q=60&auto=format&fit=crop`}
             alt={vendor.name}
             className="w-full h-56 object-cover rounded-2xl"
           />
@@ -34,7 +35,8 @@ function Vendor() {
         {vendor?.logo && (
           <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
             <img
-              src={vendor.logo}
+             loading="lazy"
+              src={`${vendor.logo}?w=300&q=60&auto=format&fit=crop`}
               alt={vendor.name}
               className="w-28 h-28 object-cover rounded-full border-4 border-purple-500 bg-[#1b1b1d] shadow-xl shadow-purple-500/40"
             />
@@ -99,7 +101,8 @@ function Vendor() {
           >
             <div>
               <img
-                src={elem.image}
+                loading="lazy"
+                src={`${elem.image}?w=300&q=60&auto=format&fit=crop`}
                 alt={elem.name}
                 className="w-full h-40 object-cover rounded-2xl"
               />
