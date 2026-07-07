@@ -1,15 +1,36 @@
 # Local Ecom
 
-Local Ecom is a React + Vite storefront prototype for browsing nearby stores, featured products, and vendor inventory. It uses browser geolocation to estimate distance and delivery time for Rajkot-based demo stores, and it includes login/signup flows backed by the FreeAPI user endpoints.
+Local Ecom is a React + Vite storefront prototype for browsing nearby Rajkot stores, featured products, vendor inventory, and auth flows. The app uses local seed data for stores/products, browser geolocation for distance and delivery estimates, and FreeAPI endpoints for signup/login.
 
-## What is included
+This README is the main map. Every component, context, page, data module, important state value, function, and responsibility is documented in separate linked files under `docs/`.
 
-- Storefront home page with featured products and all-store browsing.
-- Store detail page with banner, logo, rating, status, address, products, distance, and delivery estimate.
-- Browser geolocation support for location-aware delivery messaging.
-- User auth context for login state, user details, access token, and refresh token.
-- Store context backed by local seed data in `src/data/stores.js`.
-- Toast notifications for auth success and error states.
+## Documentation index
+
+### Architecture and app flow
+
+- [Project architecture](docs/architecture.md)
+- [Application shell: `src/main.jsx` and `src/App.jsx`](docs/app-shell.md)
+
+### Context documentation
+
+- [Location context](docs/contexts/location-context.md)
+- [Store context](docs/contexts/store-context.md)
+- [User context](docs/contexts/user-context.md)
+
+### Page documentation
+
+- [Home page: `HomeUI.jsx`](docs/pages/home-ui.md)
+- [Vendor page: `Vendor.jsx`](docs/pages/vendor.md)
+- [Login page: `Login.jsx`](docs/pages/login.md)
+- [Signup page: `Signup.jsx`](docs/pages/signup.md)
+
+### Component documentation
+
+- [Navbar component: `Nav.jsx`](docs/components/nav.md)
+
+### Data documentation
+
+- [Store seed data: `stores.js`](docs/data/stores.md)
 
 ## Tech stack
 
@@ -18,26 +39,7 @@ Local Ecom is a React + Vite storefront prototype for browsing nearby stores, fe
 - React Router 7
 - Axios
 - React Toastify
-- Tailwind-style utility classes through the app stylesheet setup
-
-## Project structure
-
-```text
-src/
-  components/
-    Nav.jsx
-  context/
-    LocationContext.jsx
-    StoreContext.jsx
-    UserContext.jsx
-  data/
-    stores.js
-  pages/
-    HomeUI.jsx
-    Login.jsx
-    Signup.jsx
-    Vendor.jsx
-```
+- Utility-first styling classes with the global CSS import in `src/index.css`
 
 ## Getting started
 
@@ -65,22 +67,25 @@ Run lint checks:
 npm run lint
 ```
 
-## App routes
+## Main routes
 
-- `/` shows the location prompt, featured products, and all stores.
-- `/vendor/:vendorId` shows one store and its products.
-- `/login` signs in a user and stores returned tokens in local storage.
-- `/signup` creates a user and redirects to login on success.
+| Route | Page | Responsibility |
+| --- | --- | --- |
+| `/` | [`HomeUI`](docs/pages/home-ui.md) | Shows location prompt, featured products, store cards, distance, and delivery messages. |
+| `/vendor/:vendorId` | [`Vendor`](docs/pages/vendor.md) | Shows one vendor profile and that vendor's products. |
+| `/login` | [`Login`](docs/pages/login.md) | Authenticates a user, stores tokens, updates `UserContext`, and redirects home. |
+| `/signup` | [`Signup`](docs/pages/signup.md) | Registers a user and redirects to login on success. |
 
-## Data and state
+## State ownership summary
 
-`StoreContext` loads local demo stores from `src/data/stores.js`. Each store includes profile media, category, location, open status, reviews, delivery radius, and products.
+| Area | Owner | What it stores or computes |
+| --- | --- | --- |
+| User authentication | [`UserContext`](docs/contexts/user-context.md) | `user`, `isLoggedIn`, `accessToken`, `refreshToken`, plus setters for each. |
+| Store data | [`StoreContext`](docs/contexts/store-context.md) | Local store list from `src/data/stores.js` and optional `selectedStore`. |
+| Location data | [`LocationContext`](docs/contexts/location-context.md) | User latitude, longitude, status message, geolocation fetch, and distance calculation. |
+| Routing and layout | [`App`](docs/app-shell.md) | Global nav, route table, and toast container. |
 
-`LocationContext` owns geolocation state and distance calculation. The UI only shows distance and delivery estimates after the user allows location access.
-
-`UserContext` owns the logged-in user, auth status, access token, and refresh token. The navbar uses it to hide auth links after login.
-
-## Auth API
+## API endpoints
 
 Signup posts to:
 
@@ -94,4 +99,44 @@ Login posts to:
 https://api.freeapi.app/api/v1/users/login
 ```
 
-Successful login persists `accessToken` and `refreshToken` in `localStorage` and updates the in-memory user context.
+Successful login stores `accessToken` and `refreshToken` in `localStorage`, then updates the in-memory auth context.
+
+## Project structure
+
+```text
+src/
+  components/
+    Nav.jsx
+  context/
+    LocationContext.jsx
+    StoreContext.jsx
+    UserContext.jsx
+  data/
+    stores.js
+  pages/
+    HomeUI.jsx
+    Login.jsx
+    Signup.jsx
+    Vendor.jsx
+  App.jsx
+  main.jsx
+```
+
+```text
+docs/
+  app-shell.md
+  architecture.md
+  components/
+    nav.md
+  contexts/
+    location-context.md
+    store-context.md
+    user-context.md
+  data/
+    stores.md
+  pages/
+    home-ui.md
+    login.md
+    signup.md
+    vendor.md
+```
