@@ -2,8 +2,10 @@ import { useContext , useMemo } from "react";
 import { Link } from "react-router-dom";
 import { LocationDataContext } from "../context/LocationContext";
 import { StoreContext } from "../context/StoreContext";
+import { CartContext } from "../context/CartContext";
 function HomeUI() {
   const { stores } = useContext(StoreContext);
+  const { items: cartItems } = useContext(CartContext);
   const { getUserLocation, message, lat, lng, calculateDistance } =
     useContext(LocationDataContext);
     const storeDistances = useMemo(() => {
@@ -23,7 +25,7 @@ function HomeUI() {
               return distanceMap;
             }, [lat, lng, stores]);
   return (
-    <div className="overflow-y-auto pb-8">
+    <div className={`h-full overflow-y-auto bg-black ${cartItems.length ? "pb-36" : "pb-8"}`}>
       {/* Location Section */}
       <div className="flex-1 flex flex-col justify-center items-center gap-6 py-8 px-6 bg-linear-to-b from-[#1b1b1d] to-[#151517]">
         <button
@@ -48,7 +50,7 @@ function HomeUI() {
         <h1 className="text-3xl font-bold text-center mb-6 text-zinc-100">
           Featured Products
         </h1>
-        <div className="flex flex-wrap gap-6 p-6 justify-center items-start">
+        <div className="flex flex-wrap gap-x-6 gap-y-12 p-6 justify-center items-start">
           {stores.flatMap((store) => {
           const distance = storeDistances[store.id];
             return store.products
@@ -56,7 +58,7 @@ function HomeUI() {
               .map((product) => (
                 <div
                   key={product.id}
-                  className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl h-72 w-56 border border-zinc-800 hover:border-amber-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/10"
+                  className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl min-h-72 w-56 border border-zinc-800 hover:border-amber-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/10"
                 >
                   <div className="flex flex-col items-center">
                     <div className="w-full h-32 rounded-2xl overflow-hidden mb-3 bg-zinc-800">
@@ -132,14 +134,14 @@ function HomeUI() {
         <h2 className="text-3xl font-bold text-center mb-6 text-zinc-100">
           All Stores
         </h2>
-        <div className="flex flex-wrap gap-6 p-6 justify-center items-start">
+        <div className="flex flex-wrap gap-x-6 gap-y-12 p-6 justify-center items-start">
           {stores.map((store) => {
             const distance = storeDistances[store.id];
 
             return (
               <div
                 key={store.id}
-                className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl h-72 w-56 border border-zinc-800 hover:border-amber-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/10"
+                className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl min-h-72 w-56 border border-zinc-800 hover:border-amber-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/10"
               >
                 <div className="flex flex-col items-center">
                   <div className="w-full h-24 rounded-2xl overflow-hidden mb-3 bg-zinc-800">

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { StoreContext } from "../context/StoreContext";
 import { LocationDataContext } from "../context/LocationContext";
 import { CartContext } from "../context/CartContext";
+import { ShoppingCart, Trash2 } from "lucide-react";
 function Vendor() {
   const { stores } = useContext(StoreContext);
   const { lat, lng, calculateDistance } = useContext(LocationDataContext);
@@ -28,7 +29,7 @@ function Vendor() {
       : null;
 
   return (
-    <div className="h-dvh text-white p-6 overflow-y-auto">
+    <div className={`h-full text-white p-6 overflow-y-auto ${items.length ? "pb-36" : ""}`}>
       {/* Banner with logo overlay at bottom */}
       <div className="relative mb-16">
         {vendor?.banner && (
@@ -113,43 +114,64 @@ function Vendor() {
       )}
       {/* 🧠 Products */}
       <div className="flex flex-wrap gap-4 p-6 justify-center">
-        {vendorProducts.map((elem) => (
-          <div
-            key={elem.id}
-            className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl h-64 w-56 border border-zinc-800"
-          >
-            <div>
-              <img
-                loading="lazy"
-                src={`${elem.image}?w=300&q=60&auto=format&fit=crop`}
-                alt={elem.name}
-                className="w-full h-40 object-cover rounded-2xl"
-              />
-              <h3 className="text-xl font-bold text-zinc-100">{elem.name}</h3>
-
-              <div className="bg-zinc-600 w-full h-px my-2" />
-
-              <div className="flex justify-between items-center">
-                <span className="text-amber-400 font-mono text-lg">
-                  ₹{elem.price}
-                </span>
-                {items.find((item) => item.id === elem.id) ? (
-                  <div className="px-4 py-1 bg-green-700/50 border-green-500 border-2 rounded-full cursor-pointer  active:scale-90 hover:bg-green-700 "  onClick={ ()=>{
-                    removeFromCart(elem.id)
-                  }}>remove from cart
-                  <button className="ml-2 text-xl font-bold text-zinc-100" onClick={()=>{increaseQuantity(elem.id)}}>+</button>
-                  <button className="ml-2 text-xl font-bold text-zinc-100" onClick={()=>{decreaseQuantity(elem.id)}}>-</button>
-                  </div>
-                ) : (
-                  <div className="px-4 py-1 bg-green-700/50 border-green-500 border-2 rounded-full cursor-pointer  active:scale-90 hover:bg-green-700 "  onClick={ ()=>{
-                    addToCart(elem.id, vendor.id)
-                    console.log('added to cart', elem.id, vendor.id, items);
-                  }}>add to cart</div>
-                )}
+        {vendorProducts.map((elem) => {
+          const inCart = items.find((item) => item.id === elem.id);
+          return (
+            <div
+              key={elem.id}
+              className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl h-64 w-56 border border-zinc-800"
+            >
+              <div>
+                <img
+                  loading="lazy"
+                  src={`${elem.image}?w=300&q=60&auto=format&fit=crop`}
+                  alt={elem.name}
+                  className="w-full h-36 object-cover rounded-2xl"
+                />
+                <h3 className="text-lg font-bold text-zinc-100 leading-tight">{elem.name}</h3>
+                <div className="bg-zinc-600 w-full h-px my-1.5" />
+                <span className="text-amber-400 font-mono text-base">₹{elem.price}</span>
               </div>
+
+              {inCart ? (
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => decreaseQuantity(elem.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-amber-400 font-bold text-sm hover:border-amber-500/50 hover:shadow-[0_0_8px_rgba(251,191,36,0.2)] transition-all active:scale-90"
+                    >
+                      -
+                    </button>
+                    <span className="text-zinc-100 font-semibold text-sm tabular-nums min-w-[2ch] text-center">
+                      {inCart.quantity}
+                    </span>
+                    <button
+                      onClick={() => increaseQuantity(elem.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-green-400 font-bold text-sm hover:border-green-500/50 hover:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all active:scale-90"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => removeFromCart(elem.id)}
+                    className="w-full flex items-center justify-center gap-1 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] font-medium hover:bg-red-500/20 hover:border-red-500/50 transition-all active:scale-95"
+                  >
+                    <Trash2 size={11} />
+                    Remove from Cart
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => addToCart(elem.id, vendor.id)}
+                  className="w-full flex items-center justify-center gap-2 py-1.5 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-zinc-100 text-sm font-semibold cursor-pointer active:scale-95 hover:from-green-500 hover:to-emerald-500 shadow-[0_4px_12px_rgba(34,197,94,0.25)] hover:shadow-[0_6px_16px_rgba(34,197,94,0.35)] transition-all"
+                >
+                  <ShoppingCart size={14} />
+                  Add to Cart
+                </button>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

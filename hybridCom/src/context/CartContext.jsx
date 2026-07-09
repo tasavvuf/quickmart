@@ -3,7 +3,7 @@ import { createContext, useMemo, useState, useEffect, useContext } from "react";
 import { StoreContext } from "./StoreContext";
 export const CartContext = createContext();
 export function CartContextProvider({ children }) {
-  const stores = useContext(StoreContext);
+  const {stores} = useContext(StoreContext);
   const [activeStore, setActiveStore] = useState(null);
   const [items, setItems] = useState([]);
 
@@ -50,19 +50,27 @@ export function CartContextProvider({ children }) {
       console.log('missing details for adding to cart');
       return;
     }
+    console.log('adding to cart', productId, store);
     if (!activeStore) {
       console.log('setting active store');
       setActiveStore(store)
+       setItems((currentItems) => {
+      return [...currentItems, { id: productId, quantity: 1 }];
+    });
+    console.log('added to cart', items);
+    return;
     }
+    console.log('active store', activeStore);
     if (activeStore !== store) {
       console.log('different store, replacing cart', activeStore, store);
-      replaceCart()
-      return
+      replaceCart([{ id: productId, quantity: 1 }], store);
+      return;
     }
     setItems((currentItems) => {
       return [...currentItems, { id: productId, quantity: 1 }];
     });
     console.log('added to cart', items);
+   
   };
 
   const removeFromCart = (productId) => {
