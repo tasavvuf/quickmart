@@ -3,10 +3,28 @@ import { createContext, useState } from "react";
 
 export const UserContext = createContext();
 
-export function UserContextProvider({ children }) {
-  const [user, setUser] = useState(null);
+const dummyUser = {
+  username: "Aarav Patel",
+  email: "aarav.patel@example.com",
+  phone: "+91 98765 43210",
+  dob: "2001-09-14",
+  role: "customer",
+  id: "frontend-dummy-user",
+  avatar: null,
+  address: {
+    label: "Home",
+    line1: "22, Kalawad Road",
+    line2: "Near Crystal Mall",
+    city: "Rajkot",
+    state: "Gujarat",
+    pincode: "360005",
+  },
+};
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export function UserContextProvider({ children }) {
+  const [user, setUser] = useState(dummyUser);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const [accessToken, setAccessToken] = useState(null);
 

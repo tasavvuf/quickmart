@@ -8,14 +8,14 @@ Exported provider: `UserContextProvider`
 
 ## Responsibility
 
-`UserContextProvider` owns the in-memory authentication state used by the navbar and login page.
+`UserContextProvider` owns the in-memory authentication state and current user profile used by the navbar, login page, and profile page.
 
 ## State
 
 | State | Initial value | Responsibility |
 | --- | --- | --- |
-| `user` | `null` | Logged-in user profile details. |
-| `isLoggedIn` | `false` | Whether the current session is authenticated in memory. |
+| `user` | Dummy frontend user | Logged-in user profile details. |
+| `isLoggedIn` | `true` | Whether the current session is authenticated in memory. |
 | `accessToken` | `null` | API access token after login. |
 | `refreshToken` | `null` | API refresh token after login. |
 
@@ -38,6 +38,7 @@ Exported provider: `UserContextProvider`
 | --- | --- |
 | `Nav.jsx` | Reads `isLoggedIn` to hide login/signup links after login. |
 | `Login.jsx` | Writes login status, tokens, and user object after successful signin. |
+| `UserPage.jsx` | Reads and updates editable user profile fields. |
 
 ## User object shape set by login
 
@@ -45,9 +46,19 @@ Exported provider: `UserContextProvider`
 {
   username,
   email,
+  phone,
+  dob,
   role,
   id,
-  avatar
+  avatar,
+  address: {
+    label,
+    line1,
+    line2,
+    city,
+    state,
+    pincode
+  }
 }
 ```
 
@@ -56,8 +67,8 @@ Exported provider: `UserContextProvider`
 ## Important behavior
 
 - Tokens are stored in both context and `localStorage` by `Login.jsx`.
+- The provider currently starts with dummy frontend-only user data and `isLoggedIn` set to `true`.
 - The provider does not currently read existing tokens from `localStorage` on page load.
-- Because of that, refreshing the browser resets `isLoggedIn` to `false` until the user logs in again.
 
 ## Notes for future changes
 
