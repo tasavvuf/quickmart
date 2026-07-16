@@ -60,10 +60,10 @@ function Cart() {
 
   if (!items.length || !store) {
     return (
-      <div className="h-full overflow-y-auto px-6 py-10 text-zinc-100">
-        <div className="mx-auto flex max-w-3xl flex-col items-center justify-center gap-4 rounded-2xl border border-zinc-800 bg-[#1b1b1d] p-8 text-center">
-          <h1 className="text-3xl font-bold text-zinc-100">Your cart is empty</h1>
-          <p className="text-zinc-400">Add products from a store to see them here.</p>
+      <div className="app-page px-6 py-10">
+        <div className="app-card mx-auto flex max-w-3xl flex-col items-center justify-center gap-4 rounded-2xl p-8 text-center">
+          <h1 className="text-3xl font-bold">Your cart is empty</h1>
+          <p className="app-muted">Add products from a store to see them here.</p>
           <Link
             to="/"
             className="rounded-xl bg-amber-400 px-5 py-2.5 font-semibold text-black transition hover:bg-amber-300"
@@ -76,22 +76,22 @@ function Cart() {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-6 py-8 pb-36 text-zinc-100">
+    <div className="app-page px-6 py-8 pb-36">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-8 rounded-2xl border border-zinc-800 bg-[#1b1b1d] p-5">
+        <div className="app-card mb-8 rounded-2xl p-5">
           <h1 className="mb-2 bg-linear-to-r from-purple-400 to-amber-400 bg-clip-text text-4xl font-bold text-transparent">
             {store.name}
           </h1>
 
-          <p className="text-sm text-zinc-400">
+          <p className="app-muted text-sm">
             {store.location.city} | {store.location.address}
           </p>
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-lg text-amber-400">★</span>
-            <span className="font-semibold text-zinc-200">{store.rating}</span>
-            <span className="text-sm text-zinc-500">({store.totalReviews} reviews)</span>
-            <span className="text-zinc-600">|</span>
+            <span className="font-semibold">{store.rating}</span>
+            <span className="app-muted text-sm">({store.totalReviews} reviews)</span>
+            <span className="app-muted">|</span>
             <span className="text-sm text-amber-400">{store.category}</span>
           </div>
         </div>
@@ -110,7 +110,7 @@ function Cart() {
           {cartProducts.map((item) => (
             <li
               key={item.id}
-              className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-[#1b1b1d] p-4 sm:flex-row sm:items-center"
+              className="app-card flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-center"
             >
               <img
                 loading="lazy"
@@ -121,7 +121,7 @@ function Cart() {
 
               <div className="flex-1">
                 <h3 className="text-xl font-bold">{item.name}</h3>
-                <p className="text-sm text-zinc-400">{item.category}</p>
+                <p className="app-muted text-sm">{item.category}</p>
                 <p className="mt-2 font-mono text-amber-400">₹{item.price}</p>
               </div>
 
@@ -129,7 +129,7 @@ function Cart() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => decreaseQuantity(item.id)}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800 text-lg font-bold text-amber-400 transition hover:border-amber-500/60"
+                    className="app-control flex h-11 w-11 items-center justify-center rounded-xl text-lg font-bold text-amber-500 hover:border-amber-500/60"
                   >
                     -
                   </button>
@@ -138,14 +138,14 @@ function Cart() {
                   </span>
                   <button
                     onClick={() => increaseQuantity(item.id)}
-                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800 text-lg font-bold text-green-400 transition hover:border-green-500/60"
+                    className="app-control flex h-11 w-11 items-center justify-center rounded-xl text-lg font-bold text-green-500 hover:border-green-500/60"
                   >
                     +
                   </button>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-sm text-zinc-500">Subtotal</p>
+                  <p className="app-muted text-sm">Subtotal</p>
                   <p className="font-mono text-lg font-bold">₹{item.lineTotal}</p>
                   <button
                     onClick={() => removeFromCart(item.id)}
@@ -160,13 +160,13 @@ function Cart() {
         </ul>
 
         {suggestedProducts.length > 0 && (
-          <section className="mt-6 rounded-2xl border border-zinc-800 bg-[#1b1b1d] p-5">
+          <section className="app-card mt-6 rounded-2xl p-5">
             <h2 className="mb-4 text-xl font-bold">Suggested Items</h2>
             <div className="grid gap-3 sm:grid-cols-3">
               {suggestedProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-black/30 p-3"
+                  className="app-panel-soft flex items-center justify-between gap-3 rounded-xl p-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{product.name}</p>
@@ -184,7 +184,7 @@ function Cart() {
           </section>
         )}
 
-        <section className="mt-6 rounded-2xl border border-zinc-800 bg-[#1b1b1d] p-5">
+        <section className="app-card mt-6 rounded-2xl p-5">
           <button
             onClick={() => setShowBillDetails((current) => !current)}
             className="flex w-full cursor-pointer items-center justify-between text-left"
@@ -196,40 +196,40 @@ function Cart() {
           </button>
 
           {showBillDetails && (
-            <div className="mt-5 space-y-3 border-t border-zinc-800 pt-4 text-sm">
+            <div className="mt-5 space-y-3 border-t border-border pt-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400">Items Total ({totalItems} items)</span>
+                <span className="app-muted">Items Total ({totalItems} items)</span>
                 <span className="font-mono">₹{totalPrice.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400">
+                <span className="app-muted">
                   Delivery Fee ({distance.toFixed(1)} km x ₹7)
                 </span>
                 <span className="font-mono">₹{deliveryFee}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400">Platform Fee</span>
+                <span className="app-muted">Platform Fee</span>
                 <span className="font-mono">₹{platformFee}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400">GST</span>
+                <span className="app-muted">GST</span>
                 <span className="font-mono">₹{gst}</span>
               </div>
             </div>
           )}
 
-          <div className="mt-5 flex items-center justify-between border-t border-zinc-800 pt-4 text-xl font-bold">
+          <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xl font-bold">
             <span>Grand Total</span>
             <span className="font-mono text-amber-400">₹{grandTotal.toFixed(2)}</span>
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-zinc-800 bg-[#1b1b1d] p-5">
+        <section className="app-card mt-6 rounded-2xl p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold">Deliver To</h2>
               <p className="mt-3 font-semibold">Home</p>
-              <p className="mt-1 max-w-xl text-sm text-zinc-400">
+              <p className="app-muted mt-1 max-w-xl text-sm">
                 22, Kalawad Road, Near Crystal Mall, Rajkot, Gujarat 360005
               </p>
             </div>
@@ -239,7 +239,7 @@ function Cart() {
           </div>
         </section>
 
-        <button className="mt-6 w-full cursor-pointer rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 px-5 py-4 text-lg font-bold text-zinc-100 transition hover:from-green-500 hover:to-emerald-500">
+        <button className="mt-6 w-full cursor-pointer rounded-2xl bg-linear-to-r from-green-600 to-emerald-600 px-5 py-4 text-lg font-bold text-white transition hover:from-green-500 hover:to-emerald-500">
           Proceed To Checkout
         </button>
       </div>

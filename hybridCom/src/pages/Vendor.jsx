@@ -28,7 +28,7 @@ function Vendor() {
       : null;
 
   return (
-    <div className={`h-full text-white p-6 overflow-y-auto ${items.length ? "pb-36" : ""}`}>
+    <div className={`app-page p-6 ${items.length ? "pb-36" : ""}`}>
       {/* Banner with logo overlay at bottom */}
       <div className="relative mb-16">
         {vendor?.banner && (
@@ -46,7 +46,7 @@ function Vendor() {
               loading="lazy"
               src={`${vendor.logo}?w=300&q=60&auto=format&fit=crop`}
               alt={vendor.name}
-              className="w-28 h-28 object-cover rounded-full border-4 border-purple-500 bg-[#1b1b1d] shadow-xl shadow-purple-500/40"
+              className="w-28 h-28 object-cover rounded-full border-4 border-purple-500 bg-card shadow-xl shadow-purple-500/40"
             />
           </div>
         )}
@@ -65,8 +65,8 @@ function Vendor() {
         {vendor?.rating && (
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-amber-400 text-lg">★</span>
-            <span className="text-zinc-200 font-semibold">{vendor.rating}</span>
-            <span className="text-zinc-500 text-sm">
+            <span className="font-semibold">{vendor.rating}</span>
+            <span className="app-muted text-sm">
               ({vendor.totalReviews} reviews)
             </span>
           </div>
@@ -74,31 +74,31 @@ function Vendor() {
         {vendor?.isOpen && (
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-green-400 text-lg">✓</span>
-            <span className="text-zinc-200 font-semibold">Open</span>
+            <span className="font-semibold">Open</span>
           </div>
         )}
         {vendor?.location && (
           <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="text-zinc-400 text-sm">
+            <span className="app-muted text-sm">
               {vendor.location.city}
             </span>{" "}
             |
-            <span className="text-zinc-400 text-sm">
+            <span className="app-muted text-sm">
               {vendor.location.address}
             </span>{" "}
             |
             {distance ? (
               <>
-                <span className="text-zinc-400 text-sm">
+                <span className="app-muted text-sm">
                   {distance} km away
                 </span>{" "}
                 |
-                <span className="text-zinc-400 text-sm">
+                <span className="app-muted text-sm">
                   {Math.round(distance * 5)} mins to deliver
                 </span>
               </>
             ) : (
-              <span className="text-zinc-500 text-sm">
+              <span className="app-muted text-sm">
                 Fetch location to see distance
               </span>
             )}
@@ -107,7 +107,7 @@ function Vendor() {
       </div>
 
       {vendorProducts.length === 0 && (
-        <div className="mt-4 text-zinc-300 text-lg">
+        <div className="mt-4 app-muted text-lg">
           No products found for this vendor.
         </div>
       )}
@@ -118,7 +118,7 @@ function Vendor() {
           return (
             <div
               key={elem.id}
-              className="bg-[#1b1b1d] flex flex-col justify-between p-4 rounded-3xl h-64 w-56 border border-zinc-800"
+              className="app-card flex flex-col justify-between p-4 rounded-3xl h-64 w-56"
             >
               <div>
                 <img
@@ -127,8 +127,8 @@ function Vendor() {
                   alt={elem.name}
                   className="w-full h-36 object-cover rounded-2xl"
                 />
-                <h3 className="text-lg font-bold text-zinc-100 leading-tight">{elem.name}</h3>
-                <div className="bg-zinc-600 w-full h-px my-1.5" />
+                <h3 className="text-lg font-bold leading-tight">{elem.name}</h3>
+                <div className="app-divider w-full h-px my-1.5" />
                 <span className="text-amber-400 font-mono text-base">₹{elem.price}</span>
               </div>
 
@@ -137,16 +137,16 @@ function Vendor() {
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => decreaseQuantity(elem.id)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-amber-400 font-bold text-sm hover:border-amber-500/50 hover:shadow-[0_0_8px_rgba(251,191,36,0.2)] transition-all active:scale-90"
+                      className="app-control w-7 h-7 flex items-center justify-center rounded-lg text-amber-500 font-bold text-sm hover:border-amber-500/50 hover:shadow-[0_0_8px_rgba(251,191,36,0.2)] transition-all active:scale-90"
                     >
                       -
                     </button>
-                    <span className="text-zinc-100 font-semibold text-sm tabular-nums min-w-[2ch] text-center">
+                    <span className="font-semibold text-sm tabular-nums min-w-[2ch] text-center">
                       {inCart.quantity}
                     </span>
                     <button
                       onClick={() => increaseQuantity(elem.id)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 text-green-400 font-bold text-sm hover:border-green-500/50 hover:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all active:scale-90"
+                      className="app-control w-7 h-7 flex items-center justify-center rounded-lg text-green-500 font-bold text-sm hover:border-green-500/50 hover:shadow-[0_0_8px_rgba(34,197,94,0.2)] transition-all active:scale-90"
                     >
                       +
                     </button>
@@ -162,7 +162,7 @@ function Vendor() {
               ) : (
                 <button
                   onClick={() => addToCart(elem.id, vendor.id)}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-zinc-100 text-sm font-semibold cursor-pointer active:scale-95 hover:from-green-500 hover:to-emerald-500 shadow-[0_4px_12px_rgba(34,197,94,0.25)] hover:shadow-[0_6px_16px_rgba(34,197,94,0.35)] transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-1.5 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold cursor-pointer active:scale-95 hover:from-green-500 hover:to-emerald-500 shadow-[0_4px_12px_rgba(34,197,94,0.25)] hover:shadow-[0_6px_16px_rgba(34,197,94,0.35)] transition-all"
                 >
                   <ShoppingCart size={14} />
                   Add to Cart

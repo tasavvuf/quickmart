@@ -30,22 +30,22 @@ export default function Signup() {
         }
     }
   return (
-    <div className="h-dvh text-white p-6 flex flex-col justify-center items-center">
-        <form onSubmit={(e)=>{e.preventDefault()}} className="bg-[#1b1b1d] p-8 rounded-3xl border border-zinc-800 flex flex-col gap-6 w-full max-w-md">
+    <div className="app-page p-6 flex flex-col justify-center items-center">
+        <form onSubmit={(e)=>{e.preventDefault()}} className="app-card p-8 rounded-3xl flex flex-col gap-6 w-full max-w-md">
            <div className="flex flex-col gap-2">
-                <label className="text-zinc-200">username</label>
-                <input type="text" name="username" value={username} onChange={(e)=>{setusername(e.target.value)}} className="bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-amber-400 transition" />
+                <label>username</label>
+                <input type="text" name="username" value={username} onChange={(e)=>{setusername(e.target.value)}} className="app-input rounded-lg px-4 py-3" />
            </div>
            <div className="flex flex-col gap-2">
-                <label className="text-zinc-200">email</label>
-                <input type="text" name="email" value={email} onChange={(e)=>{setemail(e.target.value)}} className="bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-amber-400 transition" />
+                <label>email</label>
+                <input type="text" name="email" value={email} onChange={(e)=>{setemail(e.target.value)}} className="app-input rounded-lg px-4 py-3" />
            </div>
            <div className="flex flex-col gap-2">
-                <label className="text-zinc-200">password</label>
-                <input type="password" name="password" value={password} onChange={(e)=>{setpassword(e.target.value)}} className="bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-amber-400 transition" />
+                <label>password</label>
+                <input type="password" name="password" value={password} onChange={(e)=>{setpassword(e.target.value)}} className="app-input rounded-lg px-4 py-3" />
            </div>
    
-           <button type="submit" className="px-6 py-3 bg-[#2b2b2b] text-amber-400 rounded-lg text-lg hover:bg-zinc-700 transition" onClick={(e)=>{
+           <button type="submit" className="app-control px-6 py-3 text-amber-500 rounded-lg text-lg" onClick={(e)=>{
             e.preventDefault();
             signupapicall();
            }}>Sign up</button>

@@ -17,9 +17,9 @@ const activeStoreName = stores.find(store => store.id === activeStore)?.name || 
 if(items.length===0)
     return null;
 return (
-    <div className='fixed bottom-0 left-0 right-0 h-28 max-h-28 overflow-hidden flex flex-col items-center justify-center bg-black/55 backdrop-blur-xl text-zinc-100 z-50'>
+    <div className='app-bottom-bar fixed bottom-0 left-0 right-0 h-28 max-h-28 overflow-hidden flex flex-col items-center justify-center z-50'>
         <div className='max-h-full max-w-full overflow-hidden text-center'>
-            <div className='truncate text-xs text-zinc-400'>{activeStoreName}</div>
+            <div className='app-muted truncate text-xs'>{activeStoreName}</div>
             <div className='flex flex-wrap justify-center gap-2 text-sm'>
                 <p>Items: {totalItems}</p>
                 <span>•</span>

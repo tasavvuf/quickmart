@@ -9,12 +9,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import FloatingCart from "./components/FloatingCart";
 import Cart from "./pages/Cart";
 import UserPage from "./pages/UserPage";
+import AddressBook from "./pages/AddressBook";
+import OrderHistory from "./pages/OrderHistory";
 function App() {
 
 
   return (
     
-    <div className="h-screen bg-black text-white flex flex-col">
+    <div className="app-shell">
       <Nav/>
       <div className="flex-1 min-h-0">
         <Routes>
@@ -24,6 +26,8 @@ function App() {
           <Route path="/signup" element={<Signup/>}/>
           <Route path="/cart" element={<Cart/>}/>
           <Route path="/user" element={<UserPage/>}/>
+          <Route path="/address-book" element={<AddressBook/>}/>
+          <Route path="/orders" element={<OrderHistory/>}/>
         </Routes>
       </div>
       <ToastContainer />
