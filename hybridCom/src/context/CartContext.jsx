@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useMemo, useState, useEffect, useContext } from "react";
+import { createContext, useMemo, useState, useContext } from "react";
 import { StoreContext } from "./StoreContext";
 export const CartContext = createContext();
 export function CartContextProvider({ children }) {
@@ -7,32 +7,23 @@ export function CartContextProvider({ children }) {
   const [activeStore, setActiveStore] = useState(null);
   const [items, setItems] = useState([]);
 
-  const getItemPrice = (item) => {
-    const store = stores.find((s) => s.id === activeStore);
-    if (!store) return null;
-    const product = store.products.find((p) => p.id === item.id);
-    return product ? product.price : null;
-  };
+  const store = stores.find((store) => store.id === activeStore);
 
   const totalItems = useMemo(
     () => items.reduce((total, item) => total + Number(item.quantity ?? 0), 0),
     [items],
   );
-  useEffect(() => {
-
-    if (items.length === 0) {
-      setActiveStore(null)
-    }
-
-  }, [items])
 
   const totalPrice = useMemo(
     () =>
-      items.reduce(
-        (total, item) => total + getItemPrice(item) * Number(item.quantity ?? 0),
-        0,
-      ),
-    [items],
+      items.reduce((total, item) => {
+        const product = store?.products.find((product) => product.id === item.id);
+        const price = Number(product?.price ?? 0);
+        const quantity = Number(item.quantity ?? 0);
+
+        return total + price * quantity;
+      }, 0),
+    [items, store],
   );
 
   const replaceCart = (newItems = [], store) => {
@@ -54,9 +45,7 @@ export function CartContextProvider({ children }) {
     if (!activeStore) {
       console.log('setting active store');
       setActiveStore(store)
-       setItems((currentItems) => {
-      return [...currentItems, { id: productId, quantity: 1 }];
-    });
+      setItems([{ id: productId, quantity: 1 }]);
     console.log('added to cart', items);
     return;
     }
@@ -67,6 +56,16 @@ export function CartContextProvider({ children }) {
       return;
     }
     setItems((currentItems) => {
+      const itemExists = currentItems.some((item) => item.id === productId);
+
+      if (itemExists) {
+        return currentItems.map((item) =>
+          item.id === productId
+            ? { ...item, quantity: Number(item.quantity ?? 1) + 1 }
+            : item,
+        );
+      }
+
       return [...currentItems, { id: productId, quantity: 1 }];
     });
     console.log('added to cart', items);

@@ -12,7 +12,6 @@ function Vendor() {
     removeFromCart,
     increaseQuantity,
     decreaseQuantity,
-    clearCart,
     items
   } = useContext(CartContext);
 
@@ -163,7 +162,7 @@ function Vendor() {
               ) : (
                 <button
                   onClick={() => addToCart(elem.id, vendor.id)}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-zinc-100 text-sm font-semibold cursor-pointer active:scale-95 hover:from-green-500 hover:to-emerald-500 shadow-[0_4px_12px_rgba(34,197,94,0.25)] hover:shadow-[0_6px_16px_rgba(34,197,94,0.35)] transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-1.5 rounded-xl bg-linear-to-r from-green-600 to-emerald-600 text-zinc-100 text-sm font-semibold cursor-pointer active:scale-95 hover:from-green-500 hover:to-emerald-500 shadow-[0_4px_12px_rgba(34,197,94,0.25)] hover:shadow-[0_6px_16px_rgba(34,197,94,0.35)] transition-all"
                 >
                   <ShoppingCart size={14} />
                   Add to Cart

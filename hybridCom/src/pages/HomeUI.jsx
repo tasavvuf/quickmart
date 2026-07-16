@@ -23,7 +23,7 @@ function HomeUI() {
               }
 
               return distanceMap;
-            }, [lat, lng, stores]);
+            }, [calculateDistance, lat, lng, stores]);
   return (
     <div className={`h-full overflow-y-auto bg-black ${cartItems.length ? "pb-36" : "pb-8"}`}>
       {/* Location Section */}

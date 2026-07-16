@@ -81,6 +81,40 @@ export const stores = [
 
         category: "Bakery",
       },
+
+      {
+        id: "P-104",
+
+        name: "Butter",
+
+        price: 120,
+
+        image:
+          "https://images.unsplash.com/photo-1589985270958-351f4f373fe8",
+
+        featured: false,
+
+        stock: 35,
+
+        category: "Dairy",
+      },
+
+      {
+        id: "P-105",
+
+        name: "Cheese",
+
+        price: 180,
+
+        image:
+          "https://images.unsplash.com/photo-1452195100486-9cc805987862",
+
+        featured: false,
+
+        stock: 28,
+
+        category: "Dairy",
+      },
     ],
   },
 
