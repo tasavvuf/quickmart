@@ -4,7 +4,9 @@ const Store = require('../models/Store.model');
 
 // @desc    Add item to cart
 // @access  Private
-exports.addToCart = async (userId, productId, quantity = 1) => {
+exports.addToCart = async (userId, productId) => {
+    const quantity = 1; // Default quantity to add is 1
+       
     try {
         // Check if product exists
         const product = await Product.findById(productId);

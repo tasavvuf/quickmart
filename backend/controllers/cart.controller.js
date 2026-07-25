@@ -22,13 +22,14 @@ exports.getCart = async (req, res) => {
 // @access  Private
 exports.addItem = async (req, res) => {
   try {
-    const { userId, productId, quantity } = req.body;
+    // here we use this to only addTOCart, we don't need to check for quantity cause its 1 by default, and we will check for stock in the service layer
+    const { userId, productId } = req.body;
 
     if (!userId || !productId) {
       return res.status(400).json({ message: 'User ID and Product ID are required' });
     }
 
-    const cart = await cartService.addToCart(userId, productId, quantity);
+    const cart = await cartService.addToCart(userId, productId , 1);
     res.status(201).json(cart);
   } catch (error) {
     const statusCode = error.message.includes('not found') || error.message.includes('Insufficient') || error.message.includes('same store') ? 400 : 500;
