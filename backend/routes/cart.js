@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const cartController = require('../controllers/cart.controller');
+const { verifyToken } = require('../middleware/auth.middleware');
+
+// Apply auth middleware to all cart routes
+router.use(verifyToken);
 
 // @route   GET /api/cart
 // @desc    Get current cart

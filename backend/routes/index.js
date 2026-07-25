@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// Import cart routes
+// Import routes
 const cartRoutes = require('./cart');
+const authRoutes = require('./auth');
 
 // Basic test route
 router.get('/', (req, res) => {
@@ -13,6 +14,9 @@ router.get('/', (req, res) => {
 router.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+// Auth routes
+router.use('/auth', authRoutes);
 
 // Cart routes
 router.use('/cart', cartRoutes);
