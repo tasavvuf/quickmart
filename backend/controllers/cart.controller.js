@@ -29,7 +29,7 @@ exports.addItem = async (req, res) => {
       return res.status(400).json({ message: 'User ID and Product ID are required' });
     }
 
-    const cart = await cartService.addToCart(userId, productId , 1);
+    const cart = await cartService.addToCart(userId, productId );
     res.status(201).json(cart);
   } catch (error) {
     const statusCode = error.message.includes('not found') || error.message.includes('Insufficient') || error.message.includes('same store') ? 400 : 500;
