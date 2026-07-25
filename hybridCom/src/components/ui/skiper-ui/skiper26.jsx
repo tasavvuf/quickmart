@@ -43,7 +43,7 @@ const Skiper26 = () => {
       <div
         className="text-foreground grid content-start justify-items-center gap-6 py-20 text-center">
         <span
-          className="after:from-background after:to-foreground relative max-w-[12ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-gradient-to-b after:content-['']">
+          className="after:from-background after:to-foreground relative max-w-[12ch] text-xs uppercase leading-tight opacity-40 after:absolute after:left-1/2 after:top-full after:h-16 after:w-px after:bg-linear-to-b after:content-['']">
           Click to toggle the theme
         </span>
       </div>
