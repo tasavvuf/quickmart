@@ -1,6 +1,5 @@
 const Cart = require('../models/CartModel.model');
 const Product = require('../models/Product.model');
-const Store = require('../models/Store.model');
 
 const buildResult = (success, code, message, extra = {}) => ({
   success,
@@ -36,6 +35,14 @@ exports.addToCart = async (userId, productId) => {
       items: [{ product: productId, quantity }]
     });
 
+    await cart.save();
+    const populatedCart = await populateCart(cart);
+    return buildResult(true, 'SUCCESS', 'Item added to cart', { cart: populatedCart });
+  }
+
+  if (!cart.activeStore || cart.items.length === 0) {
+    cart.activeStore = product.store;
+    cart.items = [{ product: productId, quantity }];
     await cart.save();
     const populatedCart = await populateCart(cart);
     return buildResult(true, 'SUCCESS', 'Item added to cart', { cart: populatedCart });
@@ -184,14 +191,13 @@ exports.getCartByUserId = async (userId) => {
   return buildResult(true, 'SUCCESS', 'Cart loaded', { cart });
 };
 
-exports.replaceCart = async (userId, newCartItem) => {
+exports.replaceCart = async (userId, productId) => {
   const cart = await Cart.findOne({ userId });
 
   if (!cart) {
     return buildResult(false, 'CART_NOT_FOUND', 'Cart not found');
   }
 
-  const productId = newCartItem?.productId || newCartItem?.product || newCartItem?.id;
   if (!productId) {
     return buildResult(false, 'PRODUCT_ID_REQUIRED', 'Product ID is required');
   }

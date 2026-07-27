@@ -83,8 +83,8 @@ exports.decreaseQuantity = async (req, res) => {
 
 exports.replaceCart = async (req, res) => {
   const userId = req.user._id;
-  //item is a single product with 1 quantity, not an array of items. The service will handle replacing the cart with this single item. its similar to addToCart but it replaces the entire cart with this item.
-  const { item } = req.body;
-  const result = await cartService.replaceCart(userId, item);
+  const { productId } = req.params;
+
+  const result = await cartService.replaceCart(userId, productId);
   return handleResult(res, result);
 };

@@ -287,30 +287,21 @@
 
 /**
  * @swagger
- * /api/cart/item/replacecart:
+ * /api/cart/items/{productId}/replacecart:
  *   post:
  *     summary: Replace cart with one item
  *     tags: [Cart]
  *     security:
  *       - cookieAuth: []
- *     description: Replaces the current cart contents with a single product from the request body. The replacement item quantity is always set to 1.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - item
- *             properties:
- *               item:
- *                 type: object
- *                 required:
- *                   - productId
- *                 properties:
- *                   productId:
- *                     type: string
- *                     example: 6a65a36a701b4f159a21635a
+ *     description: Replaces the current cart contents with the product from the path parameter. The replacement item quantity is always set to 1.
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 6a65a36a701b4f159a21635a
+ *         description: Product ID to place in the cart
  *     responses:
  *       200:
  *         description: Cart replaced successfully
@@ -350,6 +341,6 @@ router.delete('/items/:productId', cartController.removeItem);
 router.delete('/', cartController.clearCart);
 router.post('/items/:productId/increase', cartController.increaseQuantity);
 router.post('/items/:productId/decrease', cartController.decreaseQuantity);
-router.post('/item/replacecart', cartController.replaceCart);
+router.post('/items/:productId/replacecart', cartController.replaceCart);
 
 module.exports = router;
