@@ -41,20 +41,6 @@ exports.addItem = async (req, res) => {
   return handleResult(res, result, 201);
 };
 
-// @desc    Update item quantity
-// @access  Private
-exports.updateItemQuantity = async (req, res) => {
-  const userId = req.user._id;
-  const { productId } = req.params;
-  const { quantity } = req.body;
-
-  if (!quantity || quantity < 1) {
-    return res.status(400).json({ success: false, code: 'QUANTITY_INVALID', message: 'Quantity must be at least 1' });
-  }
-
-  const result = await cartService.updateQuantity(userId, productId, quantity);
-  return handleResult(res, result);
-};
 
 // @desc    Remove item from cart
 // @access  Private
@@ -92,5 +78,13 @@ exports.decreaseQuantity = async (req, res) => {
   const { productId } = req.params;
 
   const result = await cartService.decreaseQuantity(userId, productId);
+  return handleResult(res, result);
+};
+
+exports.replaceCart = async (req, res) => {
+  const userId = req.user._id;
+  //item is a single product with 1 quantity, not an array of items. The service will handle replacing the cart with this single item. its similar to addToCart but it replaces the entire cart with this item.
+  const { item } = req.body;
+  const result = await cartService.replaceCart(userId, item);
   return handleResult(res, result);
 };
