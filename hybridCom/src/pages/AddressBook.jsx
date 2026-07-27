@@ -24,7 +24,15 @@ export default function AddressBook() {
   const addresses = user?.addresses?.length
     ? user.addresses
     : user?.address
-      ? [user.address]
+      ? [{
+          id: "primary-address",
+          label: "Home",
+          line1: typeof user.address === "string" ? user.address : user.address.line1,
+          line2: typeof user.address === "string" ? "" : user.address.line2,
+          city: typeof user.address === "string" ? "" : user.address.city,
+          state: typeof user.address === "string" ? "" : user.address.state,
+          pincode: typeof user.address === "string" ? "" : user.address.pincode,
+        }]
       : [];
 
   const startAdding = () => {

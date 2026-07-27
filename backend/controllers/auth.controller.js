@@ -1,5 +1,31 @@
 const userModel = require("../models/user.model.js")
 const jwt = require("jsonwebtoken")
+const { uploadProfilePhoto } = require("../services/imagekit.service.js")
+
+const parseLocation = (location) => {
+  if (!location) {
+    return { lat: 22.2904, lng: 70.7915 }
+  }
+
+  if (typeof location === "string") {
+    try {
+      return JSON.parse(location)
+    } catch {
+      return { lat: 22.2904, lng: 70.7915 }
+    }
+  }
+
+  return location
+}
+
+const formatUserResponse = (user) => ({
+  _id: user._id,
+  userName: user.userName,
+  email: user.email,
+  location: user.location,
+  address: user.address,
+  profilePhoto: user.profilePhoto
+})
 
 // @desc    Register User
 // @access  Public
@@ -18,14 +44,19 @@ const regUser = async (req, res) => {
       return res.status(400).json({ message: "user already exists with this email" })
     }
 
-    // Create user with location and address (defaults applied by schema)
-    const user = await userModel.create({
+    const user = new userModel({
       userName,
       email,
       password,
-      location: location || { lat: 22.2904, lng: 70.7915 },
+      location: parseLocation(location),
       address: address || "Surat, Gujarat, India"
     })
+
+    if (req.file) {
+      user.profilePhoto = await uploadProfilePhoto(req.file, user._id)
+    }
+
+    await user.save()
 
     // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" })
@@ -40,13 +71,7 @@ const regUser = async (req, res) => {
 
     res.status(201).json({
       message: "user created and token generated in cookies",
-      user: {
-        _id: user._id,
-        userName: user.userName,
-        email: user.email,
-        location: user.location,
-        address: user.address
-      },
+      user: formatUserResponse(user),
       token
     })
   } catch (error) {
@@ -92,13 +117,7 @@ const loginUser = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      user: {
-        _id: user._id,
-        userName: user.userName,
-        email: user.email,
-        location: user.location,
-        address: user.address
-      },
+      user: formatUserResponse(user),
       token
     })
   } catch (error) {

@@ -182,22 +182,23 @@ exports.decreaseQuantity = async (userId, productId) => {
 // @desc    Get cart by user ID
 // @access  Private
 exports.getCartByUserId = async (userId) => {
-  const cart = await Cart.findOne({ userId }).populate('activeStore').populate('items.product');
+  let cart = await Cart.findOne({ userId }).populate('activeStore').populate('items.product');
 
   if (!cart) {
-    return buildResult(false, 'CART_NOT_FOUND', 'Cart not found');
+    cart = await Cart.create({
+      userId,
+      activeStore: null,
+      items: []
+    });
+
+    const populatedCart = await populateCart(cart);
+    return buildResult(true, 'SUCCESS', 'Cart loaded', { cart: populatedCart });
   }
 
   return buildResult(true, 'SUCCESS', 'Cart loaded', { cart });
 };
 
 exports.replaceCart = async (userId, productId) => {
-  const cart = await Cart.findOne({ userId });
-
-  if (!cart) {
-    return buildResult(false, 'CART_NOT_FOUND', 'Cart not found');
-  }
-
   if (!productId) {
     return buildResult(false, 'PRODUCT_ID_REQUIRED', 'Product ID is required');
   }
@@ -209,6 +210,12 @@ exports.replaceCart = async (userId, productId) => {
 
   if (product.stock < 1) {
     return buildResult(false, 'OUT_OF_STOCK', 'Insufficient stock', { availableStock: product.stock });
+  }
+
+  let cart = await Cart.findOne({ userId });
+
+  if (!cart) {
+    cart = new Cart({ userId });
   }
 
   cart.activeStore = product.store;

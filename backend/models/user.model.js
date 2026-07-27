@@ -9,6 +9,12 @@ const userSchema = new mongoose.Schema(
       lat: { type: Number, default: 22.2904 },
       lng: { type: Number, default: 70.7915 }
     },
+    profilePhoto: {
+      url: { type: String, default: "" },
+      fileId: { type: String, default: "" },
+      name: { type: String, default: "" },
+      thumbnailUrl: { type: String, default: "" }
+    },
     address: { type: String, default: "Surat, Gujarat, India" },
     createdAt: { type: Date, default: Date.now }
   },

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { LocationDataContext } from '../context/LocationContext';
 import { StoreContext } from '../context/StoreContext';
+import { UserContext } from '../context/UserContext';
+
 function Cart() {
   const [showBillDetails, setShowBillDetails] = useState(false);
   const {
@@ -17,6 +19,7 @@ function Cart() {
     clearCart,
   } = useContext(CartContext);
   const { stores } = useContext(StoreContext);
+  const { user } = useContext(UserContext);
   const { lat, lng, calculateDistance } = useContext(LocationDataContext);
   const store = stores.find((store) => store.id === activeStore);
   const preferredSuggestedNames = ['Eggs', 'Butter', 'Cheese'];
@@ -50,7 +53,7 @@ function Cart() {
   ).slice(0, 3);
 
   const distance =
-    store?.location && lat && lng
+    store?.location?.lat != null && store?.location?.lng != null && lat != null && lng != null
       ? Number(calculateDistance(lat, lng, store.location.lat, store.location.lng))
       : 3;
   const deliveryFee = Math.round(distance * 7);
@@ -230,7 +233,9 @@ function Cart() {
               <h2 className="text-xl font-bold">Deliver To</h2>
               <p className="mt-3 font-semibold">Home</p>
               <p className="app-muted mt-1 max-w-xl text-sm">
-                22, Kalawad Road, Near Crystal Mall, Rajkot, Gujarat 360005
+                {typeof user?.address === "string" && user.address
+                  ? user.address
+                  : "Add an address during signup to see it here."}
               </p>
             </div>
             <button className="shrink-0 cursor-pointer text-sm font-semibold text-amber-400 transition hover:text-amber-300">

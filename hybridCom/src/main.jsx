@@ -13,11 +13,11 @@ createRoot(document.getElementById('root')).render(
       <ThemeContextProvider>
       <LocationContext>
       <StoreContextProvider>
-      <CartContextProvider>
       <UserContextProvider>
+      <CartContextProvider>
       <App />
-      </UserContextProvider>
       </CartContextProvider>
+      </UserContextProvider>
       </StoreContextProvider>
  </LocationContext>
       </ThemeContextProvider>

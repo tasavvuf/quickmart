@@ -1,6 +1,14 @@
 import { MapPin, Pencil, Check, Trash2 } from "lucide-react";
 
 export default function AddressCard({ address, isActive, onSelect, onEdit, onDelete }) {
+  const addressText = [
+    address.line1,
+    address.line2,
+    address.city,
+    address.state,
+    address.pincode,
+  ].filter(Boolean).join(", ");
+
   return (
     <div className="app-card rounded-2xl p-5">
       <div className="mb-2 flex items-center justify-between">
@@ -17,11 +25,7 @@ export default function AddressCard({ address, isActive, onSelect, onEdit, onDel
         <span className="flex items-start gap-2">
           <MapPin size={14} className="mt-0.5 shrink-0 text-amber-500" />
           <span className="break-words">
-            {address.line1}
-            {address.line2 ? `, ${address.line2}` : ""}
-            {`, ${address.city}`}
-            {`, ${address.state}`}
-            {` - ${address.pincode}`}
+            {addressText}
           </span>
         </span>
       </p>

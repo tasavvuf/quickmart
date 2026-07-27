@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { useState, useContext } from 'react'
 import { toast } from 'react-toastify'
 import { UserContext } from '../context/UserContext'
+import { api, getApiErrorMessage } from '../lib/api'
+
 function Login() {
   const [username, setusername] = useState("")
   const [password, setpassword] = useState("")
-  const { setIsLoggedIn , setAccessToken, setRefreshToken ,setUser} = useContext(UserContext)
+  const { applyAuthenticatedUser, setRefreshToken } = useContext(UserContext)
   const navigate = useNavigate()
+
   const signinapicall = async () => {
     if (!username || !password) {
       toast.error("Please fill all fields")
@@ -15,46 +17,24 @@ function Login() {
     }
 
     try {
-      const response = await axios.post('https://api.freeapi.app/api/v1/users/login', {
-        username: username,
-        password: password
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await api.post('/auth/login', {
+        userName: username,
+        email: username,
+        password
       })
 
-      if (response.data.success) {
-        toast.success("Login successful")
-        localStorage.setItem('accessToken', JSON.stringify(response.data.data.accessToken));
-        localStorage.setItem('refreshToken', JSON.stringify(response.data.data.refreshToken));
-        setIsLoggedIn(true)
-        setAccessToken(response.data.data.accessToken)
-        setRefreshToken(response.data.data.refreshToken)
-        setUser({
-          username: response.data.data.username,
-          email: response.data.data.email,
-          role: response.data.data.role,
-          id: response.data.data.user._id,
-          avatar: response.data.data.user.avatar?.url || null
-        })
-        navigate("/", { replace: true })
-      } else { 
-        toast.error(response.data.message || "Login failed")
-      }
+      toast.success(response.data.message || "Login successful")
+      localStorage.setItem('accessToken', JSON.stringify(response.data.token));
+      setRefreshToken(null)
+      applyAuthenticatedUser(response.data.user, response.data.token)
+      navigate("/", { replace: true })
     } catch (error) {
       console.error(error)
-      if (error.response) {
-        toast.error(error.response.data?.message || `Login failed: ${error.response.status}`)
-      } else if (error.request) {
-        toast.error("Network error. Please check your connection.")
-      } else {
-        toast.error(error.message || "Login failed")
-      }
+      toast.error(getApiErrorMessage(error, "Login failed"))
     }
   }
   return (
-     <div className="app-page p-6 flex flex-col justify-center items-center">
+     <div className="app-page flex flex-col items-center justify-start px-6 pt-10 pb-16">
         <form onSubmit={(e)=>{e.preventDefault()}} className="app-card p-8 rounded-3xl flex flex-col gap-6 w-full max-w-md">
            <div className="flex flex-col gap-2">
                 <label>username</label>

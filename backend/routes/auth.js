@@ -14,7 +14,7 @@
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -43,6 +43,10 @@
  *               address:
  *                 type: string
  *                 example: Surat, Gujarat
+ *               profilePhoto:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional profile photo image
  *     responses:
  *       201:
  *         description: User registered successfully with token in cookies
@@ -155,9 +159,10 @@
 const express = require("express")
 const authController = require("../controllers/auth.controller.js")
 const { verifyToken } = require("../middleware/auth.middleware.js")
+const { uploadProfilePhoto } = require("../middleware/upload.middleware.js")
 const router = express.Router()
 
-router.post("/reg", authController.regUser)
+router.post("/reg", uploadProfilePhoto, authController.regUser)
 router.post("/login", authController.loginUser)
 
 router.get("/test", verifyToken, async (req, res) => {

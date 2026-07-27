@@ -1,85 +1,41 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+import { api } from "../lib/api";
+import { adaptUser } from "../lib/adapters";
 
 export const UserContext = createContext();
 
-const dummyUser = {
-  username: "Aarav Patel",
-  email: "aarav.patel@example.com",
-  phone: "+91 98765 43210",
-  dob: "2001-09-14",
-  role: "customer",
-  id: "frontend-dummy-user",
-  avatar: null,
-  activeAddressId: "addr-home",
-  address: {
-    id: "addr-home",
-    label: "Home",
-    line1: "22, Kalawad Road",
-    line2: "Near Crystal Mall",
-    city: "Rajkot",
-    state: "Gujarat",
-    pincode: "360005",
-  },
-  addresses: [
-    {
-      id: "addr-home",
-      label: "Home",
-      line1: "22, Kalawad Road",
-      line2: "Near Crystal Mall",
-      city: "Rajkot",
-      state: "Gujarat",
-      pincode: "360005",
-    },
-    {
-      id: "addr-work",
-      label: "Work",
-      line1: "401, Orbit Plaza",
-      line2: "Yagnik Road",
-      city: "Rajkot",
-      state: "Gujarat",
-      pincode: "360001",
-    },
-  ],
-  orderHistory: [
-    {
-      id: "ORD-1042",
-      storeName: "Fresh Basket",
-      date: "2026-07-12",
-      status: "Delivered",
-      total: 684,
-      items: ["Milk", "Eggs", "Bread"],
-      addressLabel: "Home",
-    },
-    {
-      id: "ORD-1037",
-      storeName: "Daily Dairy",
-      date: "2026-07-06",
-      status: "Delivered",
-      total: 342,
-      items: ["Cheese", "Butter"],
-      addressLabel: "Work",
-    },
-    {
-      id: "ORD-1029",
-      storeName: "Green Grocers",
-      date: "2026-06-28",
-      status: "Cancelled",
-      total: 219,
-      items: ["Tomatoes", "Spinach", "Onion"],
-      addressLabel: "Home",
-    },
-  ],
-};
-
 export function UserContextProvider({ children }) {
-  const [user, setUser] = useState(dummyUser);
+  const [user, setUser] = useState(null);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const [accessToken, setAccessToken] = useState(null);
 
   const [refreshToken, setRefreshToken] = useState(null);
+
+  const applyAuthenticatedUser = (nextUser, token = null) => {
+    setUser(adaptUser(nextUser));
+    setIsLoggedIn(true);
+    setAccessToken(token);
+  };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await api.get("/auth/test");
+        applyAuthenticatedUser(response.data.user);
+      } catch {
+        setUser(null);
+        setIsLoggedIn(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const setActiveAddress = (addressId) => {
     setUser((current) => {
@@ -160,6 +116,8 @@ export function UserContextProvider({ children }) {
 
     refreshToken,
     setRefreshToken,
+    isCheckingAuth,
+    applyAuthenticatedUser,
 
     setActiveAddress,
     addAddress,

@@ -1,6 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState } from 'react'
    export const LocationDataContext = createContext()
+const LOCATION_STORAGE_KEY = "guest_location"
+
 function LocationContext(props) {
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371; // Radius of the Earth in km
@@ -16,11 +18,27 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
      return Number((R * c).toFixed(2));; // Returns distance rounded to 2 decimal places
   };
-  const [lat, setLat] = useState(null);
-  const [lng, setLng] = useState(null);
-  const [message, setMessage] = useState("Location is not fetched yet !!!");
+  const savedLocation = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(LOCATION_STORAGE_KEY)) || {};
+    } catch {
+      return {};
+    }
+  })();
+  const [lat, setLat] = useState(savedLocation.lat ?? null);
+  const [lng, setLng] = useState(savedLocation.lng ?? null);
+  const [message, setMessage] = useState(
+    savedLocation.lat != null && savedLocation.lng != null
+      ? `Your latitude is ${savedLocation.lat} and longitude is ${savedLocation.lng}`
+      : "Location is not fetched yet !!!"
+  );
 
   const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      setMessage("Geolocation is not supported by this browser.");
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newLat = position.coords.latitude;
@@ -28,6 +46,10 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
         setLat(newLat);
         setLng(newLng);
+        localStorage.setItem(
+          LOCATION_STORAGE_KEY,
+          JSON.stringify({ lat: newLat, lng: newLng })
+        );
 
         setMessage(`Your latitude is ${newLat} and longitude is ${newLng}`);
       },

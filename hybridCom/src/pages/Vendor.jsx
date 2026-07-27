@@ -23,7 +23,7 @@ function Vendor() {
 
   const vendor = stores.find((store) => store.id === vendorId);
   const distance =
-    vendor?.location && lat && lng
+    vendor?.location?.lat != null && vendor?.location?.lng != null && lat != null && lng != null
       ? calculateDistance(lat, lng, vendor.location.lat, vendor.location.lng)
       : null;
 
@@ -97,7 +97,7 @@ function Vendor() {
                   {Math.round(distance * 5)} mins to deliver
                 </span>
               </>
-            ) : (
+              ) : (
               <span className="app-muted text-sm">
                 Fetch location to see distance
               </span>

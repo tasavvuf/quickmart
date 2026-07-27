@@ -32,6 +32,12 @@ function UserPage() {
   const activeAddress = user?.addresses?.find(
     (address) => address.id === user?.activeAddressId
   ) || user?.address;
+  const activeAddressText =
+    typeof activeAddress === "string"
+      ? activeAddress
+      : activeAddress
+        ? `${activeAddress.line1}, ${activeAddress.city}`
+        : "";
 
   const recentOrders = (user?.orderHistory || []).slice(0, 2);
 
@@ -42,6 +48,16 @@ function UserPage() {
   const saveUserInfo = () => {
     setUser((current) => ({ ...current, ...formData }));
     setIsEditing(false);
+  };
+
+  const startEditing = () => {
+    setFormData({
+      username: user?.username || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      dob: user?.dob || "",
+    });
+    setIsEditing(true);
   };
 
   const cancelEditing = () => {
@@ -108,7 +124,7 @@ function UserPage() {
             </div>
           ) : (
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={startEditing}
               className="glass glass-hover flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-xl text-amber-500"
               aria-label="Edit user details"
               title="Edit"
@@ -142,9 +158,7 @@ function UserPage() {
             <span>
               <span className="block font-semibold">Address Book</span>
               <span className="block text-sm text-muted-foreground">
-                {activeAddress
-                  ? `${activeAddress.line1}, ${activeAddress.city}`
-                  : "Manage your addresses"}
+                {activeAddressText || "Manage your addresses"}
               </span>
             </span>
           </span>
@@ -199,9 +213,7 @@ function UserPage() {
             <span>
               <span className="block font-semibold">Active Address</span>
               <span className="block text-sm text-muted-foreground">
-                {activeAddress
-                  ? `${activeAddress.line1}, ${activeAddress.city}`
-                  : "Manage your addresses"}
+                {activeAddressText || "Manage your addresses"}
               </span>
             </span>
           </span>

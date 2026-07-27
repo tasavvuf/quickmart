@@ -33,6 +33,15 @@ const options = {
             _id: { type: 'string' },
             userName: { type: 'string' },
             email: { type: 'string' },
+            profilePhoto: {
+              type: 'object',
+              properties: {
+                url: { type: 'string' },
+                fileId: { type: 'string' },
+                name: { type: 'string' },
+                thumbnailUrl: { type: 'string' }
+              }
+            },
             location: {
               type: 'object',
               properties: {

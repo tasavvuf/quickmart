@@ -1,10 +1,11 @@
 const path = require("path")
 const dotenv = require("dotenv")
-const app = require("./src/app")
 const connectDB = require("./config/db")
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, ".env") })
+
+const app = require("./src/app")
 
 // Connect to database
 connectDB()

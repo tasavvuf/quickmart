@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { LocationDataContext } from "../context/LocationContext";
 import { StoreContext } from "../context/StoreContext";
 import { CartContext } from "../context/CartContext";
+import { UserContext } from "../context/UserContext";
 import { SmoothInput } from "../components/ui/skiper-ui/skiper106";
 import { Search, X } from "lucide-react";
 
@@ -10,6 +11,7 @@ const SEARCH_STORAGE_KEY = "home_search_query";
 
 function HomeUI() {
   const { stores } = useContext(StoreContext);
+  const { isLoggedIn } = useContext(UserContext);
   const { items: cartItems } = useContext(CartContext);
   const { getUserLocation, message, lat, lng, calculateDistance } =
     useContext(LocationDataContext);
@@ -46,11 +48,15 @@ function HomeUI() {
     value?.toString().toLowerCase().includes(normalizedQuery);
 
   const storeDistances = useMemo(() => {
-    if (!lat || !lng) return {};
+    if (lat == null || lng == null) return {};
 
     const distanceMap = {};
 
     for (const store of stores) {
+      if (store.location?.lat == null || store.location?.lng == null) {
+        continue;
+      }
+
       distanceMap[store.id] = calculateDistance(
         lat,
         lng,
@@ -142,24 +148,25 @@ function HomeUI() {
         )}
       </div>
 
-      {/* Location Section */}
-      <div className="app-band flex-1 flex flex-col justify-center items-center gap-6 py-8 px-6">
-        <button
-          onClick={getUserLocation}
-          className="app-control px-6 py-3 text-amber-500 rounded-lg text-lg"
-        >
-          Fetch Your Location
-        </button>
+      {!isLoggedIn && (
+        <div className="app-band flex-1 flex flex-col justify-center items-center gap-6 py-8 px-6">
+          <button
+            onClick={getUserLocation}
+            className="app-control px-6 py-3 text-amber-500 rounded-lg text-lg"
+          >
+            Fetch Your Location
+          </button>
 
-        <p className="text-xl text-center px-6">{message}</p>
+          <p className="text-xl text-center px-6">{message}</p>
 
-        {lat && lng && (
-          <p className="text-green-400 text-lg">
-            📍 Lat: {lat} <br />
-            Lng: {lng}
-          </p>
-        )}
-      </div>
+          {lat != null && lng != null && (
+            <p className="text-green-400 text-lg">
+              Lat: {lat} <br />
+              Lng: {lng}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Featured Products Section */}
       <div className="mt-8">
