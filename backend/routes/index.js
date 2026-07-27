@@ -18,6 +18,10 @@ router.get('/health', (req, res) => {
 // Auth routes
 router.use('/auth', authRoutes);
 
+// Public product routes
+const productRoutes = require('./product');
+router.use('/products', productRoutes);
+
 // Cart routes
 router.use('/cart', cartRoutes);
 

@@ -1,137 +1,96 @@
 const cartService = require('../services/cart.service');
 
+const handleResult = (res, result, successStatus = 200) => {
+  if (!result.success) {
+    const errorCodeMap = {
+      CART_NOT_FOUND: 404,
+      PRODUCT_NOT_FOUND: 404,
+      ITEM_NOT_FOUND: 404,
+      DIFFERENT_STORE: 400,
+      PRODUCT_ALREADY_IN_CART: 400,
+      OUT_OF_STOCK: 400,
+      QUANTITY_INVALID: 400,
+      QUANTITY_MINIMUM: 400
+    };
+    const statusCode = errorCodeMap[result.code] || 400;
+    return res.status(statusCode).json(result);
+  }
+
+  return res.status(successStatus).json(result);
+};
+
 // @desc    Get current cart
 // @access  Private
 exports.getCart = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    const cart = await cartService.getCartByUserId(userId);
-    res.json(cart);
-  } catch (error) {
-    const statusCode = error.message === 'Cart not found' ? 404 : 500;
-    res.status(statusCode).json({ message: error.message });
-  }
+  const userId = req.user._id;
+  const result = await cartService.getCartByUserId(userId);
+  return handleResult(res, result);
 };
 
 // @desc    Add item to cart
 // @access  Private
 exports.addItem = async (req, res) => {
-  try {
-    // here we use this to only addTOCart, we don't need to check for quantity cause its 1 by default, and we will check for stock in the service layer
-    const { userId, productId } = req.body;
+  const userId = req.user._id;
+  const { productId } = req.body;
 
-    if (!userId || !productId) {
-      return res.status(400).json({ message: 'User ID and Product ID are required' });
-    }
-
-    const cart = await cartService.addToCart(userId, productId );
-    res.status(201).json(cart);
-  } catch (error) {
-    const statusCode = error.message.includes('not found') || error.message.includes('Insufficient') || error.message.includes('same store') ? 400 : 500;
-    res.status(statusCode).json({ message: error.message });
+  if (!productId) {
+    return res.status(400).json({ success: false, code: 'PRODUCT_ID_REQUIRED', message: 'Product ID is required' });
   }
+
+  const result = await cartService.addToCart(userId, productId);
+  return handleResult(res, result, 201);
 };
 
 // @desc    Update item quantity
 // @access  Private
 exports.updateItemQuantity = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const { productId } = req.params;
-    const { quantity } = req.body;
+  const userId = req.user._id;
+  const { productId } = req.params;
+  const { quantity } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    if (!quantity || quantity < 1) {
-      return res.status(400).json({ message: 'Quantity must be at least 1' });
-    }
-
-    const cart = await cartService.updateQuantity(userId, productId, quantity);
-    res.json(cart);
-  } catch (error) {
-    const statusCode = error.message.includes('not found') || error.message.includes('Insufficient') ? 400 : 500;
-    res.status(statusCode).json({ message: error.message });
+  if (!quantity || quantity < 1) {
+    return res.status(400).json({ success: false, code: 'QUANTITY_INVALID', message: 'Quantity must be at least 1' });
   }
+
+  const result = await cartService.updateQuantity(userId, productId, quantity);
+  return handleResult(res, result);
 };
 
 // @desc    Remove item from cart
 // @access  Private
 exports.removeItem = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const { productId } = req.params;
+  const userId = req.user._id;
+  const { productId } = req.params;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    const cart = await cartService.removeFromCart(userId, productId);
-    res.json(cart);
-  } catch (error) {
-    const statusCode = error.message === 'Cart not found' ? 404 : 500;
-    res.status(statusCode).json({ message: error.message });
-  }
+  const result = await cartService.removeFromCart(userId, productId);
+  return handleResult(res, result);
 };
 
 // @desc    Clear entire cart
 // @access  Private
 exports.clearCart = async (req, res) => {
-  try {
-    const { userId } = req.query;
+  const userId = req.user._id;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    const cart = await cartService.clearCart(userId);
-    res.json(cart);
-  } catch (error) {
-    const statusCode = error.message === 'Cart not found' ? 404 : 500;
-    res.status(statusCode).json({ message: error.message });
-  }
+  const result = await cartService.clearCart(userId);
+  return handleResult(res, result);
 };
 
 // @desc    Increase item quantity
 // @access  Private
 exports.increaseQuantity = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const { productId } = req.params;
+  const userId = req.user._id;
+  const { productId } = req.params;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    const cart = await cartService.increaseQuantity(userId, productId);
-    res.json(cart);
-  } catch (error) {
-    const statusCode = error.message.includes('not found') || error.message.includes('Insufficient') ? 400 : 500;
-    res.status(statusCode).json({ message: error.message });
-  }
+  const result = await cartService.increaseQuantity(userId, productId);
+  return handleResult(res, result);
 };
 
 // @desc    Decrease item quantity
 // @access  Private
 exports.decreaseQuantity = async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const { productId } = req.params;
+  const userId = req.user._id;
+  const { productId } = req.params;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    const cart = await cartService.decreaseQuantity(userId, productId);
-    res.json(cart);
-  } catch (error) {
-    const statusCode = error.message.includes('not found') ? 400 : 500;
-    res.status(statusCode).json({ message: error.message });
-  }
+  const result = await cartService.decreaseQuantity(userId, productId);
+  return handleResult(res, result);
 };
