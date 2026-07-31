@@ -32,7 +32,10 @@ const options = {
           properties: {
             _id: { type: 'string' },
             userName: { type: 'string' },
+            name: { type: 'string' },
+            phoneNumber: { type: 'string' },
             email: { type: 'string' },
+            role: { type: 'string', enum: ['user', 'admin', 'vendor'] },
             profilePhoto: {
               type: 'object',
               properties: {
@@ -52,6 +55,54 @@ const options = {
             address: { type: 'string' }
           }
         },
+        Store: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            owner: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                userName: { type: 'string' },
+                name: { type: 'string' },
+                phoneNumber: { type: 'string' },
+                email: { type: 'string' },
+                role: { type: 'string' }
+              }
+            },
+            name: { type: 'string' },
+            description: { type: 'string' },
+            logo: { type: 'string' },
+            banner: { type: 'string' },
+            storePhoto: {
+              type: 'object',
+              properties: {
+                url: { type: 'string' },
+                fileId: { type: 'string' },
+                name: { type: 'string' },
+                thumbnailUrl: { type: 'string' }
+              }
+            },
+            category: { type: 'string' },
+            location: { type: 'object' },
+            address: {
+              type: 'object',
+              properties: {
+                street: { type: 'string' },
+                area: { type: 'string' },
+                pincode: { type: 'string' },
+                city: { type: 'string' },
+                state: { type: 'string' },
+                landmark: { type: 'string' }
+              }
+            },
+            gstNumber: { type: 'string' },
+            emergencyContact: { type: 'string' },
+            isVerifiedByAdmin: { type: 'boolean' },
+            rating: { type: 'number' },
+            isOpen: { type: 'boolean' }
+          }
+        },
         Product: {
           type: 'object',
           properties: {
@@ -64,7 +115,7 @@ const options = {
             category: { type: 'string' },
             featured: { type: 'boolean' },
             status: { type: 'string' },
-            store: { type: 'object' }
+            store: { $ref: '#/components/schemas/Store' }
           }
         },
         Cart: {

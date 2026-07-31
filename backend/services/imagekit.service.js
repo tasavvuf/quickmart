@@ -45,4 +45,25 @@ const uploadProfilePhoto = async (file, userId) => {
   }
 }
 
-module.exports = { uploadProfilePhoto }
+const uploadStorePhoto = async (file, storeOwnerId) => {
+  if (!file) {
+    return null
+  }
+
+  const extension = file.originalname?.split(".").pop() || "jpg"
+  const result = await getImageKit().upload({
+    file: file.buffer,
+    fileName: `${storeOwnerId}-store-${Date.now()}.${extension}`,
+    folder: "/HOME/stores",
+    useUniqueFileName: true
+  })
+
+  return {
+    url: result.url,
+    fileId: result.fileId,
+    name: result.name,
+    thumbnailUrl: result.thumbnailUrl
+  }
+}
+
+module.exports = { uploadProfilePhoto, uploadStorePhoto }

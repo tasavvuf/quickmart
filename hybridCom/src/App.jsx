@@ -4,6 +4,9 @@ import Vendor from "./pages/Vendor";
 import HomeUI from "./pages/HomeUI"
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VendorLogin from "./pages/VendorLogin";
+import VendorSignup from "./pages/VendorSignup";
+import Store from "./pages/Store";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import FloatingCart from "./components/FloatingCart";
@@ -21,9 +24,12 @@ function App() {
       <div className="flex-1 min-h-0">
         <Routes>
           <Route path="/" element={<HomeUI />} />
+          <Route path="/store" element={<Store />} />
           <Route path="/vendor/:vendorId" element={<Vendor />} />
           <Route path="/login" element={<Login/>}/>
           <Route path="/signup" element={<Signup/>}/>
+          <Route path="/vendor-login" element={<VendorLogin/>}/>
+          <Route path="/vendor-signup" element={<VendorSignup/>}/>
           <Route path="/cart" element={<Cart/>}/>
           <Route path="/user" element={<UserPage/>}/>
           <Route path="/address-book" element={<AddressBook/>}/>

@@ -19,18 +19,30 @@
  *             type: object
  *             required:
  *               - userName
+ *               - name
+ *               - phoneNumber
  *               - email
  *               - password
  *             properties:
  *               userName:
  *                 type: string
  *                 example: john_doe
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "9876543210"
  *               email:
  *                 type: string
  *                 example: john@example.com
  *               password:
  *                 type: string
  *                 example: password123
+ *               role:
+ *                 type: string
+ *                 enum: [user, vendor]
+ *                 example: user
  *               location:
  *                 type: object
  *                 properties:
@@ -47,6 +59,14 @@
  *                 type: string
  *                 format: binary
  *                 description: Optional profile photo image
+ *               storePhoto:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional vendor store photo
+ *               store:
+ *                 type: string
+ *                 description: JSON string required when role is vendor. Includes shopName, businessType, shopDescription, gstNumber, emergencyContact, and address object.
+ *                 example: '{"shopName":"Fresh Mart","businessType":"Grocery","shopDescription":"Daily groceries","gstNumber":"","emergencyContact":"9876543211","address":{"street":"Fresh Mart Street","area":"Adajan","pincode":"395009","city":"Surat","state":"Gujarat","landmark":"Near Adajan Circle"}}'
  *     responses:
  *       201:
  *         description: User registered successfully with token in cookies
@@ -60,6 +80,8 @@
  *                   example: "user created and token generated in cookies"
  *                 user:
  *                   $ref: '#/components/schemas/User'
+ *                 store:
+ *                   $ref: '#/components/schemas/Store'
  *                 token:
  *                   type: string
  *       400:
@@ -90,7 +112,11 @@
  *               password:
  *                 type: string
  *                 example: password123
- *             description: Provide either email or userName, plus password
+ *               role:
+ *                 type: string
+ *                 enum: [user, vendor]
+ *                 example: user
+ *             description: Provide either email or userName, plus password and intended role
  *     responses:
  *       200:
  *         description: Login successful with token in cookies

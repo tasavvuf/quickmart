@@ -4,9 +4,16 @@ import { useNavigate } from 'react-router-dom'
 import { LocationDataContext } from '../context/LocationContext'
 import { api, getApiErrorMessage } from '../lib/api'
 
-export default function Signup() {
+export default function Signup({
+    role = "user",
+    title = "Sign up",
+    submitLabel = "Sign up",
+    loginPath = "/login",
+}) {
     const navigate = useNavigate()
     const { lat, lng, getUserLocation, message } = useContext(LocationDataContext)
+    const [name, setName] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
     const [email, setemail] = useState("")
     const [password, setpassword] = useState("")
     const [username, setusername] = useState("")
@@ -14,7 +21,7 @@ export default function Signup() {
     const [profilePhoto, setProfilePhoto] = useState(null)
 
     const signupapicall = async () => {
-        if (!email || !password || !username || !address) {
+        if (!name || !phoneNumber || !email || !password || !username || !address) {
             toast.error("Please fill all fields")
             return
         }
@@ -28,10 +35,13 @@ export default function Signup() {
             const formData = new FormData()
 
             formData.append("userName", username)
+            formData.append("name", name)
+            formData.append("phoneNumber", phoneNumber)
             formData.append("email", email)
             formData.append("password", password)
             formData.append("address", address)
             formData.append("location", JSON.stringify({ lat, lng }))
+            formData.append("role", role)
 
             if (profilePhoto) {
                 formData.append("profilePhoto", profilePhoto)
@@ -40,7 +50,7 @@ export default function Signup() {
             const response = await api.post('/auth/reg', formData)
 
             toast.success(response.data.message || "Signup successful!")
-            navigate("/login")
+            navigate(loginPath)
         } catch (error) {
             toast.error(getApiErrorMessage(error, "Signup failed"))
         }
@@ -49,8 +59,22 @@ export default function Signup() {
     <div className="app-page flex flex-col items-center justify-start px-6 pt-6 pb-16">
         <form onSubmit={(e)=>{e.preventDefault()}} className="app-card p-8 rounded-3xl flex flex-col gap-6 w-full max-w-md">
            <div className="flex flex-col gap-2">
+                <h2 className="text-2xl font-bold">{title}</h2>
+                <p className="app-muted text-sm">
+                    {role === "vendor" ? "Create your vendor account to manage seller access." : "Create your customer account."}
+                </p>
+           </div>
+           <div className="flex flex-col gap-2">
                 <label>username</label>
                 <input type="text" name="username" value={username} onChange={(e)=>{setusername(e.target.value)}} className="app-input rounded-lg px-4 py-3" />
+           </div>
+           <div className="flex flex-col gap-2">
+                <label>name</label>
+                <input type="text" name="name" value={name} onChange={(e)=>{setName(e.target.value)}} className="app-input rounded-lg px-4 py-3" />
+           </div>
+           <div className="flex flex-col gap-2">
+                <label>phone number</label>
+                <input type="tel" name="phoneNumber" value={phoneNumber} onChange={(e)=>{setPhoneNumber(e.target.value)}} className="app-input rounded-lg px-4 py-3" />
            </div>
            <div className="flex flex-col gap-2">
                 <label>email</label>
@@ -76,7 +100,10 @@ export default function Signup() {
            <button type="submit" className="app-control px-6 py-3 text-amber-500 rounded-lg text-lg" onClick={(e)=>{
             e.preventDefault();
             signupapicall();
-           }}>Sign up</button>
+           }}>{submitLabel}</button>
+           <button type="button" className="app-muted text-sm underline underline-offset-4" onClick={() => navigate(loginPath)}>
+                Already have a {role === "vendor" ? "vendor" : "user"} account?
+           </button>
         </form>
     </div>
   )

@@ -5,7 +5,8 @@ const StoreSchema = new mongoose.Schema({
 
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true
+    required: true,
+    ref: 'user'
   },
   name: {
     type: String,
@@ -14,15 +15,21 @@ const StoreSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
+    default: ''
   },
   logo: {
     type: String,
-    required: true
+    default: ''
   },
   banner: {
     type: String,
-    required: true
+    default: ''
+  },
+  storePhoto: {
+    url: { type: String, default: "" },
+    fileId: { type: String, default: "" },
+    name: { type: String, default: "" },
+    thumbnailUrl: { type: String, default: "" }
   },
   category: {
     type: String,
@@ -30,18 +37,40 @@ const StoreSchema = new mongoose.Schema({
   },
 
   location: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: true
+  },
+  address: {
+    street: { type: String, required: true, trim: true },
+    area: { type: String, required: true, trim: true },
+    pincode: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    landmark: { type: String, default: '', trim: true }
+  },
+  gstNumber: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  emergencyContact: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  isVerifiedByAdmin: {
+    type: Boolean,
+    default: false
   },
 
   rating: {
     type: Number,
-    required: true
+    default: 0
   },
 
   isOpen: {
     type: Boolean,
-    required: true
+    default: true
   },
 
 }, {

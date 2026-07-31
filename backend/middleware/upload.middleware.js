@@ -17,13 +17,16 @@ const upload = multer({
 })
 
 const uploadProfilePhoto = (req, res, next) => {
-  upload.single("profilePhoto")(req, res, (error) => {
+  upload.fields([
+    { name: "profilePhoto", maxCount: 1 },
+    { name: "storePhoto", maxCount: 1 }
+  ])(req, res, (error) => {
     if (!error) {
       return next()
     }
 
     if (error instanceof multer.MulterError) {
-      return res.status(400).json({ message: "Profile photo upload failed", error: error.message })
+      return res.status(400).json({ message: "Image upload failed", error: error.message })
     }
 
     return res.status(400).json({ message: error.message })

@@ -9,24 +9,53 @@ dotenv.config({ path: require('path').resolve(__dirname, '.env') });
 const users = [
   {
     userName: 'store_owner_1',
+    name: 'Fresh Mart Owner',
+    phoneNumber: '9876543210',
     email: 'owner1@example.com',
     password: 'password123',
+    role: 'vendor',
     location: { lat: 22.2904, lng: 70.7915 },
     address: 'Adajan, Surat, Gujarat'
   },
   {
     userName: 'store_owner_2',
+    name: 'Tech Hub Owner',
+    phoneNumber: '9876543220',
     email: 'owner2@example.com',
     password: 'password123',
+    role: 'vendor',
     location: { lat: 22.2920, lng: 70.7900 },
     address: 'Athwa, Surat, Gujarat'
   },
   {
     userName: 'customer_1',
+    name: 'Customer One',
+    phoneNumber: '9876543230',
     email: 'customer1@example.com',
     password: 'password123',
+    role: 'user',
     location: { lat: 22.2910, lng: 70.7920 },
     address: 'Pal, Surat, Gujarat'
+  },
+  {
+    userName: 'admin',
+    name: 'Admin User',
+    phoneNumber: '9876543240',
+    email: 'tev.musix@gmail.com',
+    password: 'admin',
+    role: 'admin',
+    location: { lat: 22.2904, lng: 70.7915 },
+    address: 'Surat, Gujarat, India'
+  },
+  {
+    userName: 'customer_2',
+    name: 'Tasavvufhusen Gori',
+    phoneNumber: '8469191292',
+    email: 'tasavvufg@gmail.com',
+    password: 'test',
+    role: 'user',
+    location: { lat: 22.2910, lng: 70.7920 },
+    address: 'Surat, Gujarat, India'
   }
 ];
 
@@ -37,7 +66,25 @@ const stores = [
     logo: 'https://via.placeholder.com/150?text=Fresh+Mart',
     banner: 'https://via.placeholder.com/600x200?text=Fresh+Mart+Banner',
     category: 'Grocery',
-    location: 'Surat, Gujarat',
+    location: {
+      lat: 22.2904,
+      lng: 70.7915,
+      address: 'Adajan, Surat, Gujarat 395009',
+      city: 'Surat',
+      state: 'Gujarat',
+      pincode: '395009'
+    },
+    address: {
+      street: 'Fresh Mart Street',
+      area: 'Adajan',
+      pincode: '395009',
+      city: 'Surat',
+      state: 'Gujarat',
+      landmark: 'Near Adajan Circle'
+    },
+    gstNumber: '',
+    emergencyContact: '9876543211',
+    isVerifiedByAdmin: true,
     rating: 4.7,
     isOpen: true
   },
@@ -47,7 +94,25 @@ const stores = [
     logo: 'https://via.placeholder.com/150?text=Tech+Hub',
     banner: 'https://via.placeholder.com/600x200?text=Tech+Hub+Banner',
     category: 'Electronics',
-    location: 'Surat, Gujarat',
+    location: {
+      lat: 22.2920,
+      lng: 70.7900,
+      address: 'Athwa, Surat, Gujarat 395001',
+      city: 'Surat',
+      state: 'Gujarat',
+      pincode: '395001'
+    },
+    address: {
+      street: 'Tech Hub Street',
+      area: 'Athwa',
+      pincode: '395001',
+      city: 'Surat',
+      state: 'Gujarat',
+      landmark: 'Near Athwa Gate'
+    },
+    gstNumber: '',
+    emergencyContact: '9876543221',
+    isVerifiedByAdmin: true,
     rating: 4.5,
     isOpen: true
   }
