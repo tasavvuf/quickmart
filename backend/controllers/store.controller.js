@@ -1,4 +1,136 @@
 const Store = require('../models/Store.model');
+const Product = require('../models/Product.model');
+
+const getAllStores = async (req, res) => {
+
+    try {
+
+        const { lat, lng } = req.query;
+
+        if (!lat || !lng) {
+            return res.status(400).json({
+                message: "Latitude and Longitude are required"
+            });
+        }
+
+        const latitude = Number(lat);
+        const longitude = Number(lng);
+
+        if (isNaN(latitude) || isNaN(longitude)) {
+            return res.status(400).json({
+                message: "Invalid coordinates"
+            });
+        }
+
+        const stores = await Store.aggregate([
+
+            {
+                $geoNear: {
+
+                    near: {
+                        type: "Point",
+                        coordinates: [longitude, latitude]
+                    },
+
+                    distanceField: "distance",
+
+                    spherical: true,
+
+                    maxDistance: 100000
+
+                }
+            },
+
+            {
+                $match: {
+
+                    isOpen: true,
+                    isVerifiedByAdmin: true
+
+                }
+            },
+
+            {
+                $lookup: {
+
+                    from: "products",
+
+                    localField: "_id",
+
+                    foreignField: "store",
+
+                    as: "products"
+
+                }
+
+            },
+
+            {
+
+                $addFields: {
+
+                    products: {
+
+                        $filter: {
+
+                            input: "$products",
+
+                            as: "product",
+
+                            cond: {
+
+                                $and: [
+
+                                    {
+                                        $eq: [
+                                            "$$product.featured",
+                                            true
+                                        ]
+                                    },
+                                    {
+                                        $gt: [
+                                            "$$product.stock",
+                                            0
+                                        ]
+                                    }
+
+                                ]
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        ]);
+
+        res.status(200).json({
+
+            success: true,
+
+            stores
+
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+}
 
 const parseStorePayload = (store) => {
   if (!store) {
@@ -71,11 +203,8 @@ const createStoreForVendor = async ({ user, store, userLocation, storePhoto }) =
     emergencyContact: storePayload.emergencyContact || '',
     address,
     location: {
-      ...userLocation,
-      address: `${address.street}, ${address.area}, ${address.city}, ${address.state} ${address.pincode}`,
-      city: address.city,
-      state: address.state,
-      pincode: address.pincode
+      type: "Point",
+      coordinates: [userLocation.lng, userLocation.lat]
     },
     isVerifiedByAdmin: false,
     isOpen: true,
@@ -84,6 +213,7 @@ const createStoreForVendor = async ({ user, store, userLocation, storePhoto }) =
 };
 
 module.exports = {
+  getAllStores,
   createStoreForVendor,
   parseStorePayload,
   validateVendorStorePayload

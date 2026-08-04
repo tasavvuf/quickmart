@@ -25,7 +25,10 @@ export function UserContextProvider({ children }) {
     const checkAuth = async () => {
       try {
         const response = await api.get("/auth/test");
+        console.log("AUTH TEST RESPONSE");
+        console.log(response.data);
         applyAuthenticatedUser(response.data.user);
+        console.log("Applied authenticated user");
       } catch {
         setUser(null);
         setIsLoggedIn(false);

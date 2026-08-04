@@ -100,7 +100,11 @@ const options = {
             emergencyContact: { type: 'string' },
             isVerifiedByAdmin: { type: 'boolean' },
             rating: { type: 'number' },
-            isOpen: { type: 'boolean' }
+            isOpen: { type: 'boolean' },
+            products: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Product' }
+            }
           }
         },
         Product: {
@@ -115,7 +119,7 @@ const options = {
             category: { type: 'string' },
             featured: { type: 'boolean' },
             status: { type: 'string' },
-            store: { $ref: '#/components/schemas/Store' }
+            store: { type: 'string' }
           }
         },
         Cart: {
@@ -141,6 +145,7 @@ const options = {
   },
   apis: [
     path.join(__dirname, '../routes/auth.js'),
+    path.join(__dirname, '../routes/store.js'),
     path.join(__dirname, '../routes/product.js'),
     path.join(__dirname, '../routes/cart.js')
   ]

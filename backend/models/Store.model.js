@@ -35,11 +35,19 @@ const StoreSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+ location: {
+        type: {
+            type: String,
+            enum: ["Point"],
+            default: "Point",
+            required: true
+        },
 
-  location: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true
-  },
+        coordinates: {
+            type: [Number],
+            required: true
+        }
+    },
   address: {
     street: { type: String, required: true, trim: true },
     area: { type: String, required: true, trim: true },
@@ -76,5 +84,7 @@ const StoreSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+StoreSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Store', StoreSchema);

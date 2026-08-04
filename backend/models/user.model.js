@@ -7,9 +7,18 @@ const userSchema = new mongoose.Schema(
     phoneNumber: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    location: {
-      lat: { type: Number, default: 22.2904 },
-      lng: { type: Number, default: 70.7915 }
+ location: {
+        type: {
+            type: String,
+            enum: ["Point"],
+            default: "Point",
+            required: true
+        },
+
+        coordinates: {
+            type: [Number],
+            required: true
+        }
     },
     profilePhoto: {
       url: { type: String, default: "" },
@@ -23,6 +32,6 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 )
-
+userSchema.index({ location: "2dsphere" });
 const userModel = mongoose.model("user", userSchema)
 module.exports = userModel

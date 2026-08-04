@@ -1,8 +1,8 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ArrowLeft, MapPin, Store as StoreIcon, UserRound } from "lucide-react";
-import { LocationDataContext } from "../context/LocationContext";
+import { getGPSLocation } from "../lib/locationService";
 import { api, getApiErrorMessage } from "../lib/api";
 
 const businessTypes = [
@@ -41,12 +41,38 @@ const initialStore = {
 
 export default function VendorSignup() {
   const navigate = useNavigate();
-  const { lat, lng, getUserLocation, message } = useContext(LocationDataContext);
   const [step, setStep] = useState(1);
   const [account, setAccount] = useState(initialAccount);
   const [store, setStore] = useState(initialStore);
   const [storePhoto, setStorePhoto] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Isolated Registration GPS State
+  const [regLat, setRegLat] = useState(null);
+  const [regLng, setRegLng] = useState(null);
+  const [isFetchingGps, setIsFetchingGps] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState("Location is not fetched yet !!!");
+
+  const handleFetchGpsLocation = async () => {
+    setIsFetchingGps(true);
+    setGpsMessage("Requesting vendor GPS location access...");
+    try {
+      const coords = await getGPSLocation();
+      setRegLat(coords.lat);
+      setRegLng(coords.lng);
+      setGpsMessage(`GPS Captured: Lat ${coords.lat.toFixed(4)}, Lng ${coords.lng.toFixed(4)}`);
+      toast.success("Vendor GPS location captured successfully!");
+    } catch (err) {
+      console.warn("GPS failed during vendor signup:", err);
+      setRegLat(null);
+      setRegLng(null);
+      const errTxt = "GPS permission is strictly required for vendor registration. Please enable location access in your browser.";
+      setGpsMessage(errTxt);
+      toast.error(errTxt);
+    } finally {
+      setIsFetchingGps(false);
+    }
+  };
 
   const updateAccount = (field, value) => {
     setAccount((current) => ({ ...current, [field]: value }));
@@ -62,8 +88,8 @@ export default function VendorSignup() {
       return false;
     }
 
-    if (lat == null || lng == null) {
-      toast.error("Please fetch your location before continuing");
+    if (regLat == null || regLng == null) {
+      toast.error("GPS location permission is strictly required for vendor registration. Click 'Fetch vendor GPS location'");
       return false;
     }
 
@@ -128,7 +154,7 @@ export default function VendorSignup() {
       formData.append("email", account.email);
       formData.append("password", account.password);
       formData.append("address", account.address);
-      formData.append("location", JSON.stringify({ lat, lng }));
+      formData.append("location", JSON.stringify({ lat: regLat, lng: regLng }));
       formData.append("role", "vendor");
       formData.append("store", JSON.stringify(storePayload));
 
@@ -200,7 +226,7 @@ export default function VendorSignup() {
                 <label>Name *</label>
                 <input
                   type="text"
-                  value={account.name}
+                  value={account.name || ""}
                   onChange={(event) => updateAccount("name", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Enter your full name"
@@ -216,7 +242,7 @@ export default function VendorSignup() {
                   <input
                     type="tel"
                     inputMode="numeric"
-                    value={account.phoneNumber}
+                    value={account.phoneNumber || ""}
                     onChange={(event) => updateAccount("phoneNumber", event.target.value)}
                     className="app-input min-w-0 flex-1 rounded-r-lg px-4 py-3"
                     placeholder="Enter your phone number"
@@ -228,7 +254,7 @@ export default function VendorSignup() {
                 <label>Username *</label>
                 <input
                   type="text"
-                  value={account.username}
+                  value={account.username || ""}
                   onChange={(event) => updateAccount("username", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Enter your username"
@@ -239,7 +265,7 @@ export default function VendorSignup() {
                 <label>Email Address *</label>
                 <input
                   type="email"
-                  value={account.email}
+                  value={account.email || ""}
                   onChange={(event) => updateAccount("email", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="greenmart@demo.com"
@@ -250,7 +276,7 @@ export default function VendorSignup() {
                 <label>Password *</label>
                 <input
                   type="password"
-                  value={account.password}
+                  value={account.password || ""}
                   onChange={(event) => updateAccount("password", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Create a password"
@@ -261,7 +287,7 @@ export default function VendorSignup() {
                 <label>Vendor Address *</label>
                 <input
                   type="text"
-                  value={account.address}
+                  value={account.address || ""}
                   onChange={(event) => updateAccount("address", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Enter your personal address"
@@ -271,16 +297,17 @@ export default function VendorSignup() {
               <div className="app-panel-soft flex flex-col gap-3 rounded-2xl p-4">
                 <button
                   type="button"
-                  onClick={getUserLocation}
-                  className="app-control flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-amber-500"
+                  disabled={isFetchingGps}
+                  onClick={handleFetchGpsLocation}
+                  className="app-control flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-amber-500 cursor-pointer"
                 >
                   <MapPin size={18} />
-                  Fetch vendor location
+                  {isFetchingGps ? "Requesting GPS Access..." : "Fetch vendor GPS location 📍"}
                 </button>
-                <p className="app-muted text-center text-sm">{message}</p>
-                {lat != null && lng != null && (
+                <p className="app-muted text-center text-sm">{gpsMessage}</p>
+                {regLat != null && regLng != null && (
                   <p className="text-center text-sm font-semibold text-green-500">
-                    Location captured: {lat}, {lng}
+                    ✓ Vendor GPS Captured: {regLat.toFixed(4)}, {regLng.toFixed(4)}
                   </p>
                 )}
               </div>
@@ -303,7 +330,7 @@ export default function VendorSignup() {
                 <label>Shop Name *</label>
                 <input
                   type="text"
-                  value={store.shopName}
+                  value={store.shopName || ""}
                   onChange={(event) => updateStore("shopName", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Enter your shop name"
@@ -313,7 +340,7 @@ export default function VendorSignup() {
               <div className="flex flex-col gap-2">
                 <label>Business Type *</label>
                 <select
-                  value={store.businessType}
+                  value={store.businessType || ""}
                   onChange={(event) => updateStore("businessType", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                 >
@@ -329,7 +356,7 @@ export default function VendorSignup() {
               <div className="flex flex-col gap-2">
                 <label>Shop Description</label>
                 <textarea
-                  value={store.shopDescription}
+                  value={store.shopDescription || ""}
                   onChange={(event) => updateStore("shopDescription", event.target.value)}
                   className="app-input min-h-24 resize-none rounded-lg px-4 py-3"
                   placeholder="Describe your shop and products"
@@ -353,7 +380,7 @@ export default function VendorSignup() {
                 <label>GST Number (Optional)</label>
                 <input
                   type="text"
-                  value={store.gstNumber}
+                  value={store.gstNumber || ""}
                   onChange={(event) => updateStore("gstNumber", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Enter GST number if applicable"
@@ -365,7 +392,7 @@ export default function VendorSignup() {
                 <input
                   type="tel"
                   inputMode="numeric"
-                  value={store.emergencyContact}
+                  value={store.emergencyContact || ""}
                   onChange={(event) => updateStore("emergencyContact", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Emergency contact number"
@@ -376,7 +403,7 @@ export default function VendorSignup() {
                 <label>Shop Address *</label>
                 <input
                   type="text"
-                  value={store.street}
+                  value={store.street || ""}
                   onChange={(event) => updateStore("street", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Street Address"
@@ -384,7 +411,7 @@ export default function VendorSignup() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <input
                     type="text"
-                    value={store.area}
+                    value={store.area || ""}
                     onChange={(event) => updateStore("area", event.target.value)}
                     className="app-input min-w-0 rounded-lg px-4 py-3"
                     placeholder="Area/Locality"
@@ -392,21 +419,21 @@ export default function VendorSignup() {
                   <input
                     type="text"
                     inputMode="numeric"
-                    value={store.pincode}
+                    value={store.pincode || ""}
                     onChange={(event) => updateStore("pincode", event.target.value)}
                     className="app-input min-w-0 rounded-lg px-4 py-3"
                     placeholder="Pincode"
                   />
                   <input
                     type="text"
-                    value={store.city}
+                    value={store.city || ""}
                     onChange={(event) => updateStore("city", event.target.value)}
                     className="app-input min-w-0 rounded-lg px-4 py-3"
                     placeholder="City"
                   />
                   <input
                     type="text"
-                    value={store.state}
+                    value={store.state || ""}
                     onChange={(event) => updateStore("state", event.target.value)}
                     className="app-input min-w-0 rounded-lg px-4 py-3"
                     placeholder="State"
@@ -414,7 +441,7 @@ export default function VendorSignup() {
                 </div>
                 <input
                   type="text"
-                  value={store.landmark}
+                  value={store.landmark || ""}
                   onChange={(event) => updateStore("landmark", event.target.value)}
                   className="app-input rounded-lg px-4 py-3"
                   placeholder="Landmark (Optional)"

@@ -1,20 +1,42 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { LocationDataContext } from "../context/LocationContext";
 import { StoreContext } from "../context/StoreContext";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext";
 import { SmoothInput } from "../components/ui/skiper-ui/skiper106";
-import { Search, X } from "lucide-react";
+import { Search, X, MapPin, RefreshCw } from "lucide-react";
 
 const SEARCH_STORAGE_KEY = "home_search_query";
 
+function SkeletonCard() {
+  return (
+    <div className="app-card flex flex-col justify-between p-4 rounded-3xl min-h-72 w-56 animate-pulse">
+      <div className="flex flex-col items-center">
+        <div className="w-full h-32 rounded-2xl bg-muted/60 mb-3" />
+        <div className="h-5 w-3/4 bg-muted/60 rounded-md mb-2" />
+        <div className="h-4 w-1/2 bg-muted/40 rounded-md" />
+      </div>
+      <div className="app-divider w-full h-px my-2" />
+      <div className="flex justify-between items-center my-2">
+        <div className="h-5 w-12 bg-muted/60 rounded-md" />
+        <div className="h-4 w-16 bg-muted/40 rounded-full" />
+      </div>
+      <div className="h-9 w-full bg-muted/60 rounded-xl" />
+    </div>
+  );
+}
+
 function HomeUI() {
-  const { stores } = useContext(StoreContext);
-  const { isLoggedIn } = useContext(UserContext);
+  const { stores, isLoadingStores } = useContext(StoreContext);
   const { items: cartItems } = useContext(CartContext);
-  const { getUserLocation, message, lat, lng, calculateDistance } =
-    useContext(LocationDataContext);
+  const {
+    lat,
+    lng,
+    locationSource,
+    locationName,
+    rePromptLocationChoice,
+  } = useContext(LocationDataContext);
 
   const [search, setSearch] = useState(
     () => localStorage.getItem(SEARCH_STORAGE_KEY) || ""
@@ -47,27 +69,6 @@ function HomeUI() {
   const searchMatches = (value) =>
     value?.toString().toLowerCase().includes(normalizedQuery);
 
-  const storeDistances = useMemo(() => {
-    if (lat == null || lng == null) return {};
-
-    const distanceMap = {};
-
-    for (const store of stores) {
-      if (store.location?.lat == null || store.location?.lng == null) {
-        continue;
-      }
-
-      distanceMap[store.id] = calculateDistance(
-        lat,
-        lng,
-        store.location.lat,
-        store.location.lng,
-      );
-    }
-
-    return distanceMap;
-  }, [calculateDistance, lat, lng, stores]);
-
   const featuredProducts = stores.flatMap((store) => {
     return store.products
       .filter((product) => product.featured)
@@ -95,11 +96,41 @@ function HomeUI() {
     );
   });
 
+  const locationDisplayLabel = (() => {
+    if (locationSource === "saved") return "Saved Location 🏠";
+    if (locationSource === "gps") return "Current GPS 📍";
+    if (locationSource === "ip") return locationName || "IP Location 🌐";
+    return "Location Set 📍";
+  })();
+
   return (
     <div className={`app-page ${cartItems.length ? "pb-36" : "pb-8"}`}>
-      {/* Search Section */}
+      {/* Search & Location Bar Section */}
       <div className="app-band flex flex-col justify-center items-center gap-4 py-8 px-6">
-        <div className="app-card w-full max-w-2xl rounded-2xl p-3 shadow-lg">
+        <div className="app-card w-full max-w-2xl rounded-2xl p-4 shadow-lg flex flex-col gap-3">
+          {/* Location Badge Indicator */}
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="app-muted">Delivering to:</span>
+              <button
+                type="button"
+                onClick={rePromptLocationChoice}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 hover:bg-amber-400/20 transition cursor-pointer"
+                title="Change location"
+              >
+                <MapPin size={13} />
+                <span>{locationDisplayLabel}</span>
+                <RefreshCw size={11} className="ml-1 opacity-70" />
+              </button>
+            </div>
+
+            {lat != null && lng != null && (
+              <span className="app-muted text-[11px] hidden sm:inline">
+                ({lat.toFixed(3)}, {lng.toFixed(3)})
+              </span>
+            )}
+          </div>
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <SmoothInput
               aria-label="Search products"
@@ -137,7 +168,7 @@ function HomeUI() {
         </div>
 
         {savedQuery && (
-          <div className="mt-2 text-center">
+          <div className="mt-1 text-center">
             <p className="app-muted text-sm">
               Showing results for{" "}
               <span className="text-amber-400 font-semibold">
@@ -148,36 +179,19 @@ function HomeUI() {
         )}
       </div>
 
-      {!isLoggedIn && (
-        <div className="app-band flex-1 flex flex-col justify-center items-center gap-6 py-8 px-6">
-          <button
-            onClick={getUserLocation}
-            className="app-control px-6 py-3 text-amber-500 rounded-lg text-lg"
-          >
-            Fetch Your Location
-          </button>
-
-          <p className="text-xl text-center px-6">{message}</p>
-
-          {lat != null && lng != null && (
-            <p className="text-green-400 text-lg">
-              Lat: {lat} <br />
-              Lng: {lng}
-            </p>
-          )}
-        </div>
-      )}
-
       {/* Featured Products Section */}
-      <div className="mt-8">
+      <div className="mt-6">
         <h1 className="app-heading text-3xl font-bold text-center mb-6">
           Featured Products
         </h1>
-        <div className="flex flex-wrap gap-x-6 gap-y-12 p-6 justify-center items-start">
-          {featuredProducts.map(({ product, store }) => {
-            const distance = storeDistances[store.id];
+        <div className="flex flex-wrap gap-x-6 gap-y-8 p-6 justify-center items-start">
+          {isLoadingStores ? (
+            Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : (
+            featuredProducts.map(({ product, store }) => {
+              const distance = store.distance;
 
-            return (
+              return (
                 <div
                   key={product.id}
                   className="app-card app-card-hover flex flex-col justify-between p-4 rounded-3xl min-h-72 w-56 transition-all duration-300"
@@ -194,7 +208,7 @@ function HomeUI() {
                     <h3 className="text-lg font-bold text-center">
                       {product.name}
                     </h3>
-                    {distance &&
+                    {distance != null &&
                       (distance < 5 ? (
                         <span className="text-xs font-bold text-black px-3 py-1 rounded-full bg-violet-300 mt-2">
                           Delivery in 30 mins ⚡
@@ -207,24 +221,24 @@ function HomeUI() {
                   <div className="app-divider w-full h-px my-2" />
 
                   <div className="flex justify-between items-center">
-                    <span className="text-amber-400 font-mono text-lg">
+                    <span className="text-amber-400 font-mono text-lg font-bold">
                       ₹{product.price}
                     </span>
-                    {(distance && (
-                      <span className="app-muted text-xs bg-muted px-2 py-1 rounded-full">
+                    {distance != null ? (
+                      <span className="app-muted text-xs bg-muted px-2 py-1 rounded-full font-medium">
                         📍 {distance} km away
                       </span>
-                    )) || (
+                    ) : (
                       <span className="app-muted text-[10px] italic">
-                        Fetch location to see distance
+                        Distance unavailable
                       </span>
                     )}
                   </div>
 
-                  <Link to={`/vendor/${store.id}`} className="block w-full">
-                    <button className="app-control w-full py-2 rounded-xl text-sm flex flex-col items-center">
-                      {(distance &&
-                        (distance < 5 ? (
+                  <Link to={`/vendor/${store.id}`} className="block w-full mt-2">
+                    <button className="app-control w-full py-2 rounded-xl text-sm flex flex-col items-center cursor-pointer">
+                      {distance != null ? (
+                        distance < 5 ? (
                           <span className="app-muted text-xs">
                             only ≈ {Math.ceil(distance * 5)} min delivery
                           </span>
@@ -232,18 +246,28 @@ function HomeUI() {
                           <span className="app-muted text-xs">
                             {Math.ceil(distance * 5)} min delivery
                           </span>
-                        ))) || <div></div>}
+                        )
+                      ) : (
+                        <div></div>
+                      )}
                       <span>View Vendor</span>
                     </button>
                   </Link>
                 </div>
-            );
-          })}
+              );
+            })
+          )}
 
-          {!featuredProducts.length && (
-            <div className="app-card w-full rounded-2xl p-6 text-center app-muted">
-              No featured products found for{" "}
-              <span className="font-semibold text-amber-400">{savedQuery}</span>.
+          {!isLoadingStores && !featuredProducts.length && (
+            <div className="app-card w-full max-w-md rounded-2xl p-6 text-center app-muted">
+              {savedQuery ? (
+                <>
+                  No featured products found for{" "}
+                  <span className="font-semibold text-amber-400">{savedQuery}</span>.
+                </>
+              ) : (
+                "No open nearby stores with featured products right now."
+              )}
             </div>
           )}
         </div>
@@ -263,92 +287,104 @@ function HomeUI() {
         <h2 className="app-heading text-3xl font-bold text-center mb-6">
           All Stores
         </h2>
-        <div className="flex flex-wrap gap-x-6 gap-y-12 p-6 justify-center items-start">
-          {filteredStores.map((store) => {
-            const distance = storeDistances[store.id];
+        <div className="flex flex-wrap gap-x-6 gap-y-8 p-6 justify-center items-start">
+          {isLoadingStores ? (
+            Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : (
+            filteredStores.map((store) => {
+              const distance = store.distance;
 
-            return (
-              <div
-                key={store.id}
-                className="app-card app-card-hover flex flex-col justify-between p-4 rounded-3xl min-h-72 w-56 transition-all duration-300"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-full h-24 rounded-2xl overflow-hidden mb-3 bg-muted">
-                    <img
-                      loading="lazy"
-                      src={`${store.logo}?w=300&q=60&auto=format&fit=crop`}
-                      alt={store.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold mb-1">
-                    {store.name}
-                  </h3>
-                  <span className="text-xs font-semibold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full mb-2">
-                    {store.category}
-                  </span>
-                </div>
-
-                <div className="app-divider w-full h-px my-2" />
-
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-1">
-                    <span className="text-amber-400">★</span>
-                    <span className="font-semibold">
-                      {store.rating}
+              return (
+                <div
+                  key={store.id}
+                  className="app-card app-card-hover flex flex-col justify-between p-4 rounded-3xl min-h-72 w-56 transition-all duration-300"
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-24 rounded-2xl overflow-hidden mb-3 bg-muted">
+                      <img
+                        loading="lazy"
+                        src={`${store.logo}?w=300&q=60&auto=format&fit=crop`}
+                        alt={store.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold mb-1 text-center">
+                      {store.name}
+                    </h3>
+                    <span className="text-xs font-semibold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full mb-2">
+                      {store.category}
                     </span>
+                  </div>
+
+                  <div className="app-divider w-full h-px my-2" />
+
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-1">
+                      <span className="text-amber-400">★</span>
+                      <span className="font-semibold text-sm">
+                        {store.rating}
+                      </span>
+                      <span className="app-muted text-xs">
+                        ({store.totalReviews})
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        store.isOpen ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                      }`}
+                    >
+                      {store.isOpen ? "Open" : "Closed"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center mb-3">
                     <span className="app-muted text-xs">
-                      ({store.totalReviews})
+                      {store.products.length} products
                     </span>
-                  </div>
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${store.isOpen ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
-                  >
-                    {store.isOpen ? "Open" : "Closed"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center mb-3">
-                  <span className="app-muted text-xs">
-                    {store.products.length} products
-                  </span>
-                  {distance ? (
-                    <span className="app-muted text-xs bg-muted px-2 py-1 rounded-full">
-                      📍 {distance} km away
-                    </span>
-                  ) : (
-                    <span className="app-muted text-[10px] italic">
-                      Fetch location to see distance
-                    </span>
-                  )}
-                </div>
-
-                <Link to={`/vendor/${store.id}`} className="block w-full">
-                  <button className="app-control w-full py-2 rounded-xl text-sm flex flex-col items-center">
-                    {distance ? (
-                      (distance < 5 ? (
-                        <span className="text-xs text-violet-300 font-bold">
-                          ⚡ Fast Delivery
-                        </span>
-                      ) : (
-                        <span className="app-muted text-xs">
-                          {Math.ceil(distance * 5)} min delivery
-                        </span>
-                      )) || <div></div>
+                    {distance != null ? (
+                      <span className="app-muted text-xs bg-muted px-2 py-1 rounded-full font-medium">
+                        📍 {distance} km away
+                      </span>
                     ) : (
-                      <span></span>
+                      <span className="app-muted text-[10px] italic">
+                        Distance unavailable
+                      </span>
                     )}
-                    <span>Visit Store</span>
-                  </button>
-                </Link>
-              </div>
-            );
-          })}
+                  </div>
 
-          {!filteredStores.length && (
-            <div className="app-card w-full rounded-2xl p-6 text-center app-muted">
-              No stores found for{" "}
-              <span className="font-semibold text-amber-400">{savedQuery}</span>.
+                  <Link to={`/vendor/${store.id}`} className="block w-full">
+                    <button className="app-control w-full py-2 rounded-xl text-sm flex flex-col items-center cursor-pointer">
+                      {distance != null ? (
+                        distance < 5 ? (
+                          <span className="text-xs text-violet-300 font-bold">
+                            ⚡ Fast Delivery
+                          </span>
+                        ) : (
+                          <span className="app-muted text-xs">
+                            {Math.ceil(distance * 5)} min delivery
+                          </span>
+                        )
+                      ) : (
+                        <span></span>
+                      )}
+                      <span>Visit Store</span>
+                    </button>
+                  </Link>
+                </div>
+              );
+            })
+          )}
+
+          {!isLoadingStores && !filteredStores.length && (
+            <div className="app-card w-full max-w-md rounded-2xl p-6 text-center app-muted">
+              {savedQuery ? (
+                <>
+                  No stores found for{" "}
+                  <span className="font-semibold text-amber-400">{savedQuery}</span>.
+                </>
+              ) : (
+                "No open stores near your location."
+              )}
             </div>
           )}
         </div>
@@ -356,4 +392,5 @@ function HomeUI() {
     </div>
   );
 }
+
 export default HomeUI;
