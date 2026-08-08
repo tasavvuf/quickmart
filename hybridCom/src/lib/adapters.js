@@ -28,6 +28,17 @@ const parseStoreLocation = (location) => {
   };
 };
 
+export const formatAddress = (addr) => {
+  if (!addr) return "";
+  if (typeof addr === "string") return addr;
+  if (typeof addr === "object") {
+    if (addr.fullAddress) return addr.fullAddress;
+    const parts = [addr.street, addr.area, addr.landmark, addr.city, addr.state, addr.pincode].filter(Boolean);
+    if (parts.length > 0) return parts.join(", ");
+  }
+  return "";
+};
+
 export const adaptProduct = (product) => ({
   id: normalizeId(product),
   _id: normalizeId(product),
@@ -66,7 +77,8 @@ export const adaptStore = (store, products = []) => {
     owner: store?.owner || null,
     gstNumber: store?.gstNumber || "",
     emergencyContact: store?.emergencyContact || "",
-    address: store?.address || null,
+    address: formatAddress(store?.address),
+    rawAddress: store?.address || null,
     isVerifiedByAdmin: Boolean(store?.isVerifiedByAdmin),
     distance: distanceInKm,
     products: (storeProducts || []).map(adaptProduct),
@@ -131,7 +143,7 @@ export const adaptUser = (user) => {
     phoneNumber: user.phoneNumber || "",
     email: user.email || "",
     avatar,
-    address: activeAddress?.fullAddress || user.address || "",
+    address: activeAddress?.fullAddress || formatAddress(user.address) || "Surat, Gujarat, India",
     addresses,
     activeAddressId,
     selectedAddressId: activeAddressId,

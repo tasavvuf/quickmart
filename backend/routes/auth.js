@@ -185,10 +185,11 @@
 const express = require("express")
 const authController = require("../controllers/auth.controller.js")
 const { verifyToken } = require("../middleware/auth.middleware.js")
-const { uploadProfilePhoto } = require("../middleware/upload.middleware.js")
+const { uploadProfilePhoto, uploadDeliveryDocuments } = require("../middleware/upload.middleware.js")
 const router = express.Router()
 
 router.post("/reg", uploadProfilePhoto, authController.regUser)
+router.post("/reg/delivery", uploadDeliveryDocuments, authController.regUser)
 router.post("/login", authController.loginUser)
 
 router.get("/test", verifyToken, async (req, res) => {

@@ -122,9 +122,12 @@ const OrderSchema = new mongoose.Schema(
       },
     ],
     acceptedAt: { type: Date },
+    assignedAt: { type: Date },
     preparedAt: { type: Date },
     pickedUpAt: { type: Date },
     deliveredAt: { type: Date },
+    // 4-digit delivery verification OTP (hidden by default via select: false)
+    deliveryOtp: { type: String, select: false },
   },
   { timestamps: true }
 );

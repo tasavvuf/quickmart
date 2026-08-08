@@ -173,6 +173,8 @@ exports.checkout = async (req, res) => {
       ];
     }
 
+    const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
     const order = await Order.create({
       customer: user._id,
       store: storeId,
@@ -187,6 +189,7 @@ exports.checkout = async (req, res) => {
       userStatus: "ACTIVE",
       vendorStatus: "PENDING",
       deliveryStatus: "WAITING",
+      deliveryOtp,
       deliveryAddress: {
         street: deliveryAddressPayload.street || "",
         area: deliveryAddressPayload.area || "",

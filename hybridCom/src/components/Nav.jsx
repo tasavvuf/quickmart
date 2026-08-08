@@ -25,9 +25,10 @@ function Nav() {
   const isStorePage = location.pathname === "/store" || location.pathname.startsWith("/vendor");
   const avatarInitial = (user?.name?.trim()?.charAt(0) || user?.userName?.trim()?.charAt(0) || user?.username?.trim()?.charAt(0) || "U").toUpperCase();
   const isVendor = isLoggedIn && user?.role === "vendor";
+  const isDeliveryPartner = isLoggedIn && user?.role === "deliveryPartner";
 
   const fetchActiveOrder = useCallback(async () => {
-    if (!isLoggedIn || isVendor) return;
+    if (!isLoggedIn || isVendor || isDeliveryPartner) return;
     try {
       const res = await api.get("/orders");
       if (res.data?.success && Array.isArray(res.data.orders)) {
@@ -42,17 +43,16 @@ function Nav() {
     } catch (err) {
       console.error("Nav order check error", err);
     }
-  }, [isLoggedIn, isVendor]);
+  }, [isLoggedIn, isVendor, isDeliveryPartner]);
 
   useEffect(() => {
     fetchActiveOrder();
 
-    // Check for active order updates every 5s if user is logged in
-    if (isLoggedIn && !isVendor) {
+    if (isLoggedIn && !isVendor && !isDeliveryPartner) {
       const interval = setInterval(fetchActiveOrder, 5000);
       return () => clearInterval(interval);
     }
-  }, [fetchActiveOrder, isLoggedIn, isVendor, location.pathname]);
+  }, [fetchActiveOrder, isLoggedIn, isVendor, isDeliveryPartner, location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -71,11 +71,17 @@ function Nav() {
     }
   };
 
+  const getBrandDestination = () => {
+    if (isVendor) return "/vendor-dashboard";
+    if (isDeliveryPartner) return "/delivery/dashboard";
+    return "/";
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b-2 border-border bg-background/95 backdrop-blur-md transition-colors duration-300">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
         {/* Brand Logo */}
-        <Link to={isVendor ? "/vendor-dashboard" : "/"} className="group flex items-center gap-2.5">
+        <Link to={getBrandDestination()} className="group flex items-center gap-2.5">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-black text-2xl shadow-md border-2 border-border group-hover:scale-105 transition-transform">
             E
           </div>
@@ -87,6 +93,13 @@ function Nav() {
                   Vendor
                 </span>
               </span>
+            ) : isDeliveryPartner ? (
+              <span className="flex items-center gap-2">
+                Local Ecom 
+                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  Partner
+                </span>
+              </span>
             ) : (
               <span>Local Ecom</span>
             )}
@@ -95,7 +108,7 @@ function Nav() {
 
         <div className="flex items-center gap-3">
           {/* Active Order Button on Nav if customer has an ongoing order */}
-          {isLoggedIn && !isVendor && activeOrder && (
+          {isLoggedIn && !isVendor && !isDeliveryPartner && activeOrder && (
             <Link
               to={`/orders/${activeOrder._id}`}
               className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition shadow-md shadow-amber-500/20 active:scale-95"
@@ -128,7 +141,7 @@ function Nav() {
 
           {isLoggedIn ? (
             <div className="flex items-center gap-2">
-              {!isVendor && (
+              {!isVendor && !isDeliveryPartner && (
                 <Link
                   to={"/user"}
                   className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-border bg-card text-base font-black text-foreground transition hover:border-sunyellow hover:scale-105"
@@ -146,10 +159,10 @@ function Nav() {
                   )}
                 </Link>
               )}
-              {isVendor && (
+              {(isVendor || isDeliveryPartner) && (
                 <div
                   className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-card text-base font-black text-foreground shadow-sm"
-                  title={user?.username || "Vendor"}
+                  title={user?.username || user?.name || "Partner"}
                 >
                   {avatarInitial}
                 </div>
@@ -182,6 +195,9 @@ function Nav() {
                   </Link>
                   <Link to={"/signup"}>
                     <button className="btn-primary px-5 py-2.5 text-xs font-black">User Signup</button>
+                  </Link>
+                  <Link to={"/delivery/login"}>
+                    <button className="btn-secondary px-5 py-2.5 text-xs font-black">Delivery Portal</button>
                   </Link>
                 </>
               )}

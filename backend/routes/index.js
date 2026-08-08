@@ -7,6 +7,7 @@ const authRoutes = require('./auth');
 const storeRoutes = require('./store');
 const vendorRoutes = require('./vendor');
 const orderRoutes = require('./order');
+const deliveryRoutes = require('./delivery');
 
 // Basic test route
 router.get('/', (req, res) => {
@@ -32,5 +33,8 @@ router.use('/orders', orderRoutes);
 
 // Vendor module routes
 router.use('/vendor', vendorRoutes);
+
+// Delivery partner routes
+router.use('/delivery', deliveryRoutes);
 
 module.exports = router;

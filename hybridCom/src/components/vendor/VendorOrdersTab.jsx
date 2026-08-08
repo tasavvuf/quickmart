@@ -240,22 +240,27 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
                         className="px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold transition-all shadow-md shadow-purple-500/20 cursor-pointer disabled:opacity-50">Mark Ready</button>
                     )}
                     {order.vendorStatus === "READY" && (
-                      <button disabled={isUpdating} onClick={() => handleStatusChange(order._id, "PICKED_UP")}
-                        className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-md shadow-cyan-500/20 cursor-pointer disabled:opacity-50">
-                        Mark Picked Up
-                      </button>
+                      <div className="flex items-center gap-2 text-xs">
+                        {order.deliveryPartner ? (
+                          <span className="text-cyan-400 font-bold bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/30 flex items-center gap-1.5">
+                            <PackageCheck size={14} /> Assigned to Partner: {order.deliveryPartner.name}
+                          </span>
+                        ) : (
+                          <span className="text-amber-400 font-bold bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30">
+                            Waiting for Delivery Partner Pickup
+                          </span>
+                        )}
+                      </div>
                     )}
                     {order.vendorStatus === "PICKED_UP" && (
-                      <button disabled={isUpdating} onClick={() => handleStatusChange(order._id, "OUT_FOR_DELIVERY")}
-                        className="px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50">
-                        Out for Delivery
-                      </button>
+                      <span className="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-4 py-2 rounded-xl border border-indigo-500/30 flex items-center gap-1.5">
+                        <PackageCheck size={14} /> Picked Up by Partner ({order.deliveryPartner?.name || "Rider"})
+                      </span>
                     )}
                     {order.vendorStatus === "OUT_FOR_DELIVERY" && (
-                      <button disabled={isUpdating} onClick={() => handleStatusChange(order._id, "DELIVERED")}
-                        className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all shadow-md shadow-green-500/20 cursor-pointer disabled:opacity-50">
-                        Mark Delivered
-                      </button>
+                      <span className="text-xs text-blue-400 font-bold bg-blue-500/10 px-4 py-2 rounded-xl border border-blue-500/30 flex items-center gap-1.5">
+                        <PackageCheck size={14} /> Out for Delivery ({order.deliveryPartner?.name || "Rider"})
+                      </span>
                     )}
                     {order.vendorStatus === "DELIVERED" && (
                       <span className="text-xs text-green-500 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/30 flex items-center gap-1.5">

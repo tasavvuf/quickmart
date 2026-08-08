@@ -1,0 +1,16 @@
+# AI Agent Directives & Instructions
+
+Attention AI Agent: Before analyzing or modifying this codebase, you MUST read the complete project documentation to understand the architecture, database schemas, state machines, and business logic.
+
+## 📖 Required Documentation Reading List:
+1. **Repository Overview**: [`README.md`](file:///home/tasavvuf/500GB_Drive/Projects/Web_Dev/ecom-final/README.md)
+2. **System Architecture & State Machines**: [`docs/ARCHITECTURE.md`](file:///home/tasavvuf/500GB_Drive/Projects/Web_Dev/ecom-final/docs/ARCHITECTURE.md)
+3. **REST API Reference**: [`docs/API_DOCUMENTATION.md`](file:///home/tasavvuf/500GB_Drive/Projects/Web_Dev/ecom-final/docs/API_DOCUMENTATION.md)
+4. **Agent Guidelines & Business Rules**: [`.agents/AGENTS.md`](file:///home/tasavvuf/500GB_Drive/Projects/Web_Dev/ecom-final/.agents/AGENTS.md)
+
+## 📌 Core Invariants:
+- **Featured Products**: Maximum 3 featured products per store.
+- **Delivery Radius**: Orders available to delivery partners within 20km Haversine distance from store.
+- **Atomic Acceptance**: Order claiming must use `findOneAndUpdate` with `deliveryPartner: null` lock to avoid race conditions.
+- **Document Privacy**: Uploaded verification documents are accessible strictly to admins.
+- **Order Handoff**: Vendor status transitions stop at `READY`. Delivery partner advances `ASSIGNED` → `PICKED_UP` → `OUT_FOR_DELIVERY` → `DELIVERED`.

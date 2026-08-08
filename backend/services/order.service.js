@@ -1,13 +1,13 @@
 const Order = require("../models/Order.model");
 const Product = require("../models/Product.model");
 
+// Vendor-side status transitions — vendor responsibility ends at READY
+// Delivery partner handles PICKED_UP → OUT_FOR_DELIVERY → DELIVERED
 const ALLOWED_TRANSITIONS = {
   PENDING: ["ACCEPTED", "REJECTED"],
   ACCEPTED: ["PREPARING"],
   PREPARING: ["READY"],
-  READY: ["PICKED_UP"],
-  PICKED_UP: ["OUT_FOR_DELIVERY"],
-  OUT_FOR_DELIVERY: ["DELIVERED"],
+  READY: [],         // Vendor done — delivery partner takes over
   DELIVERED: [],
   REJECTED: [],
 };
@@ -115,17 +115,6 @@ const updateOrderStatus = async (storeId, orderId, newVendorStatus, updatedBy = 
 
   if (newVendorStatus === "PREPARING") {
     order.preparedAt = new Date();
-  } else if (newVendorStatus === "PICKED_UP") {
-    order.deliveryStatus = "PICKED_UP";
-    order.pickedUpAt = new Date();
-  } else if (newVendorStatus === "OUT_FOR_DELIVERY") {
-    order.deliveryStatus = "OUT_FOR_DELIVERY";
-  } else if (newVendorStatus === "DELIVERED") {
-    order.deliveryStatus = "DELIVERED";
-    order.deliveredAt = new Date();
-    if (order.paymentType === "COD") {
-      order.paymentStatus = "PAID";
-    }
   }
 
   order.vendorStatus = newVendorStatus;

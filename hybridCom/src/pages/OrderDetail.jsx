@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Package,
   Copy,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -214,6 +215,41 @@ export default function OrderDetail() {
             </div>
           )}
         </div>
+
+        {/* Delivery OTP Verification Card for Customer */}
+        {order.deliveryOtp && !isCancelled && order.deliveryStatus !== "DELIVERED" && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 my-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center font-black shrink-0">
+                <ShieldCheck size={24} />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                  Delivery Verification PIN
+                </span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Share this 4-digit PIN with your delivery partner upon arrival to complete delivery.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-xl border border-amber-500/40">
+              <span className="font-mono text-2xl font-black text-amber-400 tracking-widest">
+                {order.deliveryOtp}
+              </span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(order.deliveryOtp);
+                  toast.success("Delivery OTP copied to clipboard!");
+                }}
+                className="p-1.5 rounded-lg text-xs text-amber-400 hover:bg-amber-500/20 transition cursor-pointer"
+                title="Copy OTP"
+              >
+                <Copy size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Divider */}
         <div className="pt-2 border-t border-border" />

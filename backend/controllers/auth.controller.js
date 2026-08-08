@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const {
   uploadProfilePhoto,
   uploadStorePhoto,
+  uploadDeliveryDocument,
 } = require("../services/imagekit.service.js");
 const {
   createStoreForVendor,
@@ -27,14 +28,14 @@ const parseLocation = (location) => {
   return location;
 };
 
-const formatUserResponse = (user) => {
+const formatUserResponse = (user, requestingUser = null) => {
   const addresses = user.addresses || [];
   const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0] || null;
   const selectedAddr =
     addresses.find((a) => String(a._id) === String(user.selectedAddressId)) ||
     defaultAddr;
 
-  return {
+  const response = {
     _id: user._id,
     userName: user.userName,
     name: user.name,
@@ -50,15 +51,36 @@ const formatUserResponse = (user) => {
     profilePhoto: user.profilePhoto,
     role: user.role,
   };
+
+  // Include delivery partner profile for deliveryPartner role
+  if (user.role === "deliveryPartner" && user.deliveryPartnerProfile) {
+    const profile = user.deliveryPartnerProfile.toObject
+      ? user.deliveryPartnerProfile.toObject()
+      : { ...user.deliveryPartnerProfile };
+
+    // Documents are only visible to admin
+    const isAdmin = requestingUser && requestingUser.role === "admin";
+    if (!isAdmin) {
+      delete profile.documents;
+    }
+
+    response.deliveryPartnerProfile = profile;
+  }
+
+  return response;
 };
 
-const PUBLIC_AUTH_ROLES = ["user", "vendor"];
+const PUBLIC_AUTH_ROLES = ["user", "vendor", "deliveryPartner"];
 
 const normalizeAuthRole = (role = "user") => {
-  const normalizedRole = String(role || "user")
-    .trim()
-    .toLowerCase();
-  return PUBLIC_AUTH_ROLES.includes(normalizedRole) ? normalizedRole : null;
+  const input = String(role || "user").trim();
+  const lower = input.toLowerCase();
+
+  if (lower === "deliverypartner") return "deliveryPartner";
+  if (lower === "vendor") return "vendor";
+  if (lower === "user") return "user";
+  if (lower === "admin") return "admin";
+  return null;
 };
 
 const getRoleMismatchMessage = (actualRole, requestedRole) => {
@@ -66,8 +88,12 @@ const getRoleMismatchMessage = (actualRole, requestedRole) => {
     return "Only vendor accounts can login from the vendor login page";
   }
 
-  if (requestedRole === "user" && actualRole === "vendor") {
-    return "Vendor accounts cannot login from the user login page";
+  if (requestedRole === "deliveryPartner" && actualRole !== "deliveryPartner") {
+    return "Only delivery partner accounts can login from the delivery partner portal";
+  }
+
+  if (requestedRole === "user" && actualRole !== "user") {
+    return "Customer login page is restricted to customer accounts";
   }
 
   return `This login page is only for ${requestedRole} accounts`;
@@ -102,7 +128,7 @@ const regUser = async (req, res) => {
     if (!requestedRole) {
       return res
         .status(400)
-        .json({ message: "Role must be either user or vendor" });
+        .json({ message: "Role must be user, vendor, or deliveryPartner" });
     }
 
     if (requestedRole === "vendor") {
@@ -167,6 +193,31 @@ const regUser = async (req, res) => {
       ],
     });
 
+    // Delivery partner profile setup
+    if (requestedRole === "deliveryPartner") {
+      const dpProfile = req.body.deliveryPartnerProfile;
+      let parsedProfile = dpProfile;
+      if (typeof dpProfile === "string") {
+        try { parsedProfile = JSON.parse(dpProfile); } catch { parsedProfile = {}; }
+      }
+      parsedProfile = parsedProfile || {};
+
+      user.deliveryPartnerProfile = {
+        dateOfBirth: parsedProfile.dateOfBirth || "",
+        emergencyContactName: parsedProfile.emergencyContactName || "",
+        emergencyContactNumber: parsedProfile.emergencyContactNumber || "",
+        currentAddress: parsedProfile.currentAddress || {},
+        vehicleType: parsedProfile.vehicleType || "",
+        vehicleNumber: parsedProfile.vehicleNumber || "",
+        drivingLicenseNumber: parsedProfile.drivingLicenseNumber || "",
+        vehicleModel: parsedProfile.vehicleModel || "",
+        insuranceNumber: parsedProfile.insuranceNumber || "",
+        isVerified: false,
+        isAvailable: true,
+        currentOrderId: null,
+      };
+    }
+
     if (user.addresses && user.addresses.length > 0) {
       user.selectedAddressId = String(user.addresses[0]._id);
     }
@@ -174,8 +225,22 @@ const regUser = async (req, res) => {
     const profilePhotoFile = req.files?.profilePhoto?.[0];
     const storePhotoFile = req.files?.storePhoto?.[0];
 
-    if (requestedRole === "user" && profilePhotoFile) {
+    if ((requestedRole === "user" || requestedRole === "deliveryPartner") && profilePhotoFile) {
       user.profilePhoto = await uploadProfilePhoto(profilePhotoFile, user._id);
+    }
+
+    // Upload delivery partner documents
+    if (requestedRole === "deliveryPartner" && req.files) {
+      const docTypes = ["drivingLicense", "vehicleRC", "vehicleInsurance", "aadhaarCard", "panCard"];
+      for (const docType of docTypes) {
+        const docFile = req.files[docType]?.[0];
+        if (docFile) {
+          const uploaded = await uploadDeliveryDocument(docFile, user._id, docType);
+          if (uploaded) {
+            user.deliveryPartnerProfile.documents[docType] = uploaded;
+          }
+        }
+      }
     }
 
     await user.save();
@@ -243,7 +308,7 @@ const loginUser = async (req, res) => {
     if (!requestedRole) {
       return res
         .status(400)
-        .json({ message: "Role must be either user or vendor" });
+        .json({ message: "Role must be user, vendor, or deliveryPartner" });
     }
 
     // Find user by email or userName

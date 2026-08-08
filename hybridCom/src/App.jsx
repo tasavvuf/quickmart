@@ -11,6 +11,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VendorLogin from "./pages/VendorLogin";
 import VendorSignup from "./pages/VendorSignup";
+import DeliveryLogin from "./pages/DeliveryLogin";
+import DeliverySignup from "./pages/DeliverySignup";
+import DeliveryDashboard from "./pages/DeliveryDashboard";
 import Store from "./pages/Store";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -25,6 +28,7 @@ function App() {
   const { user, isLoggedIn, isCheckingAuth } = useContext(UserContext);
 
   const isVendor = isLoggedIn && user?.role === "vendor";
+  const isDeliveryPartner = isLoggedIn && user?.role === "deliveryPartner";
 
   // While checking auth, render nothing (prevents flash of wrong routes)
   if (isCheckingAuth) {
@@ -39,7 +43,7 @@ function App() {
     );
   }
 
-  // Vendor gets ONLY vendor routes - no customer UI at all
+  // Vendor gets ONLY vendor routes
   if (isVendor) {
     return (
       <div className="app-shell">
@@ -48,13 +52,32 @@ function App() {
         <div className="flex-1 min-h-0 relative z-10">
           <Routes>
             <Route path="/vendor-dashboard" element={<VendorDashboard />} />
-            {/* Allow auth pages so vendor can logout/re-login */}
             <Route path="/vendor-login" element={<Navigate to="/vendor-dashboard" replace />} />
             <Route path="/vendor-signup" element={<Navigate to="/vendor-dashboard" replace />} />
             <Route path="/login" element={<Navigate to="/vendor-dashboard" replace />} />
             <Route path="/signup" element={<Navigate to="/vendor-dashboard" replace />} />
-            {/* Catch-all: any other route sends vendor to their dashboard */}
             <Route path="*" element={<Navigate to="/vendor-dashboard" replace />} />
+          </Routes>
+        </div>
+        <ToastContainer />
+      </div>
+    );
+  }
+
+  // Delivery Partner gets Delivery Dashboard UI
+  if (isDeliveryPartner) {
+    return (
+      <div className="app-shell">
+        <SeamlessPillBackground />
+        <Nav />
+        <div className="flex-1 min-h-0 relative z-10">
+          <Routes>
+            <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+            <Route path="/delivery/login" element={<Navigate to="/delivery/dashboard" replace />} />
+            <Route path="/delivery/signup" element={<Navigate to="/delivery/dashboard" replace />} />
+            <Route path="/login" element={<Navigate to="/delivery/dashboard" replace />} />
+            <Route path="/signup" element={<Navigate to="/delivery/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/delivery/dashboard" replace />} />
           </Routes>
         </div>
         <ToastContainer />
@@ -76,12 +99,21 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/vendor-login" element={<VendorLogin />} />
           <Route path="/vendor-signup" element={<VendorSignup />} />
+          <Route path="/delivery/login" element={<DeliveryLogin />} />
+          <Route path="/delivery/signup" element={<DeliverySignup />} />
+          <Route
+            path="/delivery/dashboard"
+            element={
+              isLoggedIn
+                ? <Navigate to="/" replace />
+                : <Navigate to="/delivery/login" replace />
+            }
+          />
           <Route path="/cart" element={<Cart />} />
           <Route path="/user" element={<UserPage />} />
           <Route path="/address-book" element={<AddressBook />} />
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/orders/:orderId" element={<OrderDetail />} />
-          {/* Non-vendor trying to access vendor dashboard -> redirect to login */}
           <Route
             path="/vendor-dashboard"
             element={

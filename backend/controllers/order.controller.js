@@ -6,6 +6,7 @@ const Order = require("../models/Order.model");
 exports.getUserOrders = async (req, res) => {
   try {
     const orders = await Order.find({ customer: req.user._id })
+      .select("+deliveryOtp")
       .populate("store", "name storePhoto logo address emergencyContact")
       .populate("deliveryPartner", "name phoneNumber")
       .sort({ createdAt: -1 });
@@ -31,6 +32,7 @@ exports.getOrderById = async (req, res) => {
       _id: req.params.orderId,
       customer: req.user._id,
     })
+      .select("+deliveryOtp")
       .populate("store", "name storePhoto logo address emergencyContact")
       .populate("deliveryPartner", "name phoneNumber");
 

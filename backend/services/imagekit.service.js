@@ -66,4 +66,26 @@ const uploadStorePhoto = async (file, storeOwnerId) => {
   }
 }
 
-module.exports = { uploadProfilePhoto, uploadStorePhoto }
+const uploadDeliveryDocument = async (file, partnerId, docType) => {
+  if (!file) {
+    return null
+  }
+
+  const extension = file.originalname?.split(".").pop() || "jpg"
+  const result = await getImageKit().upload({
+    file: file.buffer,
+    fileName: `${partnerId}-${docType}-${Date.now()}.${extension}`,
+    folder: `/HOME/delivery-docs/${partnerId}`,
+    useUniqueFileName: true
+  })
+
+  return {
+    url: result.url,
+    fileId: result.fileId,
+    name: result.name,
+    thumbnailUrl: result.thumbnailUrl
+  }
+}
+
+module.exports = { uploadProfilePhoto, uploadStorePhoto, uploadDeliveryDocument }
+

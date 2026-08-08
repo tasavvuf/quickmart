@@ -317,8 +317,119 @@ async function seed() {
       updatedAt: new Date('2026-08-04T09:00:38.863Z')
     });
 
+    // Seed Delivery Partners
+    const emptyDoc = { url: '', fileId: '', name: '', thumbnailUrl: '' };
+
+    const rahulAddrId = new mongoose.Types.ObjectId();
+    ownersToCreate.push({
+      userName: 'rahul_rider',
+      name: 'Rahul Sharma',
+      phoneNumber: '9876543201',
+      email: 'rahul@delivery.com',
+      password: 'test',
+      role: 'deliveryPartner',
+      location: { type: 'Point', coordinates: [70.7920, 22.2860] },
+      address: 'Sardarnagar, Rajkot, Gujarat',
+      addresses: [
+        {
+          _id: rahulAddrId,
+          label: 'Home',
+          fullAddress: 'Sardarnagar, Rajkot, Gujarat',
+          street: 'Sardarnagar Main Rd',
+          area: 'Sardarnagar',
+          city: 'Rajkot',
+          state: 'Gujarat',
+          pincode: '360001',
+          location: { type: 'Point', coordinates: [70.7920, 22.2860] },
+          isDefault: true
+        }
+      ],
+      selectedAddressId: String(rahulAddrId),
+      profilePhoto: {
+        url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rahulrider',
+        fileId: '', name: 'Rahul Avatar',
+        thumbnailUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rahulrider'
+      },
+      deliveryPartnerProfile: {
+        dateOfBirth: '1998-03-15',
+        emergencyContactName: 'Suresh Sharma',
+        emergencyContactNumber: '9876543100',
+        currentAddress: {
+          street: 'Sardarnagar Main Rd', area: 'Sardarnagar',
+          pincode: '360001', city: 'Rajkot', state: 'Gujarat', landmark: 'Near Poojara Telecom'
+        },
+        vehicleType: 'Motorcycle',
+        vehicleNumber: 'GJ-03-AB-1234',
+        drivingLicenseNumber: 'GJ0320220001234',
+        vehicleModel: 'Honda Activa 6G',
+        insuranceNumber: 'INS-2026-001234',
+        documents: {
+          drivingLicense: emptyDoc, vehicleRC: emptyDoc,
+          vehicleInsurance: emptyDoc, aadhaarCard: emptyDoc,
+          panCard: emptyDoc, profilePhoto: emptyDoc,
+        },
+        isVerified: true,
+        isAvailable: true,
+        currentOrderId: null,
+      }
+    });
+
+    const amitAddrId = new mongoose.Types.ObjectId();
+    ownersToCreate.push({
+      userName: 'amit_driver',
+      name: 'Amit Patel',
+      phoneNumber: '9876543202',
+      email: 'amit@delivery.com',
+      password: 'test',
+      role: 'deliveryPartner',
+      location: { type: 'Point', coordinates: [70.7780, 22.2840] },
+      address: 'Kotecha Nagar, Rajkot, Gujarat',
+      addresses: [
+        {
+          _id: amitAddrId,
+          label: 'Home',
+          fullAddress: 'Kotecha Nagar, Rajkot, Gujarat',
+          street: 'Amin Marg',
+          area: 'Kotecha Nagar',
+          city: 'Rajkot',
+          state: 'Gujarat',
+          pincode: '360002',
+          location: { type: 'Point', coordinates: [70.7780, 22.2840] },
+          isDefault: true
+        }
+      ],
+      selectedAddressId: String(amitAddrId),
+      profilePhoto: {
+        url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=amitdriver',
+        fileId: '', name: 'Amit Avatar',
+        thumbnailUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=amitdriver'
+      },
+      deliveryPartnerProfile: {
+        dateOfBirth: '1996-07-22',
+        emergencyContactName: 'Rajesh Patel',
+        emergencyContactNumber: '9876543200',
+        currentAddress: {
+          street: 'Amin Marg', area: 'Kotecha Nagar',
+          pincode: '360002', city: 'Rajkot', state: 'Gujarat', landmark: 'Near Track Side Tadka'
+        },
+        vehicleType: 'Scooter',
+        vehicleNumber: 'GJ-03-CD-5678',
+        drivingLicenseNumber: 'GJ0320220005678',
+        vehicleModel: 'TVS Jupiter',
+        insuranceNumber: 'INS-2026-005678',
+        documents: {
+          drivingLicense: emptyDoc, vehicleRC: emptyDoc,
+          vehicleInsurance: emptyDoc, aadhaarCard: emptyDoc,
+          panCard: emptyDoc, profilePhoto: emptyDoc,
+        },
+        isVerified: true,
+        isAvailable: true,
+        currentOrderId: null,
+      }
+    });
+
     const createdUsers = await User.insertMany(ownersToCreate);
-    console.log(`Successfully created ${createdUsers.length} Users (Owners & Admin).`);
+    console.log(`Successfully created ${createdUsers.length} Users (Owners, Admin & Delivery Partners).`);
 
     // 2. Create Stores matching Store model strict schema
     const storesToCreate = inputStoresData.map((item, index) => {

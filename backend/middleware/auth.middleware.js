@@ -37,4 +37,16 @@ const verifyVendor = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, verifyVendor };
+// @desc    Middleware to verify that authenticated user has deliveryPartner role
+// @access  Private (Delivery Partner only)
+const verifyDeliveryPartner = (req, res, next) => {
+  if (!req.user || req.user.role !== "deliveryPartner") {
+    return res.status(403).json({
+      success: false,
+      message: "Forbidden: Delivery Partner privileges required.",
+    });
+  }
+  next();
+};
+
+module.exports = { verifyToken, verifyVendor, verifyDeliveryPartner };
