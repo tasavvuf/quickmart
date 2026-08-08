@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,800,700,500,400&display=swap');
+
+.admin-monochrome {
+  font-family: 'Satoshi', 'Satoshi Fallback', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
 
 @custom-variant dark (&:is(.dark *));
 

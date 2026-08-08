@@ -132,3 +132,32 @@ Advances delivery status.
 
 ### `GET /api/delivery/my-orders`
 Returns partner's completed delivery history.
+
+---
+
+## 🛡️ 7. Admin Control Console (`/api/admin`)
+
+*Requires `Authorization: Bearer <token>` and `role === "admin"`. All other roles receive `403 Forbidden`.*
+
+### `GET /api/admin/overview`
+Returns platform-wide KPIs (Total Revenue, Orders, Active Stores, Pending Approvals, Delivery Fleet, Pending Verifications) and recent cross-store order stream.
+
+### `GET /api/admin/stores?status=ALL|PENDING_APPROVAL|VERIFIED`
+Returns stores matching approval filter.
+
+### `PATCH /api/admin/stores/:storeId/verify`
+Approves (`isVerifiedByAdmin: true`) or revokes store approval.
+- **Payload**: `{ isApproved: true | false }`
+
+### `GET /api/admin/vendors`
+Lists all vendor user accounts with associated store info.
+
+### `GET /api/admin/delivery-partners`
+Lists all registered delivery partners with **unredacted ImageKit verification documents** (Driving License, RC, Insurance, Aadhaar Card, PAN Card).
+
+### `PATCH /api/admin/delivery-partners/:partnerId/verify`
+Approves rider verification status.
+- **Payload**: `{ isVerified: true | false }`
+
+### `GET /api/admin/orders?status=ALL|PENDING|READY|DELIVERED`
+Lists all platform orders across all stores with full populate parameters.

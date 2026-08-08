@@ -14,6 +14,8 @@ import VendorSignup from "./pages/VendorSignup";
 import DeliveryLogin from "./pages/DeliveryLogin";
 import DeliverySignup from "./pages/DeliverySignup";
 import DeliveryDashboard from "./pages/DeliveryDashboard";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import Store from "./pages/Store";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -29,6 +31,7 @@ function App() {
 
   const isVendor = isLoggedIn && user?.role === "vendor";
   const isDeliveryPartner = isLoggedIn && user?.role === "deliveryPartner";
+  const isAdmin = isLoggedIn && user?.role === "admin";
 
   // While checking auth, render nothing (prevents flash of wrong routes)
   if (isCheckingAuth) {
@@ -85,6 +88,22 @@ function App() {
     );
   }
 
+  // Admin gets Admin Console UI
+  if (isAdmin) {
+    return (
+      <div className="app-shell bg-slate-950">
+        <div className="flex-1 min-h-0 relative z-10">
+          <Routes>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/login" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+          </Routes>
+        </div>
+        <ToastContainer />
+      </div>
+    );
+  }
+
   // Normal customer/guest routes
   return (
     <div className="app-shell">
@@ -101,6 +120,11 @@ function App() {
           <Route path="/vendor-signup" element={<VendorSignup />} />
           <Route path="/delivery/login" element={<DeliveryLogin />} />
           <Route path="/delivery/signup" element={<DeliverySignup />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/dashboard"
+            element={<Navigate to="/admin/login" replace />}
+          />
           <Route
             path="/delivery/dashboard"
             element={

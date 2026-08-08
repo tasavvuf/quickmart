@@ -49,4 +49,16 @@ const verifyDeliveryPartner = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, verifyVendor, verifyDeliveryPartner };
+// @desc    Middleware to verify that authenticated user has admin role
+// @access  Private (Admin only)
+const verifyAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Forbidden: Admin privileges required. Access restricted to administrator accounts.",
+    });
+  }
+  next();
+};
+
+module.exports = { verifyToken, verifyVendor, verifyDeliveryPartner, verifyAdmin };

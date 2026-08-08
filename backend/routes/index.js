@@ -8,6 +8,7 @@ const storeRoutes = require('./store');
 const vendorRoutes = require('./vendor');
 const orderRoutes = require('./order');
 const deliveryRoutes = require('./delivery');
+const adminRoutes = require('./admin');
 
 // Basic test route
 router.get('/', (req, res) => {
@@ -36,5 +37,8 @@ router.use('/vendor', vendorRoutes);
 
 // Delivery partner routes
 router.use('/delivery', deliveryRoutes);
+
+// Admin dashboard routes (Protected by verifyAdmin)
+router.use('/admin', adminRoutes);
 
 module.exports = router;

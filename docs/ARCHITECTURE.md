@@ -35,7 +35,12 @@ QuickMart supports four distinct user roles:
    - Atomically claims orders (`findOneAndUpdate`).
    - Advances delivery status (`ASSIGNED` → `PICKED_UP` → `OUT_FOR_DELIVERY` → `DELIVERED`).
 4. **Admin (`admin`)**:
-   - Verifies delivery partner registrations and inspects encrypted verification documents.
+   - Accesses hidden Admin Console (`/admin/login` & `/admin/dashboard`). Not visible in navbar.
+   - Protected by `verifyAdmin` middleware on backend (`req.user.role === "admin"`). `user`, `vendor`, and `deliveryPartner` accounts are rejected with `403 Forbidden`.
+   - **Superclean Monochrome Styling**: Designed strictly for Admin views using `#fbfbfb` background, `#363537` primary text, and `Satoshi, 'Satoshi Fallback', sans-serif` font system.
+   - Manages store approvals (`isVerifiedByAdmin: true`) and vendor listings.
+   - Inspects unredacted ImageKit verification documents (Driving License, RC, Insurance, Aadhaar, PAN) and approves delivery partners.
+   - Monitors real-time cross-store platform order streams and system revenue analytics.
 
 ---
 
