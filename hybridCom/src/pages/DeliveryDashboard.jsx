@@ -23,6 +23,8 @@ import {
 import { api, getApiErrorMessage } from "../lib/api";
 import { UserContext } from "../context/UserContext";
 import { formatAddress } from "../lib/adapters";
+import LiveOrderMap from "../components/LiveOrderMap";
+import { socket } from "../lib/socket";
 
 export default function DeliveryDashboard() {
   const navigate = useNavigate();
@@ -41,6 +43,50 @@ export default function DeliveryDashboard() {
   // OTP Verification Modal State
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpInput, setOtpInput] = useState("");
+  const [riderGps, setRiderGps] = useState(null);
+
+  // GPS Watcher & Socket.IO Streaming for Active Delivery
+  useEffect(() => {
+    if (!activeOrder?._id) return;
+
+    const orderId = activeOrder._id;
+
+    socket.emit("order:join", { orderId }, (res) => {
+      if (res?.success) {
+        console.log(`[Rider Socket] Joined room ${res.room}`);
+      }
+    });
+
+    let watchId = null;
+
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          setRiderGps([latitude, longitude]);
+
+          socket.emit("delivery:location", {
+            orderId,
+            latitude,
+            longitude,
+          });
+        },
+        (err) => {
+          console.warn("[Rider GPS Error]:", err.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        }
+      );
+    }
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [activeOrder?._id]);
 
   const handleVerifyAndDeliver = async (e) => {
     e?.preventDefault();
@@ -457,6 +503,38 @@ export default function DeliveryDashboard() {
                   </button>
                 );
               })()}
+
+              {/* Live Navigation Map for Delivery Partner */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider block flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Navigation className="w-4 h-4 text-emerald-400" /> Live Road Route & Navigation Map
+                  </span>
+                  {riderGps && (
+                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" /> Live GPS Broadcasting
+                    </span>
+                  )}
+                </span>
+
+                <LiveOrderMap
+                  storeCoords={
+                    activeOrder.store?.location?.coordinates?.length === 2
+                      ? [activeOrder.store.location.coordinates[1], activeOrder.store.location.coordinates[0]]
+                      : [22.286, 70.792]
+                  }
+                  customerCoords={
+                    activeOrder.deliveryAddress?.location?.coordinates?.length === 2
+                      ? [activeOrder.deliveryAddress.location.coordinates[1], activeOrder.deliveryAddress.location.coordinates[0]]
+                      : [22.2904, 70.7915]
+                  }
+                  partnerCoords={riderGps}
+                  storeName={activeOrder.store?.name || "Store"}
+                  customerName={activeOrder.customer?.name || "Customer"}
+                  partnerName={user?.name || "Rider"}
+                  height="300px"
+                />
+              </div>
 
               {/* Store & Customer Contact Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

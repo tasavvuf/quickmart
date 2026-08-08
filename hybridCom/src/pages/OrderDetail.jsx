@@ -1,7 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, getApiErrorMessage } from "../lib/api";
 import Stepper, { Step } from "../components/Stepper";
+import LiveOrderMap from "../components/LiveOrderMap";
+import { socket } from "../lib/socket";
+import { UserContext } from "../context/UserContext";
 import {
   Phone,
   Store as StoreIcon,
@@ -13,6 +16,8 @@ import {
   Package,
   Copy,
   ShieldCheck,
+  MapPin,
+  Navigation,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -46,6 +51,7 @@ export default function OrderDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [partnerLocation, setPartnerLocation] = useState(null);
 
   const fetchOrder = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -65,6 +71,27 @@ export default function OrderDetail() {
       setLoading(false);
       setIsRefreshing(false);
     }
+  }, [orderId]);
+
+  // Socket.IO Room Joining & Location Stream
+  useEffect(() => {
+    if (!orderId) return;
+
+    socket.emit("order:join", { orderId }, (res) => {
+      if (res?.success) {
+        console.log(`[Socket.IO] Joined order room: ${res.room}`);
+      }
+    });
+
+    socket.on("delivery:location", (data) => {
+      if (data && data.latitude && data.longitude) {
+        setPartnerLocation([data.latitude, data.longitude]);
+      }
+    });
+
+    return () => {
+      socket.off("delivery:location");
+    };
   }, [orderId]);
 
   useEffect(() => {
@@ -248,6 +275,50 @@ export default function OrderDetail() {
                 <Copy size={16} />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Real-time Live Order Map */}
+        {!isCancelled && (
+          <div className="space-y-2 my-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider app-muted flex items-center gap-2">
+                <Navigation size={14} className="text-amber-500" /> Live Delivery Route & Tracking
+              </h3>
+              {partnerLocation || (order.liveDeliveryLocation?.coordinates?.length === 2 && order.liveDeliveryLocation.coordinates[0] !== 0) ? (
+                <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  Rider Live GPS Stream
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium app-muted">
+                  Auto-Fitted Route View
+                </span>
+              )}
+            </div>
+
+            <LiveOrderMap
+              storeCoords={
+                order.store?.location?.coordinates?.length === 2
+                  ? [order.store.location.coordinates[1], order.store.location.coordinates[0]]
+                  : [22.286, 70.792]
+              }
+              customerCoords={
+                order.deliveryAddress?.location?.coordinates?.length === 2
+                  ? [order.deliveryAddress.location.coordinates[1], order.deliveryAddress.location.coordinates[0]]
+                  : [22.2904, 70.7915]
+              }
+              partnerCoords={
+                partnerLocation ||
+                (order.liveDeliveryLocation?.coordinates?.length === 2 && order.liveDeliveryLocation.coordinates[0] !== 0
+                  ? [order.liveDeliveryLocation.coordinates[1], order.liveDeliveryLocation.coordinates[0]]
+                  : null)
+              }
+              storeName={order.store?.name || "Store"}
+              customerName={order.deliveryAddress?.customerName || "Customer"}
+              partnerName={order.deliveryPartner?.name || "Delivery Rider"}
+              height="350px"
+            />
           </div>
         )}
 

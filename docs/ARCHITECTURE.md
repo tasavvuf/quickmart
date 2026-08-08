@@ -106,6 +106,17 @@ vendorStatus: OUT_FOR_DELIVERY ◄─ deliveryStatus: OUT_FOR_DELIVERY
 - **Customer Exclusivity**: Visible ONLY to the customer who placed the order when fetching `/api/orders/:orderId`.
 - **Verification**: Transition to `DELIVERED` requires the delivery partner to enter the customer's 4-digit PIN (`PATCH /api/delivery/orders/:orderId/status` with `{ status: "DELIVERED", otp: "4829" }`). Failed OTPs return `400 Bad Request`.
 
+### 📡 5. Real-Time Socket.IO Live Location & OSRM Road Routing
+- **Order Room Isolation (`order:${orderId}`)**:
+  - Socket.IO connection requires authentication and checks order ownership/assignment before granting access (`socket.join("order:" + orderId)`).
+  - Uninvolved users/vendors cannot join or spy on another order's location stream.
+- **Throttled Persistence**:
+  - Live GPS ticks stream directly via Socket.IO room broadcasts (`delivery:location`) for zero-lag marker animation.
+  - MongoDB `liveDeliveryLocation` persistence is throttled to at most once per 10 seconds per order to prevent database write spam.
+- **OSRM Road Routing Engine & Leaflet Maps**:
+  - Calculates real road route geometry (`https://router.project-osrm.org/route/v1/driving/...`), road distance (km), and road ETA (minutes).
+  - Auto-fits map camera bounds (`map.fitBounds`) to display Store 🏬, Customer 📍, and Rider 🛵 pins in an optimal framed view without requiring manual camera adjustment.
+
 ---
 
 ## 3. Concurrency & Geospatial Technical Details

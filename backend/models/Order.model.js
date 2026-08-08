@@ -128,8 +128,23 @@ const OrderSchema = new mongoose.Schema(
     deliveredAt: { type: Date },
     // 4-digit delivery verification OTP (hidden by default via select: false)
     deliveryOtp: { type: String, select: false },
+    // Real-time live delivery partner GPS location
+    liveDeliveryLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        default: [0, 0],
+      },
+      updatedAt: { type: Date },
+    },
   },
   { timestamps: true }
 );
+
+OrderSchema.index({ "liveDeliveryLocation.coordinates": "2dsphere" });
 
 module.exports = mongoose.model("Order", OrderSchema);
