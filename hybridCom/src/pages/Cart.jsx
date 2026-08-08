@@ -16,6 +16,7 @@ function Cart() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressTab, setAddressTab] = useState("saved"); // 'saved' | 'new'
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [paymentType, setPaymentType] = useState("COD"); // 'COD' | 'UPI'
 
   const [newAddrForm, setNewAddrForm] = useState({
     label: "Home",
@@ -68,6 +69,7 @@ function Cart() {
     setIsPlacingOrder(true);
     try {
       const response = await api.post("/cart/checkout", {
+        paymentType,
         deliveryAddress: selectedDeliveryAddress
           ? {
               street: selectedDeliveryAddress.street || selectedDeliveryAddress.fullAddress,
@@ -81,12 +83,16 @@ function Cart() {
               location: selectedDeliveryAddress.location || { lat: lat || 22.2904, lng: lng || 70.7915 },
             }
           : null,
-        paymentType: "COD",
       });
 
       toast.success(response.data?.message || "Order placed successfully!");
+      const newOrderId = response.data?.order?._id;
       clearCart();
-      navigate("/user");
+      if (newOrderId) {
+        navigate(`/orders/${newOrderId}`);
+      } else {
+        navigate("/orders");
+      }
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Failed to place order"));
     } finally {
@@ -364,6 +370,44 @@ function Cart() {
             <span className="font-mono text-caramel">
               ₹{grandTotal.toFixed(2)}
             </span>
+          </div>
+        </section>
+
+        {/* Payment Method Selector */}
+        <section className="app-card mt-6 rounded-2xl p-5">
+          <h2 className="text-xl font-bold mb-3">Payment Method</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setPaymentType("COD")}
+              className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                paymentType === "COD"
+                  ? "border-amber-400 bg-amber-400/10 ring-1 ring-amber-400"
+                  : "border-border bg-card hover:bg-muted"
+              }`}
+            >
+              <div className="flex items-center justify-between w-full mb-1">
+                <span className="font-extrabold text-sm">💵 Cash On Delivery (COD)</span>
+                {paymentType === "COD" && <Check className="text-amber-400" size={16} />}
+              </div>
+              <span className="app-muted text-xs">Pay cash when your order arrives</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentType("UPI")}
+              className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                paymentType === "UPI"
+                  ? "border-amber-400 bg-amber-400/10 ring-1 ring-amber-400"
+                  : "border-border bg-card hover:bg-muted"
+              }`}
+            >
+              <div className="flex items-center justify-between w-full mb-1">
+                <span className="font-extrabold text-sm">⚡ Online UPI</span>
+                {paymentType === "UPI" && <Check className="text-amber-400" size={16} />}
+              </div>
+              <span className="app-muted text-xs">Pay instantly via Google Pay, PhonePe, UPI</span>
+            </button>
           </div>
         </section>
 

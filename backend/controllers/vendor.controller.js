@@ -162,30 +162,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-const triggerSimulator = async (req, res) => {
-  try {
-    const store = await getStoreForUser(req);
-    const count = Math.min(Number(req.body.count) || 1, 5);
-    const orders = [];
-
-    for (let i = 0; i < count; i++) {
-      const order = await orderService.generateFakeOrder(store._id);
-      orders.push(order);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: `Generated ${orders.length} fake order(s)`,
-      orders,
-    });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Failed to generate fake order",
-    });
-  }
-};
-
 module.exports = {
   getDashboard,
   getStore,
@@ -197,5 +173,4 @@ module.exports = {
   getOrders,
   getOrderById,
   updateOrderStatus,
-  triggerSimulator,
 };

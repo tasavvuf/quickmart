@@ -19,6 +19,7 @@ import Cart from "./pages/Cart";
 import UserPage from "./pages/UserPage";
 import AddressBook from "./pages/AddressBook";
 import OrderHistory from "./pages/OrderHistory";
+import OrderDetail from "./pages/OrderDetail";
 
 function App() {
   const { user, isLoggedIn, isCheckingAuth } = useContext(UserContext);
@@ -79,6 +80,7 @@ function App() {
           <Route path="/user" element={<UserPage />} />
           <Route path="/address-book" element={<AddressBook />} />
           <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/orders/:orderId" element={<OrderDetail />} />
           {/* Non-vendor trying to access vendor dashboard -> redirect to login */}
           <Route
             path="/vendor-dashboard"

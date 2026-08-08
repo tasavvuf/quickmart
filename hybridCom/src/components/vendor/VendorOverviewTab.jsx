@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   IndianRupee,
   Store as StoreIcon,
-  Play,
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
@@ -17,7 +16,6 @@ export default function VendorOverviewTab({
   stats,
   loading,
   onToggleStoreOpen,
-  onTriggerSimulator,
   onNavigateTab,
 }) {
   if (loading || !stats) {
@@ -41,7 +39,7 @@ export default function VendorOverviewTab({
 
   return (
     <div className="space-y-8">
-      {/* Simulator Banner */}
+      {/* Header Banner */}
       <div className="app-card app-card-hover p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-500">
@@ -49,15 +47,9 @@ export default function VendorOverviewTab({
           </div>
           <div>
             <h2 className="text-xl font-bold app-heading">Vendor Operations Dashboard</h2>
-            <p className="text-sm app-muted">Manage live orders, inventory stock, and store availability in real-time.</p>
+            <p className="text-sm app-muted">Manage live orders placed by real customers, inventory stock, and store availability in real-time.</p>
           </div>
         </div>
-        <button
-          onClick={() => onTriggerSimulator(1)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-black font-semibold text-sm transition-all shadow-lg shadow-amber-500/20 hover:bg-amber-400 active:scale-95 cursor-pointer"
-        >
-          <Play size={16} className="fill-current" /> Simulate 1 Order
-        </button>
       </div>
 
       {/* Metric Cards Grid */}

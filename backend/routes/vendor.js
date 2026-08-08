@@ -22,7 +22,4 @@ router.get("/orders", vendorController.getOrders);
 router.get("/orders/:id", vendorController.getOrderById);
 router.patch("/orders/:id/status", vendorController.updateOrderStatus);
 
-// Fake Order Simulator API
-router.post("/orders/simulator/trigger", vendorController.triggerSimulator);
-
 module.exports = router;

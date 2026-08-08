@@ -1,7 +1,7 @@
-import { useContext } from 'react'
+import { useContext, useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from '../context/UserContext';
-import { LogOut, Store, User } from 'lucide-react';
+import { LogOut, Store, User, Package } from 'lucide-react';
 import { ThemeToggleButton2 } from './ui/skiper-ui/skiper4';
 import { toast } from 'react-toastify';
 import { api, getApiErrorMessage } from '../lib/api';
@@ -17,11 +17,42 @@ function Nav() {
   } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [activeOrder, setActiveOrder] = useState(null);
+
   const authPages = ["/login", "/signup", "/vendor-login", "/vendor-signup"];
   const isAuthPage = authPages.includes(location.pathname);
   const isStorePage = location.pathname === "/store" || location.pathname.startsWith("/vendor");
-  const avatarInitial = (user?.username?.trim()?.charAt(0) || "U").toUpperCase();
+  const avatarInitial = (user?.name?.trim()?.charAt(0) || user?.userName?.trim()?.charAt(0) || user?.username?.trim()?.charAt(0) || "U").toUpperCase();
   const isVendor = isLoggedIn && user?.role === "vendor";
+
+  const fetchActiveOrder = useCallback(async () => {
+    if (!isLoggedIn || isVendor) return;
+    try {
+      const res = await api.get("/orders");
+      if (res.data?.success && Array.isArray(res.data.orders)) {
+        const found = res.data.orders.find(
+          (o) =>
+            o.vendorStatus !== "DELIVERED" &&
+            o.vendorStatus !== "REJECTED" &&
+            !o.userStatus?.includes("CANCELLED")
+        );
+        setActiveOrder(found || null);
+      }
+    } catch (err) {
+      console.error("Nav order check error", err);
+    }
+  }, [isLoggedIn, isVendor]);
+
+  useEffect(() => {
+    fetchActiveOrder();
+
+    // Check for active order updates every 5s if user is logged in
+    if (isLoggedIn && !isVendor) {
+      const interval = setInterval(fetchActiveOrder, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [fetchActiveOrder, isLoggedIn, isVendor, location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -43,7 +74,7 @@ function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b-2 border-border bg-background/95 backdrop-blur-md transition-colors duration-300">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-        {/* Brand Logo in High Contrast Text (Denim in Light Mode, Givry in Dark Mode) */}
+        {/* Brand Logo */}
         <Link to={isVendor ? "/vendor-dashboard" : "/"} className="group flex items-center gap-2.5">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-black text-2xl shadow-md border-2 border-border group-hover:scale-105 transition-transform">
             E
@@ -63,6 +94,19 @@ function Nav() {
         </Link>
 
         <div className="flex items-center gap-3">
+          {/* Active Order Button on Nav if customer has an ongoing order */}
+          {isLoggedIn && !isVendor && activeOrder && (
+            <Link
+              to={`/orders/${activeOrder._id}`}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-extrabold transition shadow-md shadow-amber-500/20 active:scale-95"
+              title="Track your active order"
+            >
+              <Package size={15} />
+              <span className="hidden sm:inline">Track Active Order</span>
+              <span className="sm:hidden">Active Order</span>
+            </Link>
+          )}
+
           {!isLoggedIn && !isStorePage && (
             <Link
               to={"/store"}
@@ -97,10 +141,8 @@ function Nav() {
                       alt={`${user.username || "User"} avatar`}
                       className="h-full w-full object-cover"
                     />
-                  ) : user?.username ? (
-                    avatarInitial
                   ) : (
-                    <User size={18} />
+                    avatarInitial
                   )}
                 </Link>
               )}
@@ -123,7 +165,6 @@ function Nav() {
               </button>
             </div>
           ) : !isAuthPage ? (
-            /* Action buttons (Login/Signup) styled as solid and outline pills */
             <div className="hidden sm:flex items-center gap-2.5">
               {isStorePage ? (
                 <>
@@ -174,7 +215,7 @@ function Nav() {
         </div>
       )}
     </header>
-  )
+  );
 }
 
 export default Nav;

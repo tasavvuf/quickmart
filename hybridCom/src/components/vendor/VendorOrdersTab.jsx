@@ -27,6 +27,9 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
     { label: "Accepted", value: "ACCEPTED" },
     { label: "Preparing", value: "PREPARING" },
     { label: "Ready", value: "READY" },
+    { label: "Picked Up", value: "PICKED_UP" },
+    { label: "Out for Delivery", value: "OUT_FOR_DELIVERY" },
+    { label: "Delivered", value: "DELIVERED" },
     { label: "Rejected", value: "REJECTED" },
   ];
 
@@ -55,7 +58,10 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
       PENDING: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/30", icon: <Clock size={14} />, label: "Pending" },
       ACCEPTED: { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/30", icon: <CheckCircle size={14} />, label: "Accepted" },
       PREPARING: { bg: "bg-purple-500/10", text: "text-purple-500", border: "border-purple-500/30", icon: <ChefHat size={14} />, label: "Preparing" },
-      READY: { bg: "bg-green-500/10", text: "text-green-500", border: "border-green-500/30", icon: <PackageCheck size={14} />, label: "Ready" },
+      READY: { bg: "bg-cyan-500/10", text: "text-cyan-500", border: "border-cyan-500/30", icon: <PackageCheck size={14} />, label: "Ready" },
+      PICKED_UP: { bg: "bg-indigo-500/10", text: "text-indigo-400", border: "border-indigo-500/30", icon: <PackageCheck size={14} />, label: "Picked Up" },
+      OUT_FOR_DELIVERY: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/30", icon: <PackageCheck size={14} />, label: "Out for Delivery" },
+      DELIVERED: { bg: "bg-green-500/10", text: "text-green-400", border: "border-green-500/30", icon: <CheckCircle size={14} />, label: "Delivered ✓" },
       REJECTED: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30", icon: <XCircle size={14} />, label: "Rejected" },
     };
     const s = map[vendorStatus] || { bg: "bg-muted", text: "app-muted", border: "border-border", icon: null, label: vendorStatus };
@@ -126,8 +132,8 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-border">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xs font-mono font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                        #{order._id.slice(-8).toUpperCase()}
+                      <span className="text-xs font-mono font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/30">
+                        #{order._id}
                       </span>
                       <span className="text-xs app-muted font-medium">{new Date(order.createdAt).toLocaleString()}</span>
                       {getStatusBadge(order.vendorStatus, order.userStatus)}
@@ -173,7 +179,7 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500 hover:underline"
                         >
-                          📍 View Location on Map ({order.deliveryAddress.location.coordinates[1].toFixed(4)}, {order.deliveryAddress.location.coordinates[0].toFixed(4)})
+                          View Location on Map ({order.deliveryAddress.location.coordinates[1].toFixed(4)}, {order.deliveryAddress.location.coordinates[0].toFixed(4)})
                         </a>
                       </div>
                     )}
@@ -234,8 +240,26 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
                         className="px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold transition-all shadow-md shadow-purple-500/20 cursor-pointer disabled:opacity-50">Mark Ready</button>
                     )}
                     {order.vendorStatus === "READY" && (
+                      <button disabled={isUpdating} onClick={() => handleStatusChange(order._id, "PICKED_UP")}
+                        className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold transition-all shadow-md shadow-cyan-500/20 cursor-pointer disabled:opacity-50">
+                        Mark Picked Up
+                      </button>
+                    )}
+                    {order.vendorStatus === "PICKED_UP" && (
+                      <button disabled={isUpdating} onClick={() => handleStatusChange(order._id, "OUT_FOR_DELIVERY")}
+                        className="px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 cursor-pointer disabled:opacity-50">
+                        Out for Delivery
+                      </button>
+                    )}
+                    {order.vendorStatus === "OUT_FOR_DELIVERY" && (
+                      <button disabled={isUpdating} onClick={() => handleStatusChange(order._id, "DELIVERED")}
+                        className="px-5 py-2 rounded-xl bg-green-500 hover:bg-green-400 text-black text-xs font-bold transition-all shadow-md shadow-green-500/20 cursor-pointer disabled:opacity-50">
+                        Mark Delivered
+                      </button>
+                    )}
+                    {order.vendorStatus === "DELIVERED" && (
                       <span className="text-xs text-green-500 font-bold bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/30 flex items-center gap-1.5">
-                        <CheckCircle size={14} /> Waiting Delivery Partner
+                        <CheckCircle size={14} /> Order Delivered
                       </span>
                     )}
                     {order.vendorStatus === "REJECTED" && (

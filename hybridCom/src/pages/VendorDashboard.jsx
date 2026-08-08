@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useContext } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import { api, getApiErrorMessage } from "../lib/api";
 import { toast } from "react-toastify";
@@ -7,9 +7,6 @@ import {
   ShoppingBag,
   Package,
   Store as StoreIcon,
-  Play,
-  Zap,
-  RotateCw,
 } from "lucide-react";
 
 import VendorOverviewTab from "../components/vendor/VendorOverviewTab";
@@ -30,10 +27,6 @@ export default function VendorDashboard() {
   const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
-
-  const [autoSimulate, setAutoSimulate] = useState(false);
-  const autoSimulateRef = useRef(autoSimulate);
-  autoSimulateRef.current = autoSimulate;
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -80,29 +73,6 @@ export default function VendorDashboard() {
     };
     loadAll();
   }, [fetchDashboard, fetchOrders, fetchProducts]);
-
-  const handleTriggerSimulator = async (count = 1) => {
-    try {
-      const res = await api.post("/vendor/orders/simulator/trigger", { count });
-      if (res.data.success) {
-        toast.success(`⚡ ${res.data.orders.length} New Order Generated!`, { position: "top-right" });
-        fetchOrders();
-        fetchDashboard();
-      }
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Failed to simulate order"));
-    }
-  };
-
-  useEffect(() => {
-    let intervalId;
-    if (autoSimulate) {
-      intervalId = setInterval(() => {
-        if (autoSimulateRef.current) handleTriggerSimulator(1);
-      }, 8000);
-    }
-    return () => { if (intervalId) clearInterval(intervalId); };
-  }, [autoSimulate]);
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -199,28 +169,6 @@ export default function VendorDashboard() {
               </p>
             </div>
           </div>
-
-          {/* Simulator Controls */}
-          <div className="flex items-center gap-3 app-card p-2 rounded-2xl">
-            <div className="px-3 py-1 text-xs font-bold text-caramel flex items-center gap-1.5 border-r border-border">
-              <Zap size={14} className="fill-caramel" /> Simulator
-            </div>
-            <button
-              onClick={() => handleTriggerSimulator(1)}
-              className="app-control flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-caramel text-xs font-bold active:scale-95"
-            >
-              <Play size={13} className="fill-current" /> Generate Order
-            </button>
-            <button
-              onClick={() => setAutoSimulate(!autoSimulate)}
-              className={`app-control flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                autoSimulate ? "text-green-500 border-green-500/40" : ""
-              }`}
-            >
-              <RotateCw size={13} className={autoSimulate ? "animate-spin" : ""} />
-              Auto: {autoSimulate ? "ON" : "OFF"}
-            </button>
-          </div>
         </div>
 
         {/* Tabs */}
@@ -247,7 +195,7 @@ export default function VendorDashboard() {
         {/* Content */}
         <div className="pt-2">
           {activeTab === "overview" && (
-            <VendorOverviewTab stats={stats} loading={loadingDashboard} onToggleStoreOpen={handleToggleStoreOpen} onTriggerSimulator={handleTriggerSimulator} onNavigateTab={(t) => setActiveTab(t)} />
+            <VendorOverviewTab stats={stats} loading={loadingDashboard} onToggleStoreOpen={handleToggleStoreOpen} onNavigateTab={(t) => setActiveTab(t)} />
           )}
           {activeTab === "orders" && (
             <VendorOrdersTab orders={orders} loading={loadingOrders} onUpdateOrderStatus={handleUpdateOrderStatus} onRefresh={() => { fetchOrders(); fetchDashboard(); }} />
