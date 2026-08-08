@@ -232,9 +232,125 @@ const createStoreForVendor = async ({ user, store, userLocation, storePhoto }) =
   });
 };
 
+const haversineKm = (coords1, coords2) => {
+  if (!coords1 || !coords2 || coords1.length < 2 || coords2.length < 2) return null;
+  const [lng1, lat1] = coords1;
+  const [lng2, lat2] = coords2;
+  const toRad = (v) => (v * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return +(R * c).toFixed(2);
+};
+
+const searchStoresAndProducts = async (req, res) => {
+  try {
+    const { q, lat, lng } = req.query;
+
+    if (!q || !q.trim()) {
+      return res.status(200).json({
+        success: true,
+        query: "",
+        products: [],
+        stores: [],
+        count: { products: 0, stores: 0 }
+      });
+    }
+
+    const queryStr = q.trim();
+    const searchRegex = new RegExp(queryStr, 'i');
+    const userCoords = (lat && lng && !isNaN(Number(lat)) && !isNaN(Number(lng)))
+      ? [Number(lng), Number(lat)]
+      : null;
+
+    // 1. Search Products (across ALL products in DB)
+    const matchingProducts = await Product.find({
+      status: { $ne: "inactive" },
+      stock: { $gt: 0 },
+      $or: [
+        { name: searchRegex },
+        { category: searchRegex },
+        { description: searchRegex }
+      ]
+    })
+      .populate({
+        path: "store",
+        select: "name category location address logo isOpen isVerifiedByAdmin rating totalReviews"
+      })
+      .lean();
+
+    const products = matchingProducts
+      .filter(p => p.store && p.store.isVerifiedByAdmin)
+      .map(p => {
+        const storeCoords = p.store.location?.coordinates;
+        const distance = (userCoords && storeCoords) ? haversineKm(userCoords, storeCoords) : null;
+        return {
+          ...p,
+          store: {
+            ...p.store,
+            distance
+          }
+        };
+      });
+
+    // 2. Search Stores
+    const matchingStores = await Store.find({
+      isVerifiedByAdmin: true,
+      $or: [
+        { name: searchRegex },
+        { category: searchRegex },
+        { "address.city": searchRegex },
+        { "address.area": searchRegex },
+        { "address.street": searchRegex }
+      ]
+    })
+      .lean();
+
+    const stores = await Promise.all(
+      matchingStores.map(async s => {
+        const storeProducts = await Product.find({
+          store: s._id,
+          status: { $ne: "inactive" },
+          stock: { $gt: 0 }
+        }).limit(10).lean();
+
+        const storeCoords = s.location?.coordinates;
+        const distance = (userCoords && storeCoords) ? haversineKm(userCoords, storeCoords) : null;
+
+        return {
+          ...s,
+          products: storeProducts,
+          distance
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      query: queryStr,
+      products,
+      stores,
+      count: {
+        products: products.length,
+        stores: stores.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllStores,
   getStoreById,
+  searchStoresAndProducts,
   createStoreForVendor,
   parseStorePayload,
   validateVendorStorePayload

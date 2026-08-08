@@ -45,9 +45,10 @@
  */
 
 const express = require('express');
-const { getAllStores, getStoreById } = require('../controllers/store.controller');
+const { getAllStores, getStoreById, searchStoresAndProducts } = require('../controllers/store.controller');
 const router = express.Router();
 
+router.get('/search', searchStoresAndProducts);
 router.get('/', getAllStores);
 router.get('/:storeId', getStoreById);
 

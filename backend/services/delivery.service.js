@@ -43,8 +43,9 @@ const getAvailableOrders = async (partnerLocation) => {
     deliveryStatus: "WAITING",
     deliveryPartner: null,
   })
-    .populate("store", "name location address storePhoto")
-    .populate("customer", "name phoneNumber")
+    .populate("store", "name location address storePhoto emergencyContact")
+    .populate("customer", "name phoneNumber profilePhoto")
+    .populate("items.productId", "name price image category")
     .sort({ createdAt: -1 });
 
   // Filter by distance and enrich with distance data
@@ -85,7 +86,8 @@ const getMyActiveOrder = async (partnerId) => {
     deliveryStatus: { $in: ["ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"] },
   })
     .populate("store", "name location address storePhoto emergencyContact")
-    .populate("customer", "name phoneNumber profilePhoto");
+    .populate("customer", "name phoneNumber profilePhoto")
+    .populate("items.productId", "name price image category");
 };
 
 /**
@@ -96,8 +98,9 @@ const getMyOrderHistory = async (partnerId) => {
     deliveryPartner: partnerId,
     deliveryStatus: "DELIVERED",
   })
-    .populate("store", "name address")
-    .populate("customer", "name phoneNumber")
+    .populate("store", "name location address storePhoto emergencyContact")
+    .populate("customer", "name phoneNumber profilePhoto")
+    .populate("items.productId", "name price image category")
     .sort({ deliveredAt: -1 });
 };
 
@@ -145,7 +148,8 @@ const acceptDelivery = async (partnerId, orderId) => {
     { new: true }
   )
     .populate("store", "name location address storePhoto emergencyContact")
-    .populate("customer", "name phoneNumber profilePhoto");
+    .populate("customer", "name phoneNumber profilePhoto")
+    .populate("items.productId", "name price image category");
 
   if (!order) {
     const error = new Error("Order already accepted by another delivery partner or is no longer available");
@@ -234,7 +238,8 @@ const updateDeliveryStatus = async (partnerId, orderId, newStatus, otp = null) =
 
   return Order.findById(order._id)
     .populate("store", "name location address storePhoto emergencyContact")
-    .populate("customer", "name phoneNumber profilePhoto");
+    .populate("customer", "name phoneNumber profilePhoto")
+    .populate("items.productId", "name price image category");
 };
 
 /**

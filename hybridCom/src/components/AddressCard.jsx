@@ -21,7 +21,7 @@ export default function AddressCard({ address, isActive, onSelect, onEdit, onDel
             <span className="text-sm font-bold">{address.label || "Address"}</span>
             {address.isDefault && (
               <span className="bg-amber-400/20 text-amber-500 border border-amber-400/40 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Default 🌟
+                Default
               </span>
             )}
           </div>

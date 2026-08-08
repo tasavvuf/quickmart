@@ -350,7 +350,7 @@ export default function DeliveryDashboard() {
                     </div>
                     <div className="text-right">
                       <span className="text-base font-black text-foreground">
-                        ₹{order.totalAmount}
+                        ₹{(order.grandTotal ?? order.totalAmount ?? 0).toFixed(2)}
                       </span>
                       <span className="block text-[10px] font-bold text-muted-foreground uppercase">
                         {order.paymentType} • {order.paymentStatus}
@@ -387,6 +387,28 @@ export default function DeliveryDashboard() {
                         <p className="text-muted-foreground mt-0.5 line-clamp-1">{formatAddress(order.deliveryAddress) || "Customer Address"}</p>
                       </div>
                     </div>
+
+                    {/* Items Overview for Delivery Partner */}
+                    {order.items && order.items.length > 0 && (
+                      <div className="p-3 rounded-2xl bg-secondary/20 border border-border/50 text-xs space-y-1.5">
+                        <div className="flex justify-between font-bold text-muted-foreground text-[11px]">
+                          <span>ORDER ITEMS ({order.items.length})</span>
+                        </div>
+                        <div className="space-y-1">
+                          {order.items.map((item, idx) => {
+                            const name = item.productName || item.productId?.name || item.name || "Item";
+                            const qty = item.quantity || 1;
+                            const price = item.priceAtPurchase ?? item.productId?.price ?? item.price ?? 0;
+                            return (
+                              <div key={idx} className="flex justify-between text-xs">
+                                <span className="text-foreground font-medium">{name} × {qty}</span>
+                                <span className="text-muted-foreground font-semibold">₹{(price * qty).toFixed(2)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Accept Button */}
@@ -436,7 +458,7 @@ export default function DeliveryDashboard() {
                 </div>
 
                 <div className="text-right">
-                  <span className="text-2xl font-black text-foreground">₹{activeOrder.totalAmount}</span>
+                  <span className="text-2xl font-black text-foreground">₹{(activeOrder.grandTotal ?? activeOrder.totalAmount ?? 0).toFixed(2)}</span>
                   <p className="text-xs font-bold text-amber-400">{activeOrder.paymentType} Payment</p>
                 </div>
               </div>
@@ -586,15 +608,43 @@ export default function DeliveryDashboard() {
               </div>
 
               {/* Items List Summary */}
-              <div className="p-4 rounded-2xl bg-secondary/20 border border-border/80 space-y-2">
-                <span className="text-xs font-bold text-foreground block">Order Items Summary ({activeOrder.items?.length || 0} items)</span>
+              <div className="p-4 rounded-2xl bg-secondary/20 border border-border/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Package className="w-4 h-4 text-amber-400" /> Order Items Breakdown ({activeOrder.items?.length || 0} items)
+                  </span>
+                  <span className="text-xs font-black text-amber-400">
+                    Total: ₹{(activeOrder.grandTotal ?? activeOrder.totalAmount ?? 0).toFixed(2)}
+                  </span>
+                </div>
+
                 <div className="divide-y divide-border/40 text-xs">
-                  {activeOrder.items?.map((item, i) => (
-                    <div key={i} className="py-2 flex justify-between">
-                      <span className="text-foreground font-medium">{item.name} × {item.quantity}</span>
-                      <span className="text-muted-foreground font-semibold">₹{item.price * item.quantity}</span>
-                    </div>
-                  ))}
+                  {activeOrder.items?.map((item, i) => {
+                    const name = item.productName || item.productId?.name || item.name || "Item";
+                    const price = item.priceAtPurchase ?? item.productId?.price ?? item.price ?? 0;
+                    const image = item.productImage || item.productId?.image || "";
+                    const qty = item.quantity || 1;
+                    const itemTotal = (price * qty).toFixed(2);
+
+                    return (
+                      <div key={i} className="py-2.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          {image ? (
+                            <img src={image} alt={name} className="w-8 h-8 rounded-lg object-cover border border-border shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground shrink-0 font-bold">
+                              📦
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-foreground font-bold block">{name}</span>
+                            <span className="text-[11px] text-muted-foreground">₹{price} × {qty}</span>
+                          </div>
+                        </div>
+                        <span className="text-foreground font-extrabold">₹{itemTotal}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -604,7 +654,7 @@ export default function DeliveryDashboard() {
                   <span className="font-bold flex items-center gap-2">
                     <IndianRupee className="w-4 h-4 text-amber-400" /> Collect Cash on Delivery (COD) from Customer
                   </span>
-                  <span className="text-base font-black text-amber-400">₹{activeOrder.totalAmount}</span>
+                  <span className="text-base font-black text-amber-400">₹{(activeOrder.grandTotal ?? activeOrder.totalAmount ?? 0).toFixed(2)}</span>
                 </div>
               )}
 
@@ -649,7 +699,7 @@ export default function DeliveryDashboard() {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-base font-extrabold text-foreground">₹{order.totalAmount}</span>
+                    <span className="text-base font-extrabold text-foreground">₹{(order.grandTotal ?? order.totalAmount ?? 0).toFixed(2)}</span>
                     <span className="block text-[10px] text-muted-foreground">{order.paymentType}</span>
                   </div>
                 </div>

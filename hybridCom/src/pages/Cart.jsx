@@ -179,7 +179,7 @@ function Cart() {
       <div className="mx-auto max-w-5xl">
         <div className="app-card mb-8 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="mb-2 bg-linear-to-r from-chocolate to-caramel bg-clip-text text-4xl font-bold text-transparent">
+            <h1 className="mb-2 bg-linear-to-r from-chocolate to-caramel bg-clip-text text-4xl font-bold ">
               {store.name}
             </h1>
 
