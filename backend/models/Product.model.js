@@ -1,68 +1,52 @@
-// Product
+const mongoose = require("mongoose");
 
-const { default: mongoose } = require("mongoose");
-
-// store
-
-// name
-
-// description
-
-// price
-
-// stock
-
-// images
-
-// category
-
-// featured
-
-// status
-
-
-const ProductSchema = new mongoose.Schema({
-
-  store: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: 'Store'
+const ProductSchema = new mongoose.Schema(
+  {
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Store",
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      default: "",
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
+    category: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    featured: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
   },
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
-  stock: {
-    type: Number,
-    required: true
-  },
-  images: {
-    type: [String],
-    required: true
-  },
-  category: {
-    type: String,
-    required: true
-  },
-  featured: {
-    type: Boolean,
-    required: true
-  },
-  status: {
-    type: String,
-    required: true
-  }
-}, {
-  timestamps: true
-});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Product', ProductSchema);
+module.exports = mongoose.model("Product", ProductSchema);

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Store = require('../models/Store.model');
 const Product = require('../models/Product.model');
 
@@ -66,25 +67,23 @@ const getAllStores = async (req, res) => {
             },
 
             {
-
                 $addFields: {
-
                     products: {
-
                         $filter: {
-
                             input: "$products",
-
                             as: "product",
-
                             cond: {
-
                                 $and: [
-
                                     {
                                         $eq: [
                                             "$$product.featured",
                                             true
+                                        ]
+                                    },
+                                    {
+                                        $ne: [
+                                            "$$product.status",
+                                            "inactive"
                                         ]
                                     },
                                     {
@@ -93,44 +92,65 @@ const getAllStores = async (req, res) => {
                                             0
                                         ]
                                     }
-
                                 ]
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         ]);
 
         res.status(200).json({
-
             success: true,
-
             stores
-
         });
-
     }
-
     catch (error) {
-
         res.status(500).json({
-
             success: false,
-
             message: error.message
-
         });
+    }
+}
 
+const getStoreById = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(storeId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid store ID",
+      });
     }
 
-}
+    const store = await Store.findById(storeId).lean();
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found",
+      });
+    }
+
+    const products = await Product.find({
+      store: storeId,
+      status: { $ne: "inactive" },
+    })
+      .sort({ featured: -1, createdAt: -1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      store: { ...store, products },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 const parseStorePayload = (store) => {
   if (!store) {
@@ -214,6 +234,7 @@ const createStoreForVendor = async ({ user, store, userLocation, storePhoto }) =
 
 module.exports = {
   getAllStores,
+  getStoreById,
   createStoreForVendor,
   parseStorePayload,
   validateVendorStorePayload

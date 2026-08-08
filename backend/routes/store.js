@@ -45,9 +45,10 @@
  */
 
 const express = require('express');
-const { getAllStores } = require('../controllers/store.controller');
+const { getAllStores, getStoreById } = require('../controllers/store.controller');
 const router = express.Router();
 
 router.get('/', getAllStores);
+router.get('/:storeId', getStoreById);
 
 module.exports = router;

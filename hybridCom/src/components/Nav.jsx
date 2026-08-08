@@ -19,8 +19,9 @@ function Nav() {
   const location = useLocation();
   const authPages = ["/login", "/signup", "/vendor-login", "/vendor-signup"];
   const isAuthPage = authPages.includes(location.pathname);
-  const isStorePage = location.pathname === "/store";
+  const isStorePage = location.pathname === "/store" || location.pathname.startsWith("/vendor");
   const avatarInitial = (user?.username?.trim()?.charAt(0) || "U").toUpperCase();
+  const isVendor = isLoggedIn && user?.role === "vendor";
 
   const handleLogout = async () => {
     try {
@@ -40,89 +41,140 @@ function Nav() {
   };
 
   return (
-    <div className="border-b border-border bg-background">
-      <div className="flex items-center justify-between gap-4 px-6 py-5">
-        <Link to={"/"}>
-          <h1 className="text-3xl font-bold">Local Ecom</h1>
+    <header className="sticky top-0 z-40 border-b-2 border-border bg-background/95 backdrop-blur-md transition-colors duration-300">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+        {/* Brand Logo in High Contrast Text (Denim in Light Mode, Givry in Dark Mode) */}
+        <Link to={isVendor ? "/vendor-dashboard" : "/"} className="group flex items-center gap-2.5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-black text-2xl shadow-md border-2 border-border group-hover:scale-105 transition-transform">
+            E
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            {isVendor ? (
+              <span className="flex items-center gap-2">
+                Local Ecom 
+                <span className="badge-yellow text-xs px-2.5 py-0.5">
+                  Vendor
+                </span>
+              </span>
+            ) : (
+              <span>Local Ecom</span>
+            )}
+          </h1>
         </Link>
 
         <div className="flex items-center gap-3">
           {!isLoggedIn && !isStorePage && (
             <Link
               to={"/store"}
-              className="app-control flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-              aria-label="Open vendor store access"
-              title="Vendor store access"
+              className="app-control flex h-11 px-4 items-center justify-center gap-2 text-xs font-black text-foreground hover:bg-secondary transition-all"
+              aria-label="Vendor store portal"
+              title="Vendor store portal"
             >
-              <Store size={20} />
+              <Store size={18} className="text-primary" />
+              <span className="hidden sm:inline">Merchant Hub</span>
             </Link>
           )}
 
+          {/* Theme Switcher Toggle */}
           <ThemeToggleButton2
             variant="circle"
             start="top-left"
             blur={true}
           />
 
-          {isLoggedIn && (
-            <>
-              <Link
-                to={"/user"}
-                className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-amber-400/40 bg-card text-lg font-bold text-amber-500 transition hover:border-amber-300 hover:bg-muted"
-                aria-label="Open user profile"
-                title="Profile"
-              >
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={`${user.username || "User"} avatar`}
-                    className="h-full w-full object-cover"
-                  />
-                ) : user?.username ? (
-                  avatarInitial
-                ) : (
-                  <User size={20} />
-                )}
-              </Link>
+          {isLoggedIn ? (
+            <div className="flex items-center gap-2">
+              {!isVendor && (
+                <Link
+                  to={"/user"}
+                  className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-border bg-card text-base font-black text-foreground transition hover:border-sunyellow hover:scale-105"
+                  aria-label="Open user profile"
+                  title="Profile"
+                >
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={`${user.username || "User"} avatar`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : user?.username ? (
+                    avatarInitial
+                  ) : (
+                    <User size={18} />
+                  )}
+                </Link>
+              )}
+              {isVendor && (
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-card text-base font-black text-foreground shadow-sm"
+                  title={user?.username || "Vendor"}
+                >
+                  {avatarInitial}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full border border-red-500/40 bg-card text-red-400 transition hover:border-red-400 hover:bg-red-500/10"
+                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-red-500/40 bg-card text-red-500 transition hover:bg-red-500/10 hover:border-red-500 active:scale-95"
                 aria-label="Logout"
                 title="Logout"
               >
-                <LogOut size={20} />
+                <LogOut size={18} />
               </button>
-            </>
-          )}
+            </div>
+          ) : !isAuthPage ? (
+            /* Action buttons (Login/Signup) styled as solid and outline pills */
+            <div className="hidden sm:flex items-center gap-2.5">
+              {isStorePage ? (
+                <>
+                  <Link to={"/vendor-login"}>
+                    <button className="btn-secondary px-5 py-2.5 text-xs font-black">Vendor Login</button>
+                  </Link>
+                  <Link to={"/vendor-signup"}>
+                    <button className="btn-primary px-5 py-2.5 text-xs font-black">Register Shop</button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to={"/login"}>
+                    <button className="btn-secondary px-5 py-2.5 text-xs font-black">User Login</button>
+                  </Link>
+                  <Link to={"/signup"}>
+                    <button className="btn-primary px-5 py-2.5 text-xs font-black">User Signup</button>
+                  </Link>
+                </>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 
+      {/* Mobile Nav Action Buttons */}
       {!isLoggedIn && !isAuthPage && (
-        <div className='w-full flex flex-wrap justify-around gap-3 px-6 pb-4'>
+        <div className="sm:hidden w-full flex justify-center gap-3 px-6 pb-4 pt-1 border-t border-border/40">
           {isStorePage ? (
             <>
-              <Link to={"/vendor-login"} className='w-50 '>
-                <button className='bg-white text-black rounded-full w-full p-2 cursor-pointer '>vendor login</button>
+              <Link to={"/vendor-login"} className="flex-1">
+                <button className="btn-secondary w-full py-2.5 text-xs font-black">Vendor Login</button>
               </Link>
-              <Link to={"/vendor-signup"} className='w-50 '>
-                <button className='bg-white text-black rounded-full w-full p-2 cursor-pointer '>vendor signup</button>
+              <Link to={"/vendor-signup"} className="flex-1">
+                <button className="btn-primary w-full py-2.5 text-xs font-black">Register Shop</button>
               </Link>
             </>
           ) : (
             <>
-              <Link to={"/login"} className='w-50 '>
-                <button className='bg-white text-black rounded-full w-full p-2 cursor-pointer '>user login</button>
+              <Link to={"/login"} className="flex-1">
+                <button className="btn-secondary w-full py-2.5 text-xs font-black">User Login</button>
               </Link>
-              <Link to={"/signup"} className='w-50 '>
-                <button className='bg-white text-black rounded-full w-full p-2 cursor-pointer '>user signup</button>
+              <Link to={"/signup"} className="flex-1">
+                <button className="btn-primary w-full py-2.5 text-xs font-black">User Signup</button>
               </Link>
             </>
           )}
         </div>
       )}
-    </div>
+    </header>
   )
 }
 
-export default Nav
+export default Nav;

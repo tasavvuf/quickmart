@@ -30,17 +30,29 @@ export default function AddressForm({ formData, isNew, onChange, onCancel, onSav
         ))}
       </div>
 
+      <div className="mt-3">
+        <label className="flex items-center gap-2.5 text-sm font-semibold cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={Boolean(formData.isDefault)}
+            onChange={(e) => onChange("isDefault", e.target.checked)}
+            className="h-4 w-4 rounded-xs border-border bg-input text-amber-500 focus:ring-amber-500"
+          />
+          <span>Set as Default Delivery Address 🌟</span>
+        </label>
+      </div>
+
       <div className="mt-4 flex gap-2">
         <button
           onClick={onSave}
-          className="app-control flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
+          className="app-control flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold cursor-pointer"
         >
           <Save size={16} />
           Save
         </button>
         <button
           onClick={onCancel}
-          className="app-control flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
+          className="app-control flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold cursor-pointer"
         >
           <X size={16} />
           Cancel

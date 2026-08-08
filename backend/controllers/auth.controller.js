@@ -27,17 +27,30 @@ const parseLocation = (location) => {
   return location;
 };
 
-const formatUserResponse = (user) => ({
-  _id: user._id,
-  userName: user.userName,
-  name: user.name,
-  phoneNumber: user.phoneNumber,
-  email: user.email,
-  location: user.location,
-  address: user.address,
-  profilePhoto: user.profilePhoto,
-  role: user.role,
-});
+const formatUserResponse = (user) => {
+  const addresses = user.addresses || [];
+  const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0] || null;
+  const selectedAddr =
+    addresses.find((a) => String(a._id) === String(user.selectedAddressId)) ||
+    defaultAddr;
+
+  return {
+    _id: user._id,
+    userName: user.userName,
+    name: user.name,
+    phoneNumber: user.phoneNumber,
+    email: user.email,
+    location: user.location,
+    address: user.address,
+    addresses: user.addresses || [],
+    selectedAddressId:
+      user.selectedAddressId || (selectedAddr ? String(selectedAddr._id) : null),
+    currentDeliveryAddress: selectedAddr,
+    defaultAddress: defaultAddr,
+    profilePhoto: user.profilePhoto,
+    role: user.role,
+  };
+};
 
 const PUBLIC_AUTH_ROLES = ["user", "vendor"];
 
@@ -128,6 +141,7 @@ const regUser = async (req, res) => {
 
     const parsedLocation = parseLocation(location);
     const { lat, lng } = parsedLocation;
+    const initialAddressText = address || "Surat, Gujarat, India";
 
     const user = new userModel({
       userName,
@@ -137,8 +151,25 @@ const regUser = async (req, res) => {
       password,
       role: requestedRole,
       location: { type: "Point", coordinates: [lng, lat] },
-      address: address || "Surat, Gujarat, India",
+      address: initialAddressText,
+      addresses: [
+        {
+          label: "Home",
+          fullAddress: initialAddressText,
+          street: initialAddressText,
+          area: "General",
+          city: "Surat",
+          state: "Gujarat",
+          pincode: "395007",
+          location: { type: "Point", coordinates: [lng, lat] },
+          isDefault: true,
+        },
+      ],
     });
+
+    if (user.addresses && user.addresses.length > 0) {
+      user.selectedAddressId = String(user.addresses[0]._id);
+    }
 
     const profilePhotoFile = req.files?.profilePhoto?.[0];
     const storePhotoFile = req.files?.storePhoto?.[0];
@@ -258,4 +289,211 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { regUser, loginUser };
+// @desc Get saved addresses
+const getAddresses = async (req, res) => {
+  try {
+    const user = req.user;
+    return res.json({
+      addresses: user.addresses || [],
+      selectedAddressId: user.selectedAddressId || null,
+      formattedUser: formatUserResponse(user),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to get addresses", error: err.message });
+  }
+};
+
+// @desc Add address
+const addAddress = async (req, res) => {
+  try {
+    const user = req.user;
+    const { label, fullAddress, street, area, city, state, pincode, location, isDefault } = req.body;
+
+    if (!fullAddress && !street) {
+      return res.status(400).json({ message: "Address is required" });
+    }
+
+    let lat = location?.lat != null ? Number(location.lat) : 22.2904;
+    let lng = location?.lng != null ? Number(location.lng) : 70.7915;
+
+    const formattedFull = fullAddress || `${street || ""}, ${area || ""}, ${city || "Surat"}, ${state || "Gujarat"} - ${pincode || ""}`.replace(/^, |, $/g, "");
+
+    const newAddressObj = {
+      label: label || "Home",
+      fullAddress: formattedFull,
+      street: street || formattedFull,
+      area: area || "",
+      city: city || "Surat",
+      state: state || "Gujarat",
+      pincode: pincode || "",
+      location: { type: "Point", coordinates: [lng, lat] },
+      isDefault: Boolean(isDefault),
+    };
+
+    if (!user.addresses) user.addresses = [];
+
+    // If marked default or if it's the user's first address
+    if (isDefault || user.addresses.length === 0) {
+      user.addresses.forEach((a) => {
+        a.isDefault = false;
+      });
+      newAddressObj.isDefault = true;
+    }
+
+    user.addresses.push(newAddressObj);
+    const addedItem = user.addresses[user.addresses.length - 1];
+    user.selectedAddressId = String(addedItem._id);
+    user.address = formattedFull;
+    user.location = { type: "Point", coordinates: [lng, lat] };
+
+    await user.save();
+    return res.status(201).json({
+      message: "Address added successfully",
+      user: formatUserResponse(user),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to add address", error: err.message });
+  }
+};
+
+// @desc Update address
+const updateAddress = async (req, res) => {
+  try {
+    const user = req.user;
+    const { addressId } = req.params;
+    const { label, fullAddress, street, area, city, state, pincode, location, isDefault } = req.body;
+
+    const target = user.addresses.id(addressId);
+    if (!target) {
+      return res.status(404).json({ message: "Address not found" });
+    }
+
+    if (isDefault) {
+      user.addresses.forEach((a) => {
+        a.isDefault = false;
+      });
+      target.isDefault = true;
+    }
+
+    if (label !== undefined) target.label = label;
+    if (street !== undefined) target.street = street;
+    if (area !== undefined) target.area = area;
+    if (city !== undefined) target.city = city;
+    if (state !== undefined) target.state = state;
+    if (pincode !== undefined) target.pincode = pincode;
+    if (fullAddress !== undefined || street !== undefined || city !== undefined) {
+      target.fullAddress =
+        fullAddress ||
+        `${target.street}, ${target.area}, ${target.city}, ${target.state} - ${target.pincode}`.replace(/^, |, $/g, "");
+    }
+
+    if (location?.lat != null && location?.lng != null) {
+      target.location = {
+        type: "Point",
+        coordinates: [Number(location.lng), Number(location.lat)],
+      };
+    }
+
+    await user.save();
+    return res.json({
+      message: "Address updated successfully",
+      user: formatUserResponse(user),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to update address", error: err.message });
+  }
+};
+
+// @desc Set address as default
+const setDefaultAddress = async (req, res) => {
+  try {
+    const user = req.user;
+    const { addressId } = req.params;
+
+    const target = user.addresses.id(addressId);
+    if (!target) {
+      return res.status(404).json({ message: "Address not found" });
+    }
+
+    user.addresses.forEach((a) => {
+      a.isDefault = String(a._id) === String(addressId);
+    });
+
+    user.selectedAddressId = String(addressId);
+    user.address = target.fullAddress;
+    user.location = target.location;
+
+    await user.save();
+    return res.json({
+      message: "Default address updated",
+      user: formatUserResponse(user),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to set default address", error: err.message });
+  }
+};
+
+// @desc Set selected address
+const setSelectedAddress = async (req, res) => {
+  try {
+    const user = req.user;
+    const { addressId } = req.body;
+
+    const target = user.addresses.id(addressId);
+    if (!target) {
+      return res.status(404).json({ message: "Address not found" });
+    }
+
+    user.selectedAddressId = String(addressId);
+    user.address = target.fullAddress;
+    user.location = target.location;
+
+    await user.save();
+    return res.json({
+      message: "Selected address updated",
+      user: formatUserResponse(user),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to set selected address", error: err.message });
+  }
+};
+
+// @desc Delete address
+const deleteAddress = async (req, res) => {
+  try {
+    const user = req.user;
+    const { addressId } = req.params;
+
+    const target = user.addresses.id(addressId);
+    if (!target) {
+      return res.status(404).json({ message: "Address not found" });
+    }
+
+    target.deleteOne();
+
+    if (String(user.selectedAddressId) === String(addressId)) {
+      const defaultAddr = user.addresses.find((a) => a.isDefault) || user.addresses[0] || null;
+      user.selectedAddressId = defaultAddr ? String(defaultAddr._id) : null;
+    }
+
+    await user.save();
+    return res.json({
+      message: "Address deleted successfully",
+      user: formatUserResponse(user),
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Failed to delete address", error: err.message });
+  }
+};
+
+module.exports = {
+  regUser,
+  loginUser,
+  getAddresses,
+  addAddress,
+  updateAddress,
+  setDefaultAddress,
+  setSelectedAddress,
+  deleteAddress,
+  formatUserResponse,
+};

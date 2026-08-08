@@ -88,3 +88,144 @@ exports.replaceCart = async (req, res) => {
   const result = await cartService.replaceCart(userId, productId);
   return handleResult(res, result);
 };
+
+const Order = require("../models/Order.model");
+const Cart = require("../models/CartModel.model");
+
+exports.checkout = async (req, res) => {
+  try {
+    const user = req.user;
+    const cart = await Cart.findOne({ userId: user._id })
+      .populate("activeStore")
+      .populate("items.product");
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      return res.status(400).json({ success: false, message: "Cart is empty" });
+    }
+
+    const storeId = cart.activeStore?._id || cart.activeStore;
+
+    const orderItems = cart.items.map((item) => {
+      const p = item.product;
+      const price = p?.price || 0;
+      const qty = item.quantity;
+      return {
+        productId: p._id,
+        productName: p?.name || "Product",
+        productImage: p?.images?.[0] || p?.image || "",
+        priceAtPurchase: price,
+        quantity: qty,
+        subtotal: price * qty,
+      };
+    });
+
+    const totalAmount = orderItems.reduce((sum, i) => sum + i.subtotal, 0);
+    const deliveryFee = 30;
+    const platformFee = 5;
+    const discount = 0;
+    const grandTotal = totalAmount + deliveryFee + platformFee - discount;
+
+    let deliveryAddressPayload = req.body.deliveryAddress;
+    if (!deliveryAddressPayload) {
+      const addresses = user.addresses || [];
+      const selected =
+        addresses.find((a) => String(a._id) === String(user.selectedAddressId)) ||
+        addresses.find((a) => a.isDefault) ||
+        addresses[0];
+
+      if (selected) {
+        deliveryAddressPayload = {
+          street: selected.street || selected.fullAddress,
+          area: selected.area || "",
+          city: selected.city || "Surat",
+          state: selected.state || "Gujarat",
+          pincode: selected.pincode || "",
+          fullAddress: selected.fullAddress,
+          customerName: user.name,
+          phone: user.phoneNumber,
+          location: selected.location,
+        };
+      } else {
+        deliveryAddressPayload = {
+          street: user.address,
+          area: "",
+          city: "Surat",
+          state: "Gujarat",
+          pincode: "395007",
+          fullAddress: user.address || "Surat, Gujarat",
+          customerName: user.name,
+          phone: user.phoneNumber,
+          location: user.location,
+        };
+      }
+    }
+
+    let coords = [70.7915, 22.2904];
+    if (deliveryAddressPayload.location?.coordinates) {
+      coords = deliveryAddressPayload.location.coordinates;
+    } else if (
+      deliveryAddressPayload.location?.lat != null &&
+      deliveryAddressPayload.location?.lng != null
+    ) {
+      coords = [
+        Number(deliveryAddressPayload.location.lng),
+        Number(deliveryAddressPayload.location.lat),
+      ];
+    }
+
+    const order = await Order.create({
+      customer: user._id,
+      store: storeId,
+      items: orderItems,
+      totalAmount,
+      deliveryFee,
+      platformFee,
+      discount,
+      grandTotal,
+      paymentType: req.body.paymentType || "COD",
+      paymentStatus: req.body.paymentType === "UPI" ? "PAID" : "PENDING",
+      userStatus: "ACTIVE",
+      vendorStatus: "PENDING",
+      deliveryStatus: "WAITING",
+      deliveryAddress: {
+        street: deliveryAddressPayload.street || "",
+        area: deliveryAddressPayload.area || "",
+        city: deliveryAddressPayload.city || "Surat",
+        state: deliveryAddressPayload.state || "Gujarat",
+        pincode: deliveryAddressPayload.pincode || "",
+        fullAddress:
+          deliveryAddressPayload.fullAddress ||
+          `${deliveryAddressPayload.street || ""}, ${deliveryAddressPayload.city || ""}`,
+        customerName: deliveryAddressPayload.customerName || user.name,
+        phone: deliveryAddressPayload.phone || user.phoneNumber,
+        location: {
+          type: "Point",
+          coordinates: coords,
+        },
+      },
+      statusHistory: [
+        {
+          status: "PENDING",
+          updatedBy: "customer",
+          timestamp: new Date(),
+        },
+      ],
+    });
+
+    // Clear cart
+    cart.items = [];
+    cart.activeStore = null;
+    await cart.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("Checkout error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Checkout failed", error: err.message });
+  }
+};

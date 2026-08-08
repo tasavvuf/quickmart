@@ -29,9 +29,9 @@ function UserPage() {
     return (user?.username?.trim()?.charAt(0) || "U").toUpperCase();
   }, [user?.username]);
 
-  const activeAddress = user?.addresses?.find(
-    (address) => address.id === user?.activeAddressId
-  ) || user?.address;
+  const activeAddress =
+    user?.addresses?.find((address) => address.id === user?.activeAddressId) ||
+    user?.address;
   const activeAddressText =
     typeof activeAddress === "string"
       ? activeAddress
@@ -74,7 +74,12 @@ function UserPage() {
     { icon: <User size={16} />, label: "Username", value: formData.username },
     { icon: <Mail size={16} />, label: "Email", value: formData.email },
     { icon: <Phone size={16} />, label: "Phone", value: formData.phone },
-    { icon: <Calendar size={16} />, label: "DOB", value: formData.dob, date: true },
+    {
+      icon: <Calendar size={16} />,
+      label: "DOB",
+      value: formData.dob,
+      date: true,
+    },
   ];
 
   return (
@@ -82,7 +87,7 @@ function UserPage() {
       <main className="mx-auto flex max-w-3xl flex-col gap-6">
         <section className="glass flex flex-col gap-6 rounded-3xl p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-amber-400/30 bg-amber-400/10 text-3xl font-bold text-amber-500">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-caramel/30 bg-caramel/10 text-3xl font-bold text-caramel">
               {user?.avatar ? (
                 <img
                   src={user.avatar}
@@ -95,11 +100,13 @@ function UserPage() {
             </div>
 
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-caramel">
                 My Account
               </p>
               <h1 className="truncate text-3xl font-bold">{user?.username}</h1>
-              <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
+              <p className="truncate text-sm text-muted-foreground">
+                {user?.email}
+              </p>
             </div>
           </div>
 
@@ -115,7 +122,7 @@ function UserPage() {
               </button>
               <button
                 onClick={saveUserInfo}
-                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-amber-400 text-black transition hover:bg-amber-300"
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:opacity-90"
                 aria-label="Save user details"
                 title="Save"
               >
@@ -125,7 +132,7 @@ function UserPage() {
           ) : (
             <button
               onClick={startEditing}
-              className="glass glass-hover flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-xl text-amber-500"
+              className="glass glass-hover flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-xl text-caramel"
               aria-label="Edit user details"
               title="Edit"
             >
@@ -137,12 +144,17 @@ function UserPage() {
         {isEditing && (
           <section className="glass grid gap-4 rounded-2xl p-5 sm:grid-cols-2">
             {fields.map((field) => (
-              <label key={field.label} className="flex flex-col gap-1 text-sm font-semibold">
+              <label
+                key={field.label}
+                className="flex flex-col gap-1 text-sm font-semibold"
+              >
                 {field.label}
                 <input
                   type={field.date ? "date" : "text"}
                   value={field.value}
-                  onChange={(event) => updateField(field.label.toLowerCase(), event.target.value)}
+                  onChange={(event) =>
+                    updateField(field.label.toLowerCase(), event.target.value)
+                  }
                   className="glass-input w-full rounded-xl px-4 py-3"
                 />
               </label>
@@ -152,7 +164,7 @@ function UserPage() {
 
         <Link to="/address-book" className="glass app-link rounded-2xl">
           <span className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-500">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-caramel/15 text-caramel">
               <MapPin size={18} />
             </span>
             <span>
@@ -167,7 +179,7 @@ function UserPage() {
 
         <Link to="/orders" className="glass app-link rounded-2xl">
           <span className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-500">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-caramel/15 text-caramel">
               <History size={18} />
             </span>
             <span>
@@ -198,7 +210,7 @@ function UserPage() {
           {(user?.orderHistory || []).length > 2 && (
             <Link
               to="/orders"
-              className="mt-4 block text-center text-sm font-semibold text-amber-500 transition hover:text-amber-400"
+              className="mt-4 block text-center text-sm font-semibold text-caramel transition hover:text-caramel-hover"
             >
               View all orders
             </Link>
@@ -207,7 +219,7 @@ function UserPage() {
 
         <Link to="/address-book" className="glass app-link rounded-2xl">
           <span className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-500">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-caramel/15 text-caramel">
               <MapPin size={18} />
             </span>
             <span>

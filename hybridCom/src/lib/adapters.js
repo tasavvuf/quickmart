@@ -110,6 +110,17 @@ export const adaptUser = (user) => {
   }
 
   const avatar = user.profilePhoto?.url || user.avatar || null;
+  const addresses = (user.addresses || []).map((addr) => ({
+    ...addr,
+    id: normalizeId(addr),
+    _id: normalizeId(addr),
+    line1: addr.street || addr.line1 || addr.fullAddress || "",
+    line2: addr.area || addr.line2 || "",
+  }));
+
+  const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0] || null;
+  const activeAddressId = user.selectedAddressId || (defaultAddress ? defaultAddress.id : null);
+  const activeAddress = addresses.find((a) => a.id === activeAddressId) || defaultAddress;
 
   return {
     ...user,
@@ -120,8 +131,12 @@ export const adaptUser = (user) => {
     phoneNumber: user.phoneNumber || "",
     email: user.email || "",
     avatar,
-    address: user.address || "",
-    addresses: user.addresses || [],
+    address: activeAddress?.fullAddress || user.address || "",
+    addresses,
+    activeAddressId,
+    selectedAddressId: activeAddressId,
+    defaultAddress,
+    currentDeliveryAddress: activeAddress,
     orderHistory: user.orderHistory || [],
   };
 };
@@ -131,7 +146,11 @@ export const adaptCart = (cart) => {
     return { activeStore: null, items: [] };
   }
 
-  const activeStore = normalizeId(cart.activeStore);
+  const activeStore =
+    typeof cart.activeStore === "object" && cart.activeStore !== null
+      ? adaptStore(cart.activeStore)
+      : normalizeId(cart.activeStore);
+
   const items = (cart.items || [])
     .map((item) => {
       const productId = normalizeId(item.product);
@@ -140,9 +159,15 @@ export const adaptCart = (cart) => {
         return null;
       }
 
+      const product =
+        typeof item.product === "object" && item.product !== null
+          ? adaptProduct(item.product)
+          : null;
+
       return {
         id: productId,
         quantity: Math.max(Number(item.quantity ?? 1), 1),
+        product,
       };
     })
     .filter(Boolean);

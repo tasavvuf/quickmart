@@ -199,12 +199,12 @@ export default function VendorSignup() {
         </div>
 
         <div className="flex flex-col items-center gap-5">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500 text-white shadow-lg shadow-green-500/20">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
             <StoreIcon size={30} />
           </div>
           <div className="flex items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full ${step === 1 ? "bg-amber-500" : "bg-muted-foreground/30"}`} />
-            <span className={`h-2.5 w-2.5 rounded-full ${step === 2 ? "bg-amber-500" : "bg-muted-foreground/30"}`} />
+            <span className={`h-2.5 w-2.5 rounded-full ${step === 1 ? "bg-caramel" : "bg-muted-foreground/30"}`} />
+            <span className={`h-2.5 w-2.5 rounded-full ${step === 2 ? "bg-caramel" : "bg-muted-foreground/30"}`} />
           </div>
         </div>
 
@@ -299,7 +299,7 @@ export default function VendorSignup() {
                   type="button"
                   disabled={isFetchingGps}
                   onClick={handleFetchGpsLocation}
-                  className="app-control flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-amber-500 cursor-pointer"
+                  className="app-control flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-caramel cursor-pointer"
                 >
                   <MapPin size={18} />
                   {isFetchingGps ? "Requesting GPS Access..." : "Fetch vendor GPS location 📍"}
@@ -314,7 +314,7 @@ export default function VendorSignup() {
 
               <button
                 type="submit"
-                className="min-h-12 rounded-xl bg-amber-500 px-6 py-3 font-bold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-12 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Continue to Business Setup
               </button>
@@ -451,7 +451,7 @@ export default function VendorSignup() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-h-12 rounded-xl bg-amber-500 px-6 py-3 font-bold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-12 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting ? "Creating vendor account..." : "Create vendor account"}
               </button>

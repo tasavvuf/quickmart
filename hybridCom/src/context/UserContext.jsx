@@ -40,37 +40,82 @@ export function UserContextProvider({ children }) {
     checkAuth();
   }, []);
 
-  const setActiveAddress = (addressId) => {
+  const setActiveAddress = async (addressId) => {
+    if (isLoggedIn) {
+      try {
+        const res = await api.put("/auth/addresses/select", { addressId });
+        if (res.data?.user) {
+          applyAuthenticatedUser(res.data.user);
+          return res.data.user;
+        }
+      } catch (err) {
+        console.error("Failed to set active address:", err);
+      }
+    }
     setUser((current) => {
-      const activeAddress = current.addresses?.find((address) => address.id === addressId);
+      if (!current) return current;
+      const activeAddress = current.addresses?.find(
+        (address) => address.id === addressId || address._id === addressId
+      );
       if (!activeAddress) return current;
 
       return {
         ...current,
         activeAddressId: addressId,
-        address: activeAddress,
+        selectedAddressId: addressId,
+        currentDeliveryAddress: activeAddress,
+        address: activeAddress.fullAddress || activeAddress.street || current.address,
       };
     });
   };
 
-  const addAddress = (address) => {
+  const addAddress = async (addressData) => {
+    if (isLoggedIn) {
+      try {
+        const res = await api.post("/auth/addresses", addressData);
+        if (res.data?.user) {
+          applyAuthenticatedUser(res.data.user);
+          return res.data.user;
+        }
+      } catch (err) {
+        console.error("Failed to add address:", err);
+      }
+    }
     const nextAddress = {
-      ...address,
+      ...addressData,
       id: `addr-${Date.now()}`,
+      _id: `addr-${Date.now()}`,
+      fullAddress:
+        addressData.fullAddress ||
+        `${addressData.line1 || addressData.street || ""}, ${addressData.line2 || addressData.area || ""}, ${addressData.city || ""}`.replace(/^, |, $/g, ""),
     };
 
     setUser((current) => ({
       ...current,
-      addresses: [...(current.addresses || []), nextAddress],
+      addresses: [...(current?.addresses || []), nextAddress],
       activeAddressId: nextAddress.id,
-      address: nextAddress,
+      selectedAddressId: nextAddress.id,
+      currentDeliveryAddress: nextAddress,
+      address: nextAddress.fullAddress,
     }));
   };
 
-  const updateAddress = (addressId, addressUpdates) => {
+  const updateAddress = async (addressId, addressUpdates) => {
+    if (isLoggedIn) {
+      try {
+        const res = await api.put(`/auth/addresses/${addressId}`, addressUpdates);
+        if (res.data?.user) {
+          applyAuthenticatedUser(res.data.user);
+          return res.data.user;
+        }
+      } catch (err) {
+        console.error("Failed to update address:", err);
+      }
+    }
     setUser((current) => {
+      if (!current) return current;
       const addresses = (current.addresses || []).map((address) => {
-        if (address.id !== addressId) return address;
+        if (address.id !== addressId && address._id !== addressId) return address;
         return {
           ...address,
           ...addressUpdates,
@@ -83,15 +128,59 @@ export function UserContextProvider({ children }) {
       return {
         ...current,
         addresses,
-        address: activeAddress || current.address,
+        currentDeliveryAddress: activeAddress || current.currentDeliveryAddress,
+        address: activeAddress?.fullAddress || current.address,
       };
     });
   };
 
-  const deleteAddress = (addressId) => {
+  const setDefaultAddress = async (addressId) => {
+    if (isLoggedIn) {
+      try {
+        const res = await api.put(`/auth/addresses/${addressId}/default`);
+        if (res.data?.user) {
+          applyAuthenticatedUser(res.data.user);
+          return res.data.user;
+        }
+      } catch (err) {
+        console.error("Failed to set default address:", err);
+      }
+    }
     setUser((current) => {
+      if (!current) return current;
+      const addresses = (current.addresses || []).map((a) => ({
+        ...a,
+        isDefault: a.id === addressId || a._id === addressId,
+      }));
+      const defaultAddress = addresses.find((a) => a.isDefault);
+      return {
+        ...current,
+        addresses,
+        defaultAddress,
+        activeAddressId: addressId,
+        selectedAddressId: addressId,
+        currentDeliveryAddress: defaultAddress || current.currentDeliveryAddress,
+        address: defaultAddress?.fullAddress || current.address,
+      };
+    });
+  };
+
+  const deleteAddress = async (addressId) => {
+    if (isLoggedIn) {
+      try {
+        const res = await api.delete(`/auth/addresses/${addressId}`);
+        if (res.data?.user) {
+          applyAuthenticatedUser(res.data.user);
+          return res.data.user;
+        }
+      } catch (err) {
+        console.error("Failed to delete address:", err);
+      }
+    }
+    setUser((current) => {
+      if (!current) return current;
       const addresses = (current.addresses || []).filter(
-        (address) => address.id !== addressId
+        (address) => address.id !== addressId && address._id !== addressId
       );
 
       const wasActive = current.activeAddressId === addressId;
@@ -102,7 +191,9 @@ export function UserContextProvider({ children }) {
         ...current,
         addresses,
         activeAddressId: nextActive,
-        address: activeAddress || null,
+        selectedAddressId: nextActive,
+        currentDeliveryAddress: activeAddress || null,
+        address: activeAddress?.fullAddress || null,
       };
     });
   };
@@ -125,6 +216,7 @@ export function UserContextProvider({ children }) {
     setActiveAddress,
     addAddress,
     updateAddress,
+    setDefaultAddress,
     deleteAddress,
   };
 

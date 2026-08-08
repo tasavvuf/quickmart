@@ -175,8 +175,26 @@ export function LocationContext({ children }) {
       console.log("isLoggedIn:", currentAuth.isLoggedIn);
       console.log("user:", currentAuth.user);
 
-      // 1. Authenticated User -> Show Auth Modal ("Welcome back 👋 Choose your location")
+      // 1. Authenticated User
       if (currentIsLoggedIn) {
+        const defaultAddr =
+          currentAuth.user?.defaultAddress ||
+          currentAuth.user?.addresses?.find((a) => a.isDefault);
+
+        if (defaultAddr && defaultAddr.location?.coordinates?.length === 2) {
+          const [dLng, dLat] = defaultAddr.location.coordinates;
+          const finalCoords = {
+            lat: dLat,
+            lng: dLng,
+            source: "saved",
+            name: defaultAddr.label ? `Saved (${defaultAddr.label})` : "Default Address",
+          };
+          saveLocationState(finalCoords);
+          setIsLocationPending(false);
+          return resolve({ lat: dLat, lng: dLng });
+        }
+
+        // If no default address set, prompt user every time
         promiseResolverRef.current = resolve;
         setShowAuthModal(true);
         return;

@@ -24,7 +24,7 @@ export default function OrderHistory() {
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-caramel">
               Account
             </p>
             <h1 className="text-2xl font-bold">Order History</h1>
@@ -33,7 +33,7 @@ export default function OrderHistory() {
 
         <section className="glass flex items-center justify-between gap-4 rounded-2xl p-5">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-500">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-caramel/15 text-caramel">
               <Package size={18} />
             </span>
             <div>
@@ -43,7 +43,7 @@ export default function OrderHistory() {
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Amount Spent</p>
-            <p className="text-lg font-bold text-amber-500">₹{totalSpent}</p>
+            <p className="text-lg font-bold text-caramel">₹{totalSpent}</p>
           </div>
         </section>
 
@@ -55,7 +55,7 @@ export default function OrderHistory() {
           </section>
         ) : (
           <div className="glass flex flex-col items-center gap-2 rounded-2xl p-10 text-center text-sm text-muted-foreground">
-            <History size={22} className="text-amber-500" />
+            <History size={22} className="text-caramel" />
             No orders placed yet.
           </div>
         )}

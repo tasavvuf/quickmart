@@ -194,7 +194,7 @@ router.post("/login", authController.loginUser)
 router.get("/test", verifyToken, async (req, res) => {
   res.json({
     message: "Token verified successfully",
-    user: req.user
+    user: authController.formatUserResponse(req.user)
   })
 })
 
@@ -202,5 +202,13 @@ router.get("/logout", (req, res) => {
   res.clearCookie("token")
   res.json({ message: "Logged out successfully" })
 })
+
+// Address management routes
+router.get("/addresses", verifyToken, authController.getAddresses)
+router.post("/addresses", verifyToken, authController.addAddress)
+router.put("/addresses/select", verifyToken, authController.setSelectedAddress)
+router.put("/addresses/:addressId/default", verifyToken, authController.setDefaultAddress)
+router.put("/addresses/:addressId", verifyToken, authController.updateAddress)
+router.delete("/addresses/:addressId", verifyToken, authController.deleteAddress)
 
 module.exports = router

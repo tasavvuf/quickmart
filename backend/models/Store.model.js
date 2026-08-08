@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
-// store contains Store
 
 const StoreSchema = new mongoose.Schema({
-
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -35,19 +33,26 @@ const StoreSchema = new mongoose.Schema({
     type: String,
     required: true
   },
- location: {
-        type: {
-            type: String,
-            enum: ["Point"],
-            default: "Point",
-            required: true
-        },
-
-        coordinates: {
-            type: [Number],
-            required: true
-        }
+  categories: {
+    type: [String],
+    default: []
+  },
+  openingHours: {
+    open: { type: String, default: '09:00 AM' },
+    close: { type: String, default: '09:00 PM' }
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point",
+      required: true
     },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
+  },
   address: {
     street: { type: String, required: true, trim: true },
     area: { type: String, required: true, trim: true },
@@ -66,21 +71,23 @@ const StoreSchema = new mongoose.Schema({
     default: '',
     trim: true
   },
+  contactPhone: {
+    type: String,
+    default: '',
+    trim: true
+  },
   isVerifiedByAdmin: {
     type: Boolean,
-    default: false
+    default: true
   },
-
   rating: {
     type: Number,
-    default: 0
+    default: 4.5
   },
-
   isOpen: {
     type: Boolean,
     default: true
   },
-
 }, {
   timestamps: true
 });

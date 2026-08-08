@@ -27,6 +27,30 @@ const userSchema = new mongoose.Schema(
       thumbnailUrl: { type: String, default: "" }
     },
     address: { type: String, default: "Surat, Gujarat, India" },
+    addresses: [
+      {
+        label: { type: String, default: "Home" },
+        fullAddress: { type: String, required: true },
+        street: { type: String, default: "" },
+        area: { type: String, default: "" },
+        city: { type: String, default: "Surat" },
+        state: { type: String, default: "Gujarat" },
+        pincode: { type: String, default: "" },
+        location: {
+          type: {
+            type: String,
+            enum: ["Point"],
+            default: "Point"
+          },
+          coordinates: {
+            type: [Number],
+            required: true
+          }
+        },
+        isDefault: { type: Boolean, default: false }
+      }
+    ],
+    selectedAddressId: { type: String, default: null },
     createdAt: { type: Date, default: Date.now },
     role: { type: String, default: "user", enum: ["user", "admin", "vendor"] }
   },

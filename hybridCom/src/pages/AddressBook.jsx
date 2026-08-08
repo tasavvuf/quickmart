@@ -15,7 +15,7 @@ const emptyAddressForm = {
 };
 
 export default function AddressBook() {
-  const { user, setActiveAddress, addAddress, updateAddress, deleteAddress } =
+  const { user, setActiveAddress, addAddress, updateAddress, deleteAddress, setDefaultAddress } =
     useContext(UserContext);
 
   const [editingId, setEditingId] = useState(null);
@@ -24,15 +24,21 @@ export default function AddressBook() {
   const addresses = user?.addresses?.length
     ? user.addresses
     : user?.address
-      ? [{
-          id: "primary-address",
-          label: "Home",
-          line1: typeof user.address === "string" ? user.address : user.address.line1,
-          line2: typeof user.address === "string" ? "" : user.address.line2,
-          city: typeof user.address === "string" ? "" : user.address.city,
-          state: typeof user.address === "string" ? "" : user.address.state,
-          pincode: typeof user.address === "string" ? "" : user.address.pincode,
-        }]
+      ? [
+          {
+            id: "primary-address",
+            _id: "primary-address",
+            label: "Home",
+            street: typeof user.address === "string" ? user.address : user.address.street,
+            fullAddress: typeof user.address === "string" ? user.address : user.address.fullAddress,
+            line1: typeof user.address === "string" ? user.address : user.address.line1,
+            line2: typeof user.address === "string" ? "" : user.address.line2,
+            city: typeof user.address === "string" ? "Surat" : user.address.city,
+            state: typeof user.address === "string" ? "Gujarat" : user.address.state,
+            pincode: typeof user.address === "string" ? "" : user.address.pincode,
+            isDefault: true,
+          },
+        ]
       : [];
 
   const startAdding = () => {
@@ -41,14 +47,15 @@ export default function AddressBook() {
   };
 
   const startEditing = (address) => {
-    setEditingId(address.id);
+    setEditingId(address.id || address._id);
     setForm({
       label: address.label || "",
-      line1: address.line1 || "",
-      line2: address.line2 || "",
+      line1: address.street || address.line1 || address.fullAddress || "",
+      line2: address.area || address.line2 || "",
       city: address.city || "",
       state: address.state || "",
       pincode: address.pincode || "",
+      isDefault: Boolean(address.isDefault),
     });
   };
 
@@ -64,10 +71,21 @@ export default function AddressBook() {
   const save = () => {
     if (!form.label.trim() || !form.line1.trim()) return;
 
+    const payload = {
+      label: form.label,
+      street: form.line1,
+      area: form.line2,
+      city: form.city || "Surat",
+      state: form.state || "Gujarat",
+      pincode: form.pincode || "",
+      fullAddress: `${form.line1}, ${form.line2 ? form.line2 + ", " : ""}${form.city || "Surat"}, ${form.state || "Gujarat"}${form.pincode ? " - " + form.pincode : ""}`,
+      isDefault: Boolean(form.isDefault),
+    };
+
     if (editingId === "new") {
-      addAddress(form);
+      addAddress(payload);
     } else {
-      updateAddress(editingId, form);
+      updateAddress(editingId, payload);
     }
 
     cancel();
@@ -90,7 +108,7 @@ export default function AddressBook() {
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-caramel">
               Account
             </p>
             <h1 className="text-2xl font-bold">Address Book</h1>
@@ -110,29 +128,33 @@ export default function AddressBook() {
         <section className="grid gap-4 sm:grid-cols-2">
           <button
             onClick={startAdding}
-            className="glass glass-hover flex min-h-[7.5rem] flex-col items-center justify-center gap-2 rounded-2xl p-5 text-sm font-semibold text-amber-500"
+            className="glass glass-hover flex min-h-[7.5rem] flex-col items-center justify-center gap-2 rounded-2xl p-5 text-sm font-semibold text-caramel cursor-pointer"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400/15">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-caramel/15">
               <Plus size={20} />
             </span>
             Add New Address
           </button>
 
-          {addresses.map((address) => (
-            <AddressCard
-              key={address.id}
-              address={address}
-              isActive={user?.activeAddressId === address.id}
-              onSelect={() => setActiveAddress(address.id)}
-              onEdit={() => startEditing(address)}
-              onDelete={() => handleDelete(address.id)}
-            />
-          ))}
+          {addresses.map((address) => {
+            const addrId = address.id || address._id;
+            return (
+              <AddressCard
+                key={addrId}
+                address={address}
+                isActive={user?.activeAddressId === addrId || user?.selectedAddressId === addrId}
+                onSelect={() => setActiveAddress(addrId)}
+                onSetDefault={() => setDefaultAddress(addrId)}
+                onEdit={() => startEditing(address)}
+                onDelete={() => handleDelete(addrId)}
+              />
+            );
+          })}
         </section>
 
         {!addresses.length && !editingId && (
           <div className="glass flex flex-col items-center gap-2 rounded-2xl p-10 text-center text-sm text-muted-foreground">
-            <MapPin size={22} className="text-amber-500" />
+            <MapPin size={22} className="text-caramel" />
             No saved addresses yet.
           </div>
         )}

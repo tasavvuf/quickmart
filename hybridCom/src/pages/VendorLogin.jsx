@@ -7,7 +7,7 @@ export default function VendorLogin() {
       title="Vendor login"
       submitLabel="Login as vendor"
       signupPath="/vendor-signup"
-      successPath="/"
+      successPath="/vendor-dashboard"
     />
   );
 }

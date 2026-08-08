@@ -6,7 +6,7 @@ export default function Store() {
     <div className="app-page flex flex-col items-center px-6 py-10">
       <div className="app-card flex w-full max-w-2xl flex-col gap-6 rounded-3xl p-8">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/40 bg-amber-400/10 text-amber-500">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-caramel/40 bg-caramel/10 text-caramel">
             <StoreIcon size={28} />
           </div>
           <div>
@@ -22,7 +22,7 @@ export default function Store() {
             to="/vendor-login"
             className="app-control flex min-h-32 flex-col items-center justify-center gap-3 rounded-2xl px-6 py-5 text-center"
           >
-            <LogIn size={24} className="text-amber-500" />
+            <LogIn size={24} className="text-caramel" />
             <span className="text-lg font-semibold">Vendor login</span>
           </Link>
 
@@ -30,7 +30,7 @@ export default function Store() {
             to="/vendor-signup"
             className="app-control flex min-h-32 flex-col items-center justify-center gap-3 rounded-2xl px-6 py-5 text-center"
           >
-            <UserPlus size={24} className="text-amber-500" />
+            <UserPlus size={24} className="text-caramel" />
             <span className="text-lg font-semibold">Vendor registration</span>
           </Link>
         </div>

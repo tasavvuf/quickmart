@@ -195,7 +195,7 @@ async function seed() {
 
     console.log('Cleared existing User, Store, and Product collections.');
 
-    // 1. Create Owners (User model)
+    // 1. Create Owners & Users (User model)
     const ownersToCreate = inputStoresData.map((item, index) => {
       const idx = index + 1;
       const cleanPhone = item.contact && item.contact.phone_number 
@@ -203,6 +203,8 @@ async function seed() {
         : `987654320${idx}`;
       
       const emailUsername = item.store_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const fullAddr = `${item.address.street}, ${item.address.area}, ${item.address.city}, ${item.address.state} - ${item.address.pincode}`;
+      const addrId = new mongoose.Types.ObjectId();
 
       return {
         userName: `${emailUsername}_owner`,
@@ -215,7 +217,25 @@ async function seed() {
           type: 'Point',
           coordinates: item.location
         },
-        address: `${item.address.street}, ${item.address.area}, ${item.address.city}, ${item.address.state} - ${item.address.pincode}`,
+        address: fullAddr,
+        addresses: [
+          {
+            _id: addrId,
+            label: "Store Address",
+            fullAddress: fullAddr,
+            street: item.address.street,
+            area: item.address.area,
+            city: item.address.city,
+            state: item.address.state,
+            pincode: item.address.pincode,
+            location: {
+              type: "Point",
+              coordinates: item.location
+            },
+            isDefault: true
+          }
+        ],
+        selectedAddressId: String(addrId),
         profilePhoto: {
           url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${emailUsername}`,
           fileId: '',
@@ -225,7 +245,8 @@ async function seed() {
       };
     });
 
-    // Seed default admin and customer user for testing
+    // Seed default admin user
+    const adminAddrId = new mongoose.Types.ObjectId();
     ownersToCreate.push({
       userName: 'admin',
       name: 'Admin User',
@@ -235,7 +256,65 @@ async function seed() {
       role: 'admin',
       location: { type: 'Point', coordinates: [70.7963, 22.2842] },
       address: 'Rajkot, Gujarat, India',
+      addresses: [
+        {
+          _id: adminAddrId,
+          label: 'Main Office',
+          fullAddress: 'Rajkot, Gujarat, India',
+          street: 'Amin Marg',
+          area: 'Central',
+          city: 'Rajkot',
+          state: 'Gujarat',
+          pincode: '360001',
+          location: { type: 'Point', coordinates: [70.7963, 22.2842] },
+          isDefault: true
+        }
+      ],
+      selectedAddressId: String(adminAddrId),
       profilePhoto: { url: '', fileId: '', name: '', thumbnailUrl: '' }
+    });
+
+    // Seed user 'tasavvuf'
+    const tasavvufAddrId = new mongoose.Types.ObjectId();
+    ownersToCreate.push({
+      _id: new mongoose.Types.ObjectId('6a71aa365c655cf0e77a3c71'),
+      userName: 'tasavvuf',
+      name: 'Tasavvufhusen Imdadhusen Gori',
+      phoneNumber: '08469191292',
+      email: 'tasavvufg@gmail.com',
+      password: 'test',
+      role: 'user',
+      location: {
+        type: 'Point',
+        coordinates: [70.7915, 22.2904]
+      },
+      address: 'Afiya 1 , 2nd floor , flat no 204',
+      addresses: [
+        {
+          _id: tasavvufAddrId,
+          label: 'Home',
+          fullAddress: 'Afiya 1 , 2nd floor , flat no 204, Surat, Gujarat',
+          street: 'Afiya 1 , 2nd floor , flat no 204',
+          area: 'Vesu',
+          city: 'Surat',
+          state: 'Gujarat',
+          pincode: '395007',
+          location: {
+            type: 'Point',
+            coordinates: [70.7915, 22.2904]
+          },
+          isDefault: true
+        }
+      ],
+      selectedAddressId: String(tasavvufAddrId),
+      profilePhoto: {
+        url: '',
+        fileId: '',
+        name: '',
+        thumbnailUrl: ''
+      },
+      createdAt: new Date('2026-08-04T09:00:38.863Z'),
+      updatedAt: new Date('2026-08-04T09:00:38.863Z')
     });
 
     const createdUsers = await User.insertMany(ownersToCreate);
@@ -288,29 +367,54 @@ async function seed() {
     // 3. Create Products for each store based on their categories
     const productsToCreate = [];
 
+    const categoryImageMap = {
+      "Groceries": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80",
+      "Packaged Foods": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&q=80",
+      "Daily Essentials": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&q=80",
+      "Snacks": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=500&q=80",
+      "Supermarket Items": "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=500&q=80",
+      "Household Goods": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "Personal Care": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500&q=80",
+      "Spices & Pulses": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "Packaged Snacks": "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=500&q=80",
+      "Beverages": "https://images.unsplash.com/photo-1527960471264-932f39eb5846?w=500&q=80",
+      "Daily Groceries": "https://images.unsplash.com/photo-1543083477-4f785aeafaa9?w=500&q=80",
+      "Organic Foods": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=500&q=80",
+      "Dairy Products": "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=500&q=80",
+      "Confectionery": "https://images.unsplash.com/photo-1581798459219-318e76aecc7b?w=500&q=80",
+      "Grains & Flour": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
+      "Household Cleaners": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
+      "Dairy & Snacks": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
+    };
+
     createdStores.forEach((storeObj, index) => {
       const rawStoreItem = inputStoresData[index];
       const categories = rawStoreItem.product_details.categories;
+      let featuredCount = 0;
 
-      categories.forEach((cat, catIdx) => {
+      categories.forEach((cat) => {
         const catalogProducts = productCatalogByCategory[cat] || [
-          { name: `${cat} Product 1`, description: `Quality item from ${cat}`, price: 100, stock: 50 },
-          { name: `${cat} Product 2`, description: `Best selling ${cat} item`, price: 150, stock: 30 }
+          { name: `${cat} Item 1`, description: `Fresh high-quality ${cat}`, price: 100, stock: 50 },
+          { name: `${cat} Item 2`, description: `Popular selling ${cat}`, price: 150, stock: 40 }
         ];
 
-        catalogProducts.forEach((p, pIdx) => {
+        catalogProducts.forEach((p) => {
+          const catImg = categoryImageMap[cat] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80";
+          const isFeatured = featuredCount < 3;
+          if (isFeatured) {
+            featuredCount++;
+          }
+
           productsToCreate.push({
             store: storeObj._id,
             name: `${p.name} (${storeObj.name.split(' ')[0]})`,
             description: p.description,
             price: p.price,
-            stock: p.stock,
-            images: [
-              `https://via.placeholder.com/400?text=${encodeURIComponent(p.name)}`
-            ],
+            stock: Math.max(p.stock, 25),
+            images: [catImg],
             category: cat,
-            featured: (catIdx === 0 && pIdx === 0),
-            status: 'available'
+            featured: isFeatured,
+            status: 'active'
           });
         });
       });

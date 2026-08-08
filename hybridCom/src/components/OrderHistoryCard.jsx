@@ -3,18 +3,18 @@ import { History, MapPin } from "lucide-react";
 const STATUS_STYLES = {
   Delivered: "text-emerald-500",
   Cancelled: "text-red-500",
-  Pending: "text-amber-500",
+  Pending: "text-highlight",
   Shipped: "text-sky-500",
 };
 
 export default function OrderHistoryCard({ order }) {
-  const statusStyle = STATUS_STYLES[order.status] || "text-amber-500";
+  const statusStyle = STATUS_STYLES[order.status] || "text-highlight";
 
   return (
     <div className="app-card rounded-2xl p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-amber-500">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-caramel">
             <History size={16} />
           </span>
           <div>
@@ -30,7 +30,7 @@ export default function OrderHistoryCard({ order }) {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <p className="app-panel-soft min-h-10 flex-1 rounded-xl px-4 py-2 text-sm">
           <span className="flex items-start gap-2">
-            <MapPin size={14} className="mt-0.5 shrink-0 text-amber-500" />
+            <MapPin size={14} className="mt-0.5 shrink-0 text-caramel" />
             <span className="break-words">
               {order.items?.join(", ") || "No items"}
             </span>

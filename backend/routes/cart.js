@@ -342,5 +342,6 @@ router.delete('/', cartController.clearCart);
 router.post('/items/:productId/increase', cartController.increaseQuantity);
 router.post('/items/:productId/decrease', cartController.decreaseQuantity);
 router.post('/items/:productId/replacecart', cartController.replaceCart);
+router.post('/checkout', cartController.checkout);
 
 module.exports = router;

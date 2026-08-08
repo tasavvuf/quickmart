@@ -15,7 +15,15 @@ export function CartContextProvider({ children }) {
   const [items, setItems] = useState([]);
   const [isCartLoading, setIsCartLoading] = useState(false);
 
-  const store = stores.find((store) => store.id === activeStore);
+  const activeStoreId =
+    typeof activeStore === "object" && activeStore !== null
+      ? activeStore.id
+      : activeStore;
+
+  const store =
+    typeof activeStore === "object" && activeStore !== null
+      ? activeStore
+      : stores.find((s) => s.id === activeStoreId);
 
   const totalItems = useMemo(
     () => items.reduce((total, item) => total + Number(item.quantity ?? 0), 0),
@@ -25,7 +33,8 @@ export function CartContextProvider({ children }) {
   const totalPrice = useMemo(
     () =>
       items.reduce((total, item) => {
-        const product = store?.products.find((product) => product.id === item.id);
+        const product =
+          item.product || store?.products?.find((p) => p.id === item.id);
         const price = Number(product?.price ?? 0);
         const quantity = Number(item.quantity ?? 0);
 
@@ -216,7 +225,9 @@ export function CartContextProvider({ children }) {
 
 
   const value = {
-    activeStore,
+    activeStore: activeStoreId,
+    store,
+    cartStore: store,
     setActiveStore,
 
     items,
