@@ -7,24 +7,29 @@ const DEFAULT_LOCATION = {
 
 const normalizeId = (value) => value?._id || value?.id || value;
 
-const parseStoreLocation = (location) => {
-  if (!location) {
-    return DEFAULT_LOCATION;
+const parseStoreLocation = (location, rawAddress) => {
+  let lat = null;
+  let lng = null;
+
+  if (location) {
+    if (Array.isArray(location.coordinates) && location.coordinates.length === 2) {
+      lng = Number(location.coordinates[0]);
+      lat = Number(location.coordinates[1]);
+    } else if (location.lat != null && location.lng != null) {
+      lat = Number(location.lat);
+      lng = Number(location.lng);
+    }
   }
 
-  if (typeof location === "object") {
-    return {
-      city: location.city || location.address || DEFAULT_LOCATION.city,
-      address: location.address || location.city || DEFAULT_LOCATION.address,
-      lat: location.lat ?? null,
-      lng: location.lng ?? null,
-    };
-  }
+  const city = rawAddress?.city || (typeof rawAddress === "string" ? rawAddress : "") || "Local Market";
+  const formattedAddr = formatAddress(rawAddress) || (typeof rawAddress === "string" ? rawAddress : city);
 
   return {
-    ...DEFAULT_LOCATION,
-    city: location,
-    address: location,
+    city,
+    address: formattedAddr,
+    fullAddress: formattedAddr,
+    lat,
+    lng,
   };
 };
 
@@ -60,6 +65,9 @@ export const adaptStore = (store, products = []) => {
   // MongoDB $geoNear returns distance in meters. Convert to km:
   const distanceInKm = rawDistance != null ? Number((rawDistance / 1000).toFixed(1)) : null;
 
+  const formattedAddress = formatAddress(store?.address);
+  const parsedLoc = parseStoreLocation(store?.location, store?.address);
+
   return {
     id: normalizeId(store),
     _id: normalizeId(store),
@@ -69,7 +77,7 @@ export const adaptStore = (store, products = []) => {
     banner: store?.banner || store?.logo || "",
     logo: store?.logo || store?.banner || "",
     storePhoto: store?.storePhoto || null,
-    location: parseStoreLocation(store?.location),
+    location: parsedLoc,
     deliveryRadius: Number(store?.deliveryRadius ?? 0),
     rating: Number(store?.rating ?? 0),
     totalReviews: Number(store?.totalReviews ?? 0),
@@ -77,7 +85,7 @@ export const adaptStore = (store, products = []) => {
     owner: store?.owner || null,
     gstNumber: store?.gstNumber || "",
     emergencyContact: store?.emergencyContact || "",
-    address: formatAddress(store?.address),
+    address: formattedAddress || parsedLoc.address,
     rawAddress: store?.address || null,
     isVerifiedByAdmin: Boolean(store?.isVerifiedByAdmin),
     distance: distanceInKm,

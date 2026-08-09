@@ -257,7 +257,7 @@ export default function Vendor() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 flex-wrap">
                 <span className="flex items-center gap-1">
                   <MapPin size={13} className="text-amber-400 shrink-0" />
-                  {formatAddress(vendor.location) || vendor.location?.address || "Local Marketplace"}
+                  {vendor.address || vendor.location?.address || "Local Marketplace"}
                 </span>
 
                 {distance != null && (
