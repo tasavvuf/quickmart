@@ -5,6 +5,29 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+api.interceptors.request.use(
+  (config) => {
+    try {
+      const storedToken = localStorage.getItem("accessToken");
+      if (storedToken) {
+        let token = storedToken;
+        try {
+          token = JSON.parse(storedToken);
+        } catch {
+          // raw string
+        }
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch (e) {
+      console.error("Error setting auth header", e);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const getApiErrorMessage = (error, fallback = "Something went wrong") => {
   if (error?.response?.data?.message) {
     return error.response.data.message;
