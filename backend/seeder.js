@@ -7,6 +7,7 @@ const Product = require('./models/Product.model');
 dotenv.config({ path: require('path').resolve(__dirname, '.env') });
 
 const inputStoresData = [
+  // ─── RAJKOT STORES ───
   {
     "store_name": "Pick N Pack",
     "address": {
@@ -19,7 +20,7 @@ const inputStoresData = [
     },
     "location": [70.7963, 22.2842],
     "contact": {
-      "phone_number": null
+      "phone_number": "+91 98765 43001"
     },
     "product_details": {
       "categories": ["Groceries", "Packaged Foods", "Daily Essentials", "Snacks"]
@@ -37,7 +38,7 @@ const inputStoresData = [
     },
     "location": [70.7674, 22.2881],
     "contact": {
-      "phone_number": null
+      "phone_number": "+91 98765 43002"
     },
     "product_details": {
       "categories": ["Supermarket Items", "Household Goods", "Groceries", "Personal Care"]
@@ -96,10 +97,127 @@ const inputStoresData = [
     "product_details": {
       "categories": ["Grains & Flour", "Household Cleaners", "Personal Care", "Dairy & Snacks"]
     }
+  },
+
+  // ─── BHAVNAGAR STORES (10km radius of Talawdi Chawk, Vadva, Bhavnagar) ───
+  {
+    "store_name": "MODI SHOW ROOM - Best men's fabric shop in bhavnagar",
+    "address": {
+      "street": "Shelarsha Chowk, Near Dargha",
+      "area": "Vadva",
+      "pincode": "364001",
+      "city": "Bhavnagar",
+      "state": "Gujarat",
+      "landmark": "Near Dargha"
+    },
+    "location": [72.1385, 21.7828],
+    "contact": {
+      "phone_number": "+91 98765 43011"
+    },
+    "product_details": {
+      "categories": ["Clothing Store", "Men's Apparel", "Fabric Store"]
+    },
+    "custom_products": [
+      { "name": "Cotton Shirt Fabric", "description": "Premium 100% breathable unstitched cotton shirt fabric per meter.", "price": 450, "stock": 50, "featured": true, "image": "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=500&q=80" },
+      { "name": "Suiting Material", "description": "High-grade luxury suiting fabric for tuxedos & blazers per meter.", "price": 1200, "stock": 35, "featured": true, "image": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&q=80" },
+      { "name": "Unstitched Kurta Fabric", "description": "Traditional unstitched men's ethnic kurta fabric set.", "price": 600, "stock": 40, "featured": true, "image": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80" }
+    ]
+  },
+  {
+    "store_name": "All In One - Supermarket",
+    "address": {
+      "street": "Harris Road, Near Hotel Vrindavan",
+      "area": "Amba Chowk, Darbargadh",
+      "pincode": "364001",
+      "city": "Bhavnagar",
+      "state": "Gujarat",
+      "landmark": "Near Hotel Vrindavan"
+    },
+    "location": [72.1450, 21.7895],
+    "contact": {
+      "phone_number": "+91 98765 43012"
+    },
+    "product_details": {
+      "categories": ["Supermarket", "Grocery Store", "Department Store"]
+    },
+    "custom_products": [
+      { "name": "Basmati Rice 5kg", "description": "Aromatic long-grain basmati rice 5kg pack.", "price": 450, "stock": 60, "featured": true, "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80" },
+      { "name": "Sunflower Oil 1L", "description": "Refined healthy cooking sunflower oil 1L pouch.", "price": 140, "stock": 70, "featured": true, "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80" },
+      { "name": "Assorted Snack Pack", "description": "Combo pack of crispy traditional Bhavnagari farsan & snacks.", "price": 99, "stock": 90, "featured": true, "image": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=500&q=80" }
+    ]
+  },
+  {
+    "store_name": "Reliance SMART Bazaar",
+    "address": {
+      "street": "Ground Flr & 1st Flr, Shiva Blessing, CS No 208/415",
+      "area": "Nawa Para",
+      "pincode": "364001",
+      "city": "Bhavnagar",
+      "state": "Gujarat",
+      "landmark": "Opposite BMC"
+    },
+    "location": [72.1481, 21.7850],
+    "contact": {
+      "phone_number": "+91 98765 43013"
+    },
+    "product_details": {
+      "categories": ["Hypermarket", "Supermarket", "Electronics", "Groceries"]
+    },
+    "custom_products": [
+      { "name": "Whole Wheat Atta 10kg", "description": "Chakki fresh 100% whole wheat flour 10kg.", "price": 380, "stock": 50, "featured": true, "image": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80" },
+      { "name": "Stainless Steel Cookware Set", "description": "Heavy gauge 5-piece stainless steel kitchen cookware set.", "price": 1299, "stock": 25, "featured": true, "image": "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=500&q=80" },
+      { "name": "Detergent Powder 4kg", "description": "Advanced stain removing laundry detergent powder 4kg economy pack.", "price": 499, "stock": 45, "featured": true, "image": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" }
+    ]
+  },
+  {
+    "store_name": "Deodap Wholesale Mall",
+    "address": {
+      "street": "105, Shiva Blessing 2",
+      "area": "Nawa Para",
+      "pincode": "364001",
+      "city": "Bhavnagar",
+      "state": "Gujarat",
+      "landmark": "Near Collectorate Building"
+    },
+    "location": [72.1478, 21.7845],
+    "contact": {
+      "phone_number": "+91 98765 43014"
+    },
+    "product_details": {
+      "categories": ["Wholesale Store", "Household Goods", "Kitchenware", "Gadgets"]
+    },
+    "custom_products": [
+      { "name": "Mini Vegetable Chopper", "description": "Handy quick manual vegetable and fruit chopper with stainless blades.", "price": 199, "stock": 80, "featured": true, "image": "https://images.unsplash.com/photo-1590794056226-77ef3a6c4743?w=500&q=80" },
+      { "name": "Rechargeable LED Desk Lamp", "description": "Touch-control eye care dimmable LED study desk lamp.", "price": 349, "stock": 40, "featured": true, "image": "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=500&q=80" },
+      { "name": "Organizer Storage Box", "description": "Multi-purpose foldable fabric wardrobe organizer box.", "price": 149, "stock": 65, "featured": true, "image": "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=500&q=80" }
+    ]
+  },
+  {
+    "store_name": "Mahadev Provisan Store",
+    "address": {
+      "street": "Chitra - Sidsar Rd, Sahyog Society",
+      "area": "Chitra",
+      "pincode": "364004",
+      "city": "Bhavnagar",
+      "state": "Gujarat",
+      "landmark": "Sahyog Society"
+    },
+    "location": [72.1220, 21.7710],
+    "contact": {
+      "phone_number": "+91 98765 43015"
+    },
+    "product_details": {
+      "categories": ["Grocery Store", "Provision Store", "General Store"]
+    },
+    "custom_products": [
+      { "name": "Fresh Milk 1L", "description": "Pure pasteurized fresh full cream milk 1L.", "price": 60, "stock": 100, "featured": true, "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&q=80" },
+      { "name": "Toor Dal 1kg", "description": "Unpolished high protein yellow toor dal 1kg.", "price": 160, "stock": 55, "featured": true, "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80" },
+      { "name": "Tea Powder 500g", "description": "Strong aromatic CTC Assam chai tea powder 500g.", "price": 240, "stock": 45, "featured": true, "image": "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=500&q=80" }
+    ]
   }
 ];
 
-// Product generator catalog based on categories
+// Product generator catalog based on categories for default store products
 const productCatalogByCategory = {
   "Groceries": [
     { name: "Basmati Rice 5kg", description: "Premium long-grain fragrant basmati rice.", price: 450, stock: 40 },
@@ -254,19 +372,19 @@ async function seed() {
       email: 'admin@ecom.com',
       password: 'adminpassword',
       role: 'admin',
-      location: { type: 'Point', coordinates: [70.7963, 22.2842] },
-      address: 'Rajkot, Gujarat, India',
+      location: { type: 'Point', coordinates: [72.1385, 21.7828] },
+      address: 'Bhavnagar, Gujarat, India',
       addresses: [
         {
           _id: adminAddrId,
           label: 'Main Office',
-          fullAddress: 'Rajkot, Gujarat, India',
-          street: 'Amin Marg',
-          area: 'Central',
-          city: 'Rajkot',
+          fullAddress: 'Talawdi Chawk, Vadva, Bhavnagar, Gujarat',
+          street: 'Alka Cinema Road',
+          area: 'Vadva',
+          city: 'Bhavnagar',
           state: 'Gujarat',
-          pincode: '360001',
-          location: { type: 'Point', coordinates: [70.7963, 22.2842] },
+          pincode: '364001',
+          location: { type: 'Point', coordinates: [72.1385, 21.7828] },
           isDefault: true
         }
       ],
@@ -286,22 +404,22 @@ async function seed() {
       role: 'user',
       location: {
         type: 'Point',
-        coordinates: [70.7915, 22.2904]
+        coordinates: [72.1385, 21.7828]
       },
-      address: 'Afiya 1 , 2nd floor , flat no 204',
+      address: 'Talawdi Chawk, Vadva, Bhavnagar',
       addresses: [
         {
           _id: tasavvufAddrId,
           label: 'Home',
-          fullAddress: 'Afiya 1 , 2nd floor , flat no 204, Surat, Gujarat',
-          street: 'Afiya 1 , 2nd floor , flat no 204',
-          area: 'Vesu',
-          city: 'Surat',
+          fullAddress: 'Talawdi Chawk, Alka Cinema Road, Vadva, Bhavnagar, Gujarat - 364001',
+          street: 'Alka Cinema Road',
+          area: 'Vadva',
+          city: 'Bhavnagar',
           state: 'Gujarat',
-          pincode: '395007',
+          pincode: '364001',
           location: {
             type: 'Point',
-            coordinates: [70.7915, 22.2904]
+            coordinates: [72.1385, 21.7828]
           },
           isDefault: true
         }
@@ -317,7 +435,42 @@ async function seed() {
       updatedAt: new Date('2026-08-04T09:00:38.863Z')
     });
 
-    // Seed Delivery Partners
+    // Seed Bhavnagar Customer User
+    const bhavnagarUserAddrId = new mongoose.Types.ObjectId();
+    ownersToCreate.push({
+      userName: 'bhavnagar_user',
+      name: 'Hardik Gohil',
+      phoneNumber: '9876543022',
+      email: 'bhavnagar@user.com',
+      password: 'test',
+      role: 'user',
+      location: {
+        type: 'Point',
+        coordinates: [72.1385, 21.7828]
+      },
+      address: 'Talawdi Chawk, Vadva, Bhavnagar',
+      addresses: [
+        {
+          _id: bhavnagarUserAddrId,
+          label: 'Home',
+          fullAddress: 'Talawdi Chawk, Vadva, Bhavnagar, Gujarat - 364001',
+          street: 'Alka Cinema Road',
+          area: 'Vadva',
+          city: 'Bhavnagar',
+          state: 'Gujarat',
+          pincode: '364001',
+          location: {
+            type: 'Point',
+            coordinates: [72.1385, 21.7828]
+          },
+          isDefault: true
+        }
+      ],
+      selectedAddressId: String(bhavnagarUserAddrId),
+      profilePhoto: { url: '', fileId: '', name: '', thumbnailUrl: '' }
+    });
+
+    // Seed Delivery Partners (Rajkot & Bhavnagar)
     const emptyDoc = { url: '', fileId: '', name: '', thumbnailUrl: '' };
 
     const rahulAddrId = new mongoose.Types.ObjectId();
@@ -374,49 +527,49 @@ async function seed() {
       }
     });
 
-    const amitAddrId = new mongoose.Types.ObjectId();
+    const vijayAddrId = new mongoose.Types.ObjectId();
     ownersToCreate.push({
-      userName: 'amit_driver',
-      name: 'Amit Patel',
-      phoneNumber: '9876543202',
-      email: 'amit@delivery.com',
+      userName: 'bhavnagar_rider',
+      name: 'Vijay Rathod',
+      phoneNumber: '9876543021',
+      email: 'bhavnagar@delivery.com',
       password: 'test',
       role: 'deliveryPartner',
-      location: { type: 'Point', coordinates: [70.7780, 22.2840] },
-      address: 'Kotecha Nagar, Rajkot, Gujarat',
+      location: { type: 'Point', coordinates: [72.1400, 21.7830] },
+      address: 'Vadva, Bhavnagar, Gujarat',
       addresses: [
         {
-          _id: amitAddrId,
+          _id: vijayAddrId,
           label: 'Home',
-          fullAddress: 'Kotecha Nagar, Rajkot, Gujarat',
-          street: 'Amin Marg',
-          area: 'Kotecha Nagar',
-          city: 'Rajkot',
+          fullAddress: 'Vadva, Bhavnagar, Gujarat - 364001',
+          street: 'Shelarsha Chowk',
+          area: 'Vadva',
+          city: 'Bhavnagar',
           state: 'Gujarat',
-          pincode: '360002',
-          location: { type: 'Point', coordinates: [70.7780, 22.2840] },
+          pincode: '364001',
+          location: { type: 'Point', coordinates: [72.1400, 21.7830] },
           isDefault: true
         }
       ],
-      selectedAddressId: String(amitAddrId),
+      selectedAddressId: String(vijayAddrId),
       profilePhoto: {
-        url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=amitdriver',
-        fileId: '', name: 'Amit Avatar',
-        thumbnailUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=amitdriver'
+        url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=vijayrider',
+        fileId: '', name: 'Vijay Avatar',
+        thumbnailUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=vijayrider'
       },
       deliveryPartnerProfile: {
-        dateOfBirth: '1996-07-22',
-        emergencyContactName: 'Rajesh Patel',
-        emergencyContactNumber: '9876543200',
+        dateOfBirth: '1997-05-10',
+        emergencyContactName: 'Ramesh Rathod',
+        emergencyContactNumber: '9876543099',
         currentAddress: {
-          street: 'Amin Marg', area: 'Kotecha Nagar',
-          pincode: '360002', city: 'Rajkot', state: 'Gujarat', landmark: 'Near Track Side Tadka'
+          street: 'Shelarsha Chowk', area: 'Vadva',
+          pincode: '364001', city: 'Bhavnagar', state: 'Gujarat', landmark: 'Near Dargha'
         },
-        vehicleType: 'Scooter',
-        vehicleNumber: 'GJ-03-CD-5678',
-        drivingLicenseNumber: 'GJ0320220005678',
-        vehicleModel: 'TVS Jupiter',
-        insuranceNumber: 'INS-2026-005678',
+        vehicleType: 'Motorcycle',
+        vehicleNumber: 'GJ-04-XY-9876',
+        drivingLicenseNumber: 'GJ0420230009876',
+        vehicleModel: 'Hero Splendor',
+        insuranceNumber: 'INS-2026-009876',
         documents: {
           drivingLicense: emptyDoc, vehicleRC: emptyDoc,
           vehicleInsurance: emptyDoc, aadhaarCard: emptyDoc,
@@ -443,13 +596,13 @@ async function seed() {
         owner: ownerUser._id,
         name: item.store_name,
         description: `Welcome to ${item.store_name}! We provide quality ${item.product_details.categories.join(', ')}.`,
-        logo: `https://via.placeholder.com/150?text=${encodeURIComponent(item.store_name)}`,
-        banner: `https://via.placeholder.com/600x200?text=${encodeURIComponent(item.store_name + ' Banner')}`,
+        logo: `https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80`,
+        banner: `https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&q=80`,
         storePhoto: {
-          url: `https://via.placeholder.com/600x400?text=${encodeURIComponent(item.store_name)}`,
+          url: `https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&q=80`,
           fileId: '',
           name: `${item.store_name} Photo`,
-          thumbnailUrl: `https://via.placeholder.com/150?text=${encodeURIComponent(item.store_name)}`
+          thumbnailUrl: `https://images.unsplash.com/photo-1542838132-92c53300491e?w=150&q=80`
         },
         category: primaryCategory,
         location: {
@@ -467,7 +620,7 @@ async function seed() {
         gstNumber: `24AAAAA0000A1Z${index + 1}`,
         emergencyContact: cleanPhone,
         isVerifiedByAdmin: true,
-        rating: +(4.0 + (index * 0.2)).toFixed(1),
+        rating: +(4.2 + (index % 5) * 0.15).toFixed(1),
         isOpen: true
       };
     });
@@ -475,7 +628,7 @@ async function seed() {
     const createdStores = await Store.insertMany(storesToCreate);
     console.log(`Successfully created ${createdStores.length} Stores.`);
 
-    // 3. Create Products for each store based on their categories
+    // 3. Create Products for each store matching Product model strict schema
     const productsToCreate = [];
 
     const categoryImageMap = {
@@ -495,44 +648,71 @@ async function seed() {
       "Confectionery": "https://images.unsplash.com/photo-1581798459219-318e76aecc7b?w=500&q=80",
       "Grains & Flour": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
       "Household Cleaners": "https://images.unsplash.com/photo-1584813470613-5b1c1cad3d69?w=500&q=80",
-      "Dairy & Snacks": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
+      "Dairy & Snacks": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "Clothing Store": "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=500&q=80",
+      "Men's Apparel": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&q=80",
+      "Fabric Store": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&q=80",
+      "Wholesale Store": "https://images.unsplash.com/photo-1590794056226-77ef3a6c4743?w=500&q=80",
+      "Kitchenware": "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=500&q=80",
+      "Gadgets": "https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=500&q=80",
+      "Hypermarket": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&q=80",
+      "Department Store": "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=500&q=80"
     };
 
     createdStores.forEach((storeObj, index) => {
       const rawStoreItem = inputStoresData[index];
-      const categories = rawStoreItem.product_details.categories;
       let featuredCount = 0;
 
-      categories.forEach((cat) => {
-        const catalogProducts = productCatalogByCategory[cat] || [
-          { name: `${cat} Item 1`, description: `Fresh high-quality ${cat}`, price: 100, stock: 50 },
-          { name: `${cat} Item 2`, description: `Popular selling ${cat}`, price: 150, stock: 40 }
-        ];
-
-        catalogProducts.forEach((p) => {
-          const catImg = categoryImageMap[cat] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80";
+      // If store has custom products specified (e.g. Bhavnagar stores)
+      if (rawStoreItem.custom_products && Array.isArray(rawStoreItem.custom_products)) {
+        rawStoreItem.custom_products.forEach((cp) => {
           const isFeatured = featuredCount < 3;
-          if (isFeatured) {
-            featuredCount++;
-          }
+          if (isFeatured) featuredCount++;
 
           productsToCreate.push({
             store: storeObj._id,
-            name: `${p.name} (${storeObj.name.split(' ')[0]})`,
-            description: p.description,
-            price: p.price,
-            stock: Math.max(p.stock, 25),
-            images: [catImg],
-            category: cat,
+            name: cp.name,
+            description: cp.description || `Quality ${cp.name} available at ${storeObj.name}`,
+            price: Number(cp.price),
+            stock: Number(cp.stock || 50),
+            images: [cp.image || categoryImageMap[storeObj.category] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"],
+            category: rawStoreItem.product_details.categories[0] || storeObj.category,
             featured: isFeatured,
             status: 'active'
           });
         });
-      });
+      } else {
+        // Generate from catalog
+        const categories = rawStoreItem.product_details.categories;
+        categories.forEach((cat) => {
+          const catalogProducts = productCatalogByCategory[cat] || [
+            { name: `${cat} Item 1`, description: `Fresh high-quality ${cat}`, price: 100, stock: 50 },
+            { name: `${cat} Item 2`, description: `Popular selling ${cat}`, price: 150, stock: 40 }
+          ];
+
+          catalogProducts.forEach((p) => {
+            const catImg = categoryImageMap[cat] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80";
+            const isFeatured = featuredCount < 3;
+            if (isFeatured) featuredCount++;
+
+            productsToCreate.push({
+              store: storeObj._id,
+              name: `${p.name} (${storeObj.name.split(' ')[0]})`,
+              description: p.description,
+              price: p.price,
+              stock: Math.max(p.stock, 25),
+              images: [catImg],
+              category: cat,
+              featured: isFeatured,
+              status: 'active'
+            });
+          });
+        });
+      }
     });
 
     const createdProducts = await Product.insertMany(productsToCreate);
-    console.log(`Successfully created ${createdProducts.length} Products across all stores.`);
+    console.log(`Successfully created ${createdProducts.length} Products across all ${createdStores.length} stores.`);
 
     console.log('Database seeding completed successfully!');
     process.exit(0);

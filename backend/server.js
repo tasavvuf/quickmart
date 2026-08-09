@@ -12,6 +12,8 @@ const app = require("./src/app");
 const Order = require("./models/Order.model");
 const User = require("./models/user.model");
 
+const { setIO } = require("./lib/socketHelper");
+
 // Create HTTP server for Express and Socket.IO
 const server = http.createServer(app);
 
@@ -22,6 +24,8 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+setIO(io);
 
 // Throttling map to prevent MongoDB write spam on every GPS tick
 const dbUpdateThrottles = new Map();
@@ -87,7 +91,30 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Event 2: Delivery partner streams live GPS location
+  // Event 2: Vendor joins store room
+  socket.on("store:join", (data, callback) => {
+    if (data?.storeId) {
+      socket.join(`store:${data.storeId}`);
+      if (callback) callback({ success: true, room: `store:${data.storeId}` });
+    }
+  });
+
+  // Event 3: Delivery partner joins partner room & available pool
+  socket.on("partner:join", (data, callback) => {
+    if (data?.partnerId) {
+      socket.join(`partner:${data.partnerId}`);
+      socket.join("delivery:available");
+      if (callback) callback({ success: true });
+    }
+  });
+
+  // Event 4: Admin joins admin dashboard room
+  socket.on("admin:join", (data, callback) => {
+    socket.join("admin:dashboard");
+    if (callback) callback({ success: true, room: "admin:dashboard" });
+  });
+
+  // Event 5: Delivery partner streams live GPS location
   socket.on("delivery:location", async (data) => {
     try {
       const { orderId, latitude, longitude } = data || {};

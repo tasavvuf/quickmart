@@ -28,6 +28,8 @@ const getAvailableOrders = async (req, res) => {
 const acceptOrder = async (req, res) => {
   try {
     const order = await deliveryService.acceptDelivery(req.user._id, req.params.orderId);
+    const { broadcastOrderUpdate } = require("../lib/socketHelper");
+    broadcastOrderUpdate(order, "order:status_updated");
     res.json({ message: "Delivery accepted successfully", order });
   } catch (error) {
     res.status(error.statusCode || 500).json({ message: error.message });
@@ -54,6 +56,8 @@ const updateDeliveryStatus = async (req, res) => {
       return res.status(400).json({ message: "status is required" });
     }
     const order = await deliveryService.updateDeliveryStatus(req.user._id, req.params.orderId, status, otp);
+    const { broadcastOrderUpdate } = require("../lib/socketHelper");
+    broadcastOrderUpdate(order, "order:status_updated");
     res.json({ message: `Delivery status updated to ${status}`, order });
   } catch (error) {
     res.status(error.statusCode || 500).json({ message: error.message });

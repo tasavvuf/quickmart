@@ -149,6 +149,9 @@ const updateOrderStatus = async (req, res) => {
       req.user?.name || "vendor"
     );
 
+    const { broadcastOrderUpdate } = require("../lib/socketHelper");
+    broadcastOrderUpdate(order);
+
     res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,

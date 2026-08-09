@@ -220,6 +220,9 @@ exports.checkout = async (req, res) => {
     cart.activeStore = null;
     await cart.save();
 
+    const { broadcastOrderUpdate } = require('../lib/socketHelper');
+    broadcastOrderUpdate(order, 'order:new_placed');
+
     return res.status(201).json({
       success: true,
       message: "Order placed successfully",

@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { api, getApiErrorMessage } from "../lib/api";
+import { socket } from "../lib/socket";
 import { UserContext } from "../context/UserContext";
 import { formatAddress } from "../lib/adapters";
 
@@ -73,11 +74,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (user && user.role !== "admin") {
       toast.error("Unauthorized: Access restricted to Administrators");
-      navigate("/admin/login");
+      navigate("/", { replace: true });
       return;
     }
     loadAdminData();
-  }, [user]);
+  }, [user, navigate]);
+
+  useEffect(() => {
+    socket.emit("admin:join");
+
+    const handleUpdate = () => {
+      loadAdminData(false);
+    };
+
+    socket.on("order:status_updated", handleUpdate);
+    socket.on("order:new_placed", handleUpdate);
+
+    return () => {
+      socket.off("order:status_updated", handleUpdate);
+      socket.off("order:new_placed", handleUpdate);
+    };
+  }, []);
 
   const handleVerifyStore = async (storeId, isApproved) => {
     setActionLoadingId(storeId);

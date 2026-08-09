@@ -89,8 +89,19 @@ export default function OrderDetail() {
       }
     });
 
+    const handleStatusUpdate = (payload) => {
+      if (payload && payload.order) {
+        setOrder(payload.order);
+      } else {
+        fetchOrder(true);
+      }
+    };
+
+    socket.on("order:status_updated", handleStatusUpdate);
+
     return () => {
       socket.off("delivery:location");
+      socket.off("order:status_updated", handleStatusUpdate);
     };
   }, [orderId]);
 

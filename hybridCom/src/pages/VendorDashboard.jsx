@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import { api, getApiErrorMessage } from "../lib/api";
+import { socket } from "../lib/socket";
 import { toast } from "react-toastify";
 import {
   LayoutDashboard,
@@ -13,6 +14,7 @@ import VendorOverviewTab from "../components/vendor/VendorOverviewTab";
 import VendorOrdersTab from "../components/vendor/VendorOrdersTab";
 import VendorProductsTab from "../components/vendor/VendorProductsTab";
 import VendorStoreTab from "../components/vendor/VendorStoreTab";
+import UnverifiedNotice from "../components/UnverifiedNotice";
 
 export default function VendorDashboard() {
   const { user } = useContext(UserContext);
@@ -74,6 +76,25 @@ export default function VendorDashboard() {
     loadAll();
   }, [fetchDashboard, fetchOrders, fetchProducts]);
 
+  useEffect(() => {
+    if (!store?._id) return;
+    const storeId = store._id;
+    socket.emit("store:join", { storeId });
+
+    const handleUpdate = () => {
+      fetchOrders();
+      fetchDashboard();
+    };
+
+    socket.on("order:status_updated", handleUpdate);
+    socket.on("order:new_placed", handleUpdate);
+
+    return () => {
+      socket.off("order:status_updated", handleUpdate);
+      socket.off("order:new_placed", handleUpdate);
+    };
+  }, [store?._id, fetchOrders, fetchDashboard]);
+
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       const res = await api.patch(`/vendor/orders/${orderId}/status`, { status: newStatus });
@@ -122,6 +143,17 @@ export default function VendorDashboard() {
   };
 
   const pendingOrdersCount = stats?.pendingOrders || 0;
+
+  // Block dashboard access if store is not verified by admin
+  if (!loadingDashboard && store && store.isVerifiedByAdmin === false) {
+    return (
+      <UnverifiedNotice
+        type="vendor"
+        name={user?.name || store?.name}
+        onRefresh={fetchDashboard}
+      />
+    );
+  }
 
   const tabClasses = (tab) =>
     `flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold transition-all cursor-pointer ${

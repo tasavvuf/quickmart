@@ -25,6 +25,7 @@ import { UserContext } from "../context/UserContext";
 import { formatAddress } from "../lib/adapters";
 import LiveOrderMap from "../components/LiveOrderMap";
 import { socket } from "../lib/socket";
+import UnverifiedNotice from "../components/UnverifiedNotice";
 
 export default function DeliveryDashboard() {
   const navigate = useNavigate();
@@ -161,6 +162,24 @@ export default function DeliveryDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (user?._id) {
+      socket.emit("partner:join", { partnerId: user._id });
+    }
+
+    const handleUpdate = () => {
+      loadDashboardData(false);
+    };
+
+    socket.on("order:status_updated", handleUpdate);
+    socket.on("order:available_new", handleUpdate);
+
+    return () => {
+      socket.off("order:status_updated", handleUpdate);
+      socket.off("order:available_new", handleUpdate);
+    };
+  }, [user?._id]);
+
   // Accept Order (Atomic)
   const handleAcceptOrder = async (orderId) => {
     setActionLoading(true);
@@ -174,27 +193,27 @@ export default function DeliveryDashboard() {
       if (err.response?.status === 409) {
         toast.error("Order was already accepted by another delivery partner!");
       } else {
-        toast.error(getApiErrorMessage(err, "Failed to accept delivery"));
+        toast.error(getApiErrorMessage(err, "Failed to accept order"));
       }
-      loadDashboardData();
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Update Status Transition
+  // Update Status
   const handleUpdateStatus = async (orderId, newStatus) => {
+    if (newStatus === "DELIVERED") {
+      setShowOtpModal(true);
+      return;
+    }
+
     setActionLoading(true);
     try {
-      const response = await api.patch(`/delivery/orders/${orderId}/status`, { status: newStatus });
-      toast.success(`Order updated: ${newStatus.replace(/_/g, " ")}`);
-      
-      if (newStatus === "DELIVERED") {
-        setActiveOrder(null);
-        setActiveTab("history");
-      } else {
-        setActiveOrder(response.data.order);
-      }
+      const response = await api.patch(`/delivery/orders/${orderId}/status`, {
+        status: newStatus,
+      });
+      toast.success(`Status updated to ${newStatus}`);
+      setActiveOrder(response.data.order);
       loadDashboardData();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Failed to update status"));
@@ -216,6 +235,19 @@ export default function DeliveryDashboard() {
         return null;
     }
   };
+
+  // Block dashboard access if Delivery Partner is not verified by admin
+  const isPartnerVerified = stats?.isVerified ?? user?.deliveryPartnerProfile?.isVerified ?? true;
+
+  if (!loading && isPartnerVerified === false) {
+    return (
+      <UnverifiedNotice
+        type="deliveryPartner"
+        name={user?.name}
+        onRefresh={() => loadDashboardData(true)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen py-6 px-4 sm:px-6 max-w-6xl mx-auto space-y-6">
