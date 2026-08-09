@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { api, getApiErrorMessage } from "../lib/api";
 import { adaptStores } from "../lib/adapters";
@@ -12,13 +12,15 @@ export function StoreContextProvider({ children }) {
   const [isLoadingStores, setIsLoadingStores] = useState(true);
   const locationCtx = useContext(LocationDataContext);
 
-  const loadStores = async (customLocation = null) => {
+  const loadStores = useCallback(async (customLocation = null) => {
     setIsLoadingStores(true);
 
     try {
       let location = customLocation;
       if (!location || location.lat == null || location.lng == null) {
-        if (locationCtx?.getUserLocation) {
+        if (locationCtx?.lat != null && locationCtx?.lng != null) {
+          location = { lat: locationCtx.lat, lng: locationCtx.lng };
+        } else if (locationCtx?.getUserLocation) {
           location = await locationCtx.getUserLocation();
         }
       }
@@ -43,11 +45,15 @@ export function StoreContextProvider({ children }) {
     } finally {
       setIsLoadingStores(false);
     }
-  };
+  }, [locationCtx?.lat, locationCtx?.lng, locationCtx?.getUserLocation]);
 
   useEffect(() => {
-    loadStores();
-  }, []);
+    if (locationCtx?.lat != null && locationCtx?.lng != null) {
+      loadStores({ lat: locationCtx.lat, lng: locationCtx.lng });
+    } else {
+      loadStores();
+    }
+  }, [locationCtx?.lat, locationCtx?.lng, loadStores]);
 
   const value = {
     stores,

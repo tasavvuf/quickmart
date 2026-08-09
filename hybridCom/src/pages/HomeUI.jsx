@@ -117,10 +117,10 @@ export default function HomeUI() {
   });
 
   const locationDisplayLabel = (() => {
-    if (locationSource === "saved") return "Saved Location 🏠";
-    if (locationSource === "gps") return "Current GPS 📍";
-    if (locationSource === "ip") return locationName || "IP Location 🌐";
-    return "Location Set 📍";
+    if (locationSource === "saved") return "Saved Location";
+    if (locationSource === "gps") return "Current GPS";
+    if (locationSource === "ip") return locationName || "IP Location";
+    return "Location Set";
   })();
 
   return (
@@ -276,8 +276,8 @@ export default function HomeUI() {
                               ₹{product.price}
                             </span>
                             {distance != null && (
-                              <span className="text-[10px] text-muted-foreground font-bold">
-                                📍 {distance} km
+                              <span className="text-[10px] text-muted-foreground font-bold flex items-center gap-1">
+                                <MapPin size={11} className="text-amber-400" /> {distance} km
                               </span>
                             )}
                           </div>
@@ -371,11 +371,12 @@ export default function HomeUI() {
 
                         <div className="mt-4 pt-3 border-t border-border/60 flex flex-col gap-3">
                           <div className="flex items-center justify-between text-xs text-muted-foreground font-bold">
-                            <span>{store.products?.length || 0} products</span>
                             {distance != null ? (
-                              <span className="font-black text-foreground">📍 {distance} km</span>
+                              <span className="font-black text-foreground flex items-center gap-1">
+                                <MapPin size={12} className="text-amber-400" /> {distance} km away
+                              </span>
                             ) : (
-                              <span>Nearby</span>
+                              <span className="font-medium text-muted-foreground">Local Merchant</span>
                             )}
                           </div>
 
@@ -450,8 +451,8 @@ export default function HomeUI() {
                               ₹{product.price}
                             </span>
                             {distance != null && (
-                              <span className="text-[10px] text-muted-foreground font-bold">
-                                📍 {distance} km
+                              <span className="text-[10px] text-muted-foreground font-bold flex items-center gap-1">
+                                <MapPin size={11} className="text-amber-400" /> {distance} km
                               </span>
                             )}
                           </div>
@@ -552,11 +553,12 @@ export default function HomeUI() {
 
                         <div className="mt-4 pt-3 border-t border-border/60 flex flex-col gap-3">
                           <div className="flex items-center justify-between text-xs text-muted-foreground font-bold">
-                            <span>{store.products?.length || 0} products</span>
                             {distance != null ? (
-                              <span className="font-black text-foreground">📍 {distance} km</span>
+                              <span className="font-black text-foreground flex items-center gap-1">
+                                <MapPin size={12} className="text-amber-400" /> {distance} km away
+                              </span>
                             ) : (
-                              <span>Nearby</span>
+                              <span className="font-medium text-muted-foreground">Local Merchant</span>
                             )}
                           </div>
 
