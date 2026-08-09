@@ -54,8 +54,8 @@ Orders are governed by a synchronized state machine with strict vendor and deliv
 [Customer Checkout]
         │
         ▼
-   vendorStatus: PENDING ──(Vendor Rejects)──► vendorStatus: REJECTED (Stock Restored)
-        │
+   vendorStatus: PENDING ──(Vendor Rejects)──► vendorStatus: REJECTED
+        │                                      deliveryStatus: CANCELLED (Stock Restored)
   (Vendor Accepts)
         │
         ▼
@@ -97,13 +97,13 @@ vendorStatus: OUT_FOR_DELIVERY ◄─ deliveryStatus: OUT_FOR_DELIVERY
 
 | Role | Allowed Transitions |
 | :--- | :--- |
-| **Vendor** | `PENDING` → `["ACCEPTED", "REJECTED"]`<br>`ACCEPTED` → `["PREPARING"]`<br>`PREPARING` → `["READY"]`<br>*Responsibility strictly ends at READY. Vendors cannot transition past READY.* |
+| **Vendor** | `PENDING` → `["ACCEPTED", "REJECTED"]`<br>`ACCEPTED` → `["PREPARING", "REJECTED"]`<br>`PREPARING` → `["READY", "REJECTED"]`<br>*When REJECTED is selected, deliveryStatus is set to CANCELLED, deliveryPartner is cleared, and real-time order:removed event is emitted to delivery pool.* |
 | **Delivery Partner** | `ASSIGNED` → `["PICKED_UP"]`<br>`PICKED_UP` → `["OUT_FOR_DELIVERY"]`<br>`OUT_FOR_DELIVERY` → `["DELIVERED"]` *(Requires customer 4-digit OTP)* |
 
 ### 🔒 4-Digit Delivery OTP Security Rule
 - **Generation**: Each order auto-generates a 4-digit numeric OTP (`deliveryOtp`) upon creation.
-- **Privacy & Hidden Projection**: Saved with `deliveryOtp: { type: String, select: false }` in MongoDB. Excluded from vendor, delivery partner, and aggregation query projections.
-- **Customer Exclusivity**: Visible ONLY to the customer who placed the order when fetching `/api/orders/:orderId`.
+- **Privacy & Hidden Projection**: Saved with `deliveryOtp: { type: String, select: false }` in MongoDB. Excluded from non-admin projections.
+- **Customer & Admin Exclusivity**: Visible ONLY to the customer who placed the order when fetching `/api/orders/:orderId` and to authorized Administrators in the Admin Order Inspector Modal.
 - **Verification**: Transition to `DELIVERED` requires the delivery partner to enter the customer's 4-digit PIN (`PATCH /api/delivery/orders/:orderId/status` with `{ status: "DELIVERED", otp: "4829" }`). Failed OTPs return `400 Bad Request`.
 
 ### 📡 5. Real-Time Socket.IO Live Location & OSRM Road Routing
@@ -157,7 +157,7 @@ if (!order) {
 Available orders are filtered using the partner's location `[lng, lat]` and the store's location `[lng, lat]`:
 $$\text{haversine}(c_1, c_2) = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \text{lat}}{2}\right) + \cos(\text{lat}_1)\cos(\text{lat}_2)\sin^2\left(\frac{\Delta \text{lng}}{2}\right)}\right)$$
 - Max radius constraint: `MAX_DELIVERY_RADIUS_KM = 20`.
-- Orders outside 20km are automatically excluded from the delivery partner's feed.
+- Orders outside 20km or marked as `REJECTED`/`CANCELLED` are automatically excluded from the delivery partner's feed.
 
 ---
 
@@ -167,11 +167,11 @@ $$\text{haversine}(c_1, c_2) = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \t
 - `userName`, `name`, `phoneNumber`, `email`, `password`, `role` (`user` \| `admin` \| `vendor` \| `deliveryPartner`).
 - `location`: GeoJSON `Point` (`coordinates: [lng, lat]`).
 - `addresses`: Array of saved customer delivery addresses with individual GeoJSON points.
-- `deliveryPartnerProfile`: Subdocument storing vehicle details, emergency contacts, availability, and ImageKit verification documents.
+- `deliveryPartnerProfile`: Subdocument storing vehicle details (`vehicleType`: `Motorcycle` \| `Scooter` \| `Car`), emergency contacts, availability, and ImageKit verification documents.
 
 ### `Store` (`models/Store.model.js`)
 - `owner`: Reference to vendor `User._id`.
-- `name`, `description`, `category`, `emergencyContact`, `address`, `storePhoto`.
+- `name`, `description`, `category`, `emergencyContact`, `address`, `storePhoto`, `isOpen`, `isVerifiedByAdmin`.
 - `location`: GeoJSON `Point` indexed with `2dsphere`.
 
 ### `Product` (`models/Product.model.js`)
@@ -183,7 +183,7 @@ $$\text{haversine}(c_1, c_2) = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \t
 - `store`: Reference to `Store._id`.
 - `deliveryPartner`: Reference to delivery partner `User._id` (default `null`).
 - `items`: Snapshot of products (`productId`, `productName`, `priceAtPurchase`, `quantity`, `subtotal`).
-- `vendorStatus`, `deliveryStatus`, `paymentType` (`COD` \| `UPI`), `paymentStatus` (`PENDING` \| `PAID`).
+- `vendorStatus` (`PENDING` | `ACCEPTED` | `REJECTED` | `PREPARING` | `READY` | `PICKED_UP` | `OUT_FOR_DELIVERY` | `DELIVERED`), `deliveryStatus` (`WAITING` | `ASSIGNED` | `PICKED_UP` | `OUT_FOR_DELIVERY` | `DELIVERED` | `CANCELLED`), `paymentType` (`COD` | `UPI`), `paymentStatus` (`PENDING` | `PAID`).
 - `statusHistory`: Timestamped audit trail of status changes.
 
 ---

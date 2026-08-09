@@ -167,7 +167,21 @@
  * @swagger
  * /api/auth/logout:
  *   get:
- *     summary: Logout user (clears token cookie)
+ *     summary: Logout user (clears token cookie across all paths)
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Logged out successfully"
+ *   post:
+ *     summary: Logout user (clears token cookie across all paths)
  *     tags: [Authentication]
  *     responses:
  *       200:

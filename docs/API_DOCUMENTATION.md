@@ -32,15 +32,15 @@ Authenticates any user role.
 ### `GET /api/auth/test`
 Validates JWT token and returns user profile. `Authorization: Bearer <token>`.
 
-### `GET /api/auth/logout`
-Clears session token.
+### `GET /api/auth/logout` & `POST /api/auth/logout`
+Clears session token across all cookie path variations (`token`, `accessToken`, `jwt`). Supports both GET and POST HTTP requests.
 
 ---
 
 ## 🏪 2. Public Store & Catalog (`/api/stores`)
 
 ### `GET /api/stores`
-Returns list of active stores. Optional query params: `lat`, `lng`, `radius` (km).
+Returns list of open (`isOpen: true`) and admin-verified (`isVerifiedByAdmin: true`) stores near user's GPS coordinates (`lat`, `lng`). Uses 500km `$geoNear` radius with database fallback.
 
 ### `GET /api/stores/:storeId`
 Returns detailed store profile and product catalog.
@@ -64,6 +64,11 @@ Updates item quantity.
 
 ### `DELETE /api/cart/items/:productId`
 Removes an item from the cart.
+
+### `POST /api/cart/checkout`
+Validates cart items, verifies store status (`store.isOpen === true` & `isVerifiedByAdmin === true`), calculates taxes/delivery fees, and checks out order.
+- **Payload**: `{ deliveryAddress, paymentType: "COD" | "UPI" }`
+- **Error Guards**: Returns `400 Bad Request` if store is closed or unverified by admin.
 
 ---
 
@@ -95,6 +100,7 @@ Returns vendor order history with filter options (`ALL`, `PENDING`, `ACCEPTED`, 
 ### `PATCH /api/vendor/orders/:orderId/status`
 Advances vendor order status.
 - **Payload**: `{ status: "ACCEPTED" | "PREPARING" | "READY" | "REJECTED" }`
+- **REJECTED Logic**: When `status === "REJECTED"`, sets `deliveryStatus: "CANCELLED"`, unassigns `deliveryPartner: null`, restores product stock, and broadcasts real-time Socket.IO `order:removed` event to delivery pool.
 
 ### `GET /api/vendor/products`
 Lists store products.
@@ -115,7 +121,7 @@ Toggles featured status. Enforces the strict **max 3 featured products** limit p
 Returns delivery partner dashboard stats (total completed deliveries, availability, current active order).
 
 ### `GET /api/delivery/available-orders`
-Returns all orders in `READY` status from stores **within 20km radius** of partner's GPS location. Enriched with `distanceToStore` and `storeToCustomerDistance`.
+Returns all orders in `READY` status from stores **within 20km radius** of partner's GPS location. Excludes any `REJECTED` or `CANCELLED` orders. Enriched with `distanceToStore` and `storeToCustomerDistance`.
 
 ### `POST /api/delivery/accept/:orderId`
 Atomically claims an available order.
@@ -159,5 +165,5 @@ Lists all registered delivery partners with **unredacted ImageKit verification d
 Approves rider verification status.
 - **Payload**: `{ isVerified: true | false }`
 
-### `GET /api/admin/orders?status=ALL|PENDING|READY|DELIVERED`
-Lists all platform orders across all stores with full populate parameters.
+### `GET /api/admin/orders?status=ALL|PENDING|READY|DELIVERED|REJECTED`
+Lists all platform orders across all stores with populated `deliveryOtp`, customer phone & address, store emergency contact & location, delivery partner phone & vehicle profile, and items roster.

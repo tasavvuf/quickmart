@@ -1,3 +1,149 @@
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin
+ *     description: Administrative management endpoints (requires role === "admin")
+ */
+
+/**
+ * @swagger
+ * /api/admin/overview:
+ *   get:
+ *     summary: Get platform analytics overview
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Overview KPIs and recent orders
+ *       403:
+ *         description: Forbidden - Admin access required
+ */
+
+/**
+ * @swagger
+ * /api/admin/stores:
+ *   get:
+ *     summary: Get store approval roster
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [ALL, PENDING_APPROVAL, VERIFIED]
+ *     responses:
+ *       200:
+ *         description: List of vendor stores
+ */
+
+/**
+ * @swagger
+ * /api/admin/stores/{storeId}/verify:
+ *   patch:
+ *     summary: Approve or revoke store registration
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: storeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isApproved
+ *             properties:
+ *               isApproved:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Store approval updated
+ */
+
+/**
+ * @swagger
+ * /api/admin/vendors:
+ *   get:
+ *     summary: Get registered vendors roster
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of vendor user accounts
+ */
+
+/**
+ * @swagger
+ * /api/admin/delivery-partners:
+ *   get:
+ *     summary: Get delivery partner fleet with verification documents
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of delivery partners with unredacted document URLs
+ */
+
+/**
+ * @swagger
+ * /api/admin/delivery-partners/{partnerId}/verify:
+ *   patch:
+ *     summary: Approve or revoke delivery partner verification
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: partnerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isVerified
+ *             properties:
+ *               isVerified:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Delivery partner verification updated
+ */
+
+/**
+ * @swagger
+ * /api/admin/orders:
+ *   get:
+ *     summary: Get cross-store platform order stream
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [ALL, PENDING, ACCEPTED, PREPARING, READY, DELIVERED, REJECTED]
+ *     responses:
+ *       200:
+ *         description: List of platform orders populated with customer, store location/phone, rider, and OTP details
+ */
+
 const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/admin.controller");
