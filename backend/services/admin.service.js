@@ -142,9 +142,11 @@ const getAllPlatformOrders = async (statusFilter = "ALL") => {
   }
 
   return Order.find(query)
-    .populate("customer", "name email phoneNumber")
-    .populate("store", "name address emergencyContact")
-    .populate("deliveryPartner", "name phoneNumber")
+    .select("+deliveryOtp")
+    .populate("customer", "name email phoneNumber profilePhoto")
+    .populate("store", "name category address location emergencyContact owner")
+    .populate("deliveryPartner", "name phoneNumber deliveryPartnerProfile")
+    .populate("items.productId", "name price image category")
     .sort({ createdAt: -1 });
 };
 

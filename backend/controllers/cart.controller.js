@@ -105,6 +105,29 @@ exports.checkout = async (req, res) => {
 
     const storeId = cart.activeStore?._id || cart.activeStore;
 
+    const Store = require("../models/Store.model");
+    const storeObj = typeof cart.activeStore === "object" && cart.activeStore !== null
+      ? cart.activeStore
+      : await Store.findById(storeId);
+
+    if (!storeObj) {
+      return res.status(404).json({ success: false, message: "Store not found" });
+    }
+
+    if (!storeObj.isOpen) {
+      return res.status(400).json({
+        success: false,
+        message: `Store "${storeObj.name || 'Store'}" is currently closed. Orders cannot be placed right now.`,
+      });
+    }
+
+    if (!storeObj.isVerifiedByAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: `Store "${storeObj.name || 'Store'}" is not verified by admin.`,
+      });
+    }
+
     const orderItems = cart.items.map((item) => {
       const p = item.product;
       const price = p?.price || 0;

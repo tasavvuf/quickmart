@@ -60,6 +60,11 @@ function Cart() {
       return;
     }
 
+    if (store && !store.isOpen) {
+      toast.error(`Store "${store.name}" is currently closed. Orders cannot be placed right now.`);
+      return;
+    }
+
     if (!selectedDeliveryAddress && !hasSelectedSavedAddress) {
       setShowAddressModal(true);
       toast.warn("Please choose or add a delivery address before checkout");
@@ -196,6 +201,12 @@ function Cart() {
               <span className="app-muted">|</span>
               <span className="text-sm text-caramel">{store.category}</span>
             </div>
+
+            {!store.isOpen && (
+              <div className="mt-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-2">
+                ⚠️ Store is currently CLOSED. Ordering is disabled for this store.
+              </div>
+            )}
           </div>
 
           <Link
@@ -238,10 +249,10 @@ function Cart() {
                 className="h-28 w-full rounded-xl object-cover sm:w-32"
               />
 
-              <div className="flex-1">
-                <h3 className="text-xl font-bold">{item.name}</h3>
-                <p className="app-muted text-sm">{item.category}</p>
-                <p className="mt-2 font-mono text-caramel">₹{item.price}</p>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-xl font-bold break-words line-clamp-2 leading-snug">{item.name}</h3>
+                <p className="app-muted text-xs sm:text-sm truncate">{item.category}</p>
+                <p className="mt-1 font-mono text-caramel font-black">₹{item.price}</p>
               </div>
 
               <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
@@ -282,14 +293,14 @@ function Cart() {
 
         {suggestedProducts.length > 0 && (
           <section className="app-card mt-6 rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-xl font-bold">Suggestions from {store.name}</h2>
-                <p className="text-muted-foreground text-xs font-medium">Add popular items directly from this store</p>
+            <div className="flex items-center justify-between mb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base sm:text-xl font-bold break-words line-clamp-2 leading-snug">Suggestions from {store.name}</h2>
+                <p className="text-muted-foreground text-xs font-medium truncate">Add popular items directly from this store</p>
               </div>
               <Link
                 to={`/vendor/${store.id}`}
-                className="text-xs font-bold text-caramel hover:underline inline-flex items-center gap-1"
+                className="text-xs font-bold text-caramel hover:underline inline-flex items-center gap-1 shrink-0"
               >
                 View all items →
               </Link>
@@ -460,14 +471,16 @@ function Cart() {
 
         <button
           onClick={handleProceedToCheckout}
-          disabled={isPlacingOrder}
-          className="mt-6 w-full cursor-pointer rounded-2xl bg-amber-400 hover:bg-amber-300 text-black px-5 py-4 text-lg font-extrabold transition shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2 disabled:opacity-50"
+          disabled={isPlacingOrder || (store && !store.isOpen)}
+          className="mt-6 w-full cursor-pointer rounded-2xl bg-amber-400 hover:bg-amber-300 text-black px-5 py-4 text-lg font-extrabold transition shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPlacingOrder ? (
             <>
               <div className="h-5 w-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
               Placing Order...
             </>
+          ) : store && !store.isOpen ? (
+            "Store Closed (Orders Disabled) 🛑"
           ) : (
             "Proceed To Checkout 🚀"
           )}

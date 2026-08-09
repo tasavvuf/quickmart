@@ -23,6 +23,7 @@ import { api, getApiErrorMessage } from "../lib/api";
 import { socket } from "../lib/socket";
 import { UserContext } from "../context/UserContext";
 import { formatAddress } from "../lib/adapters";
+import LiveOrderMap from "../components/LiveOrderMap";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
   const [selectedPartnerDocs, setSelectedPartnerDocs] = useState(null);
   const [orders, setOrders] = useState([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
 
   // Load Admin Console Data
   const loadAdminData = async (showToast = false) => {
@@ -124,14 +126,17 @@ export default function AdminDashboard() {
 
   const handleAdminLogout = async () => {
     try {
-      await api.post("/auth/logout");
-    } catch {
-      // Ignore
+      await api.get("/auth/logout");
+    } catch (err) {
+      console.error("Admin logout error", err);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      setUser(null);
+      setIsLoggedIn(false);
+      toast.success("Logged out successfully");
+      navigate("/admin/login", { replace: true });
     }
-    setUser(null);
-    setIsLoggedIn(false);
-    toast.info("Logged out");
-    navigate("/admin/login");
   };
 
   const filteredStores = stores.filter((s) => {
@@ -212,7 +217,7 @@ export default function AdminDashboard() {
       </header>
 
       {/* Monochrome Navigation Tabs */}
-      <nav className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#e5e5e7] overflow-x-auto shadow-sm">
+      <nav className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#e5e5e7] overflow-x-auto max-w-full min-w-0 shadow-sm no-scrollbar">
         {[
           { key: "overview", label: "Overview", icon: Shield, badge: null },
           { key: "stores", label: "Store Approvals", icon: StoreIcon, badge: overviewData?.metrics?.pendingStores },
@@ -330,7 +335,12 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-[#eeeeef]">
                   {overviewData.recentOrders?.map((order) => (
-                    <tr key={order._id} className="hover:bg-[#fbfbfb] transition">
+                    <tr
+                      key={order._id}
+                      onClick={() => setSelectedOrderDetails(order)}
+                      className="hover:bg-[#fbfbfb] transition cursor-pointer"
+                      title="Click to inspect order details"
+                    >
                       <td className="p-3 font-mono font-extrabold text-[#363537]">
                         #{order._id.substring(order._id.length - 8).toUpperCase()}
                       </td>
@@ -365,12 +375,12 @@ export default function AdminDashboard() {
               <p className="text-xs text-[#706f73] font-medium">Verify vendor registrations and store availability</p>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#e5e5e7] text-xs shadow-sm">
+            <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-[#e5e5e7] text-xs shadow-sm overflow-x-auto max-w-full no-scrollbar">
               {["ALL", "PENDING_APPROVAL", "VERIFIED"].map((f) => (
                 <button
                   key={f}
                   onClick={() => setStoreStatusFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition ${
+                  className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition shrink-0 ${
                     storeStatusFilter === f
                       ? "bg-[#363537] text-[#fbfbfb]"
                       : "text-[#706f73] hover:text-[#363537]"
@@ -559,15 +569,15 @@ export default function AdminDashboard() {
       {/* TAB 5: ALL PLATFORM ORDERS */}
       {activeTab === "orders" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-4 min-w-0">
             <h2 className="text-lg font-bold text-[#363537]">Platform Order Stream ({orders.length})</h2>
 
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-[#e5e5e7] text-xs shadow-sm">
-              {["ALL", "PENDING", "ACCEPTED", "PREPARING", "READY", "DELIVERED"].map((f) => (
+            <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-[#e5e5e7] text-xs shadow-sm overflow-x-auto max-w-full no-scrollbar">
+              {["ALL", "PENDING", "ACCEPTED", "PREPARING", "READY", "DELIVERED", "REJECTED"].map((f) => (
                 <button
                   key={f}
                   onClick={() => setOrderStatusFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition ${
+                  className={`px-3 py-1.5 rounded-lg font-bold cursor-pointer transition shrink-0 ${
                     orderStatusFilter === f
                       ? "bg-[#363537] text-[#fbfbfb]"
                       : "text-[#706f73] hover:text-[#363537]"
@@ -581,9 +591,14 @@ export default function AdminDashboard() {
 
           <div className="space-y-3">
             {filteredOrders.map((order) => (
-              <div key={order._id} className="bg-white border border-[#e5e5e7] rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
+              <div
+                key={order._id}
+                onClick={() => setSelectedOrderDetails(order)}
+                className="bg-white border border-[#e5e5e7] hover:border-[#363537] rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer transition"
+                title="Click to view numbers, details & live map"
+              >
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
                     <span className="font-mono font-extrabold text-[#363537] text-xs bg-[#fbfbfb] px-2.5 py-1 rounded-lg border border-[#e5e5e7]">
                       #{order._id.substring(order._id.length - 8).toUpperCase()}
                     </span>
@@ -594,17 +609,29 @@ export default function AdminDashboard() {
                       Delivery: {order.deliveryStatus}
                     </span>
                   </div>
-                  <p className="text-xs text-[#363537]">
-                    Store: <strong className="text-[#363537]">{order.store?.name}</strong> • Customer: <strong className="text-[#363537]">{order.customer?.name}</strong> ({order.customer?.phoneNumber})
+                  <p className="text-xs text-[#363537] break-words">
+                    Store: <strong className="text-[#363537]">{order.store?.name}</strong> • Customer: <strong className="text-[#363537]">{order.customer?.name}</strong> ({order.customer?.phoneNumber || "N/A"})
                   </p>
                   <p className="text-[11px] text-[#706f73]">
                     Assigned Rider: {order.deliveryPartner?.name || "Unassigned"}
                   </p>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-lg font-black text-[#363537]">₹{order.grandTotal}</span>
-                  <span className="block text-[10px] font-bold text-[#706f73] uppercase">{order.paymentType} • {order.paymentStatus}</span>
+                <div className="flex items-center justify-between md:flex-col md:items-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[#eeeeef] shrink-0">
+                  <div className="text-right">
+                    <span className="text-lg font-black text-[#363537]">₹{order.grandTotal}</span>
+                    <span className="block text-[10px] font-bold text-[#706f73] uppercase">{order.paymentType} • {order.paymentStatus}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedOrderDetails(order);
+                    }}
+                    className="mt-1 px-3 py-1.5 rounded-xl bg-[#363537] hover:bg-[#201f21] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1"
+                  >
+                    <Eye size={13} /> Inspect Order
+                  </button>
                 </div>
               </div>
             ))}
@@ -668,6 +695,190 @@ export default function AdminDashboard() {
               className="w-full py-3 bg-[#363537] hover:bg-[#201f21] text-[#fbfbfb] font-bold text-xs rounded-xl cursor-pointer shadow-sm"
             >
               Close Document Inspector
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN ORDER DETAILS & LIVE LOCATION INSPECTOR MODAL */}
+      {selectedOrderDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-[#e5e5e7] w-full max-w-3xl rounded-3xl p-6 sm:p-8 text-[#363537] max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#eeeeef] pb-4">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-black text-sm bg-[#363537] text-white px-3 py-1 rounded-xl">
+                    #{selectedOrderDetails._id.substring(selectedOrderDetails._id.length - 8).toUpperCase()}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                    Vendor: {selectedOrderDetails.vendorStatus}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                    Delivery: {selectedOrderDetails.deliveryStatus}
+                  </span>
+                </div>
+                <p className="text-xs text-[#706f73] font-medium mt-1">
+                  Placed on {new Date(selectedOrderDetails.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedOrderDetails(null)}
+                className="p-2 rounded-xl bg-[#f6f6f7] text-[#706f73] hover:text-[#363537] cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* OTP Alert (if generated) */}
+            {selectedOrderDetails.deliveryOtp && (
+              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 font-extrabold text-xs flex items-center justify-between">
+                <span>Delivery Verification OTP</span>
+                <span className="font-mono text-sm tracking-widest bg-amber-500 text-black px-3 py-1 rounded-xl">
+                  {selectedOrderDetails.deliveryOtp}
+                </span>
+              </div>
+            )}
+
+            {/* Stakeholders Phone Numbers & Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Customer Box */}
+              <div className="p-4 rounded-2xl bg-[#fbfbfb] border border-[#e5e5e7] space-y-2">
+                <span className="text-[10px] text-[#9e9da2] uppercase font-black block">👤 Customer Details</span>
+                <p className="font-bold text-sm text-[#363537]">{selectedOrderDetails.customer?.name || "Customer"}</p>
+                {selectedOrderDetails.customer?.phoneNumber ? (
+                  <a
+                    href={`tel:${selectedOrderDetails.customer.phoneNumber}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:underline"
+                  >
+                    <Phone size={13} /> {selectedOrderDetails.customer.phoneNumber}
+                  </a>
+                ) : (
+                  <span className="text-xs text-[#706f73] block">Phone N/A</span>
+                )}
+                <p className="text-xs text-[#706f73] leading-relaxed pt-1">
+                  📍 {selectedOrderDetails.deliveryAddress?.fullAddress || formatAddress(selectedOrderDetails.deliveryAddress) || "Delivery address N/A"}
+                </p>
+              </div>
+
+              {/* Store / Vendor Box */}
+              <div className="p-4 rounded-2xl bg-[#fbfbfb] border border-[#e5e5e7] space-y-2">
+                <span className="text-[10px] text-[#9e9da2] uppercase font-black block">🏬 Store / Vendor</span>
+                <p className="font-bold text-sm text-[#363537] truncate">{selectedOrderDetails.store?.name || "Store"}</p>
+                {selectedOrderDetails.store?.emergencyContact || selectedOrderDetails.store?.owner?.phoneNumber ? (
+                  <a
+                    href={`tel:${selectedOrderDetails.store.emergencyContact || selectedOrderDetails.store.owner?.phoneNumber}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:underline"
+                  >
+                    <Phone size={13} /> {selectedOrderDetails.store.emergencyContact || selectedOrderDetails.store.owner?.phoneNumber}
+                  </a>
+                ) : (
+                  <span className="text-xs text-[#706f73] block">Emergency Phone N/A</span>
+                )}
+                <p className="text-xs text-[#706f73] leading-relaxed pt-1">
+                  📍 {formatAddress(selectedOrderDetails.store?.address) || "Store Address N/A"}
+                </p>
+              </div>
+
+              {/* Delivery Partner Box */}
+              <div className="p-4 rounded-2xl bg-[#fbfbfb] border border-[#e5e5e7] space-y-2">
+                <span className="text-[10px] text-[#9e9da2] uppercase font-black block">🛵 Delivery Partner</span>
+                <p className="font-bold text-sm text-[#363537]">{selectedOrderDetails.deliveryPartner?.name || "Unassigned"}</p>
+                {selectedOrderDetails.deliveryPartner?.phoneNumber ? (
+                  <a
+                    href={`tel:${selectedOrderDetails.deliveryPartner.phoneNumber}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:underline"
+                  >
+                    <Phone size={13} /> {selectedOrderDetails.deliveryPartner.phoneNumber}
+                  </a>
+                ) : (
+                  <span className="text-xs text-[#706f73] block">Partner Phone N/A</span>
+                )}
+                <p className="text-xs text-[#706f73] font-medium pt-1">
+                  Vehicle: {selectedOrderDetails.deliveryPartner?.deliveryPartnerProfile?.vehicleType || "N/A"} ({selectedOrderDetails.deliveryPartner?.deliveryPartnerProfile?.vehicleNumber || "No RC"})
+                </p>
+              </div>
+            </div>
+
+            {/* Live GPS Map (If Ongoing Order) */}
+            {selectedOrderDetails.vendorStatus !== "REJECTED" && (
+              <div className="space-y-2">
+                <span className="text-xs font-black text-[#363537] uppercase tracking-wider block">
+                  🗺️ Live Order Location & GPS Route
+                </span>
+                <LiveOrderMap
+                  storeCoords={
+                    selectedOrderDetails.store?.location?.coordinates?.length === 2
+                      ? [selectedOrderDetails.store.location.coordinates[1], selectedOrderDetails.store.location.coordinates[0]]
+                      : [22.286, 70.792]
+                  }
+                  customerCoords={
+                    selectedOrderDetails.deliveryAddress?.location?.coordinates?.length === 2
+                      ? [selectedOrderDetails.deliveryAddress.location.coordinates[1], selectedOrderDetails.deliveryAddress.location.coordinates[0]]
+                      : [22.2904, 70.7915]
+                  }
+                  partnerCoords={
+                    selectedOrderDetails.liveDeliveryLocation?.coordinates?.length === 2 && selectedOrderDetails.liveDeliveryLocation.coordinates[0] !== 0
+                      ? [selectedOrderDetails.liveDeliveryLocation.coordinates[1], selectedOrderDetails.liveDeliveryLocation.coordinates[0]]
+                      : null
+                  }
+                  storeName={selectedOrderDetails.store?.name || "Store"}
+                  customerName={selectedOrderDetails.customer?.name || "Customer"}
+                  partnerName={selectedOrderDetails.deliveryPartner?.name || "Delivery Partner"}
+                  height="300px"
+                />
+              </div>
+            )}
+
+            {/* Items Purchased Table */}
+            <div className="space-y-2">
+              <span className="text-xs font-black text-[#363537] uppercase tracking-wider block">
+                📦 Order Items Roster ({selectedOrderDetails.items?.length || 0})
+              </span>
+              <div className="border border-[#e5e5e7] rounded-2xl overflow-hidden">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-[#fbfbfb] text-[#706f73] font-bold uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">Product</th>
+                      <th className="p-3 text-center">Qty</th>
+                      <th className="p-3 text-right">Price</th>
+                      <th className="p-3 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#eeeeef]">
+                    {selectedOrderDetails.items?.map((item, i) => (
+                      <tr key={i} className="hover:bg-[#fbfbfb]">
+                        <td className="p-3 font-semibold text-[#363537]">
+                          {item.productName || item.productId?.name || "Product"}
+                        </td>
+                        <td className="p-3 text-center font-mono font-bold">{item.quantity}</td>
+                        <td className="p-3 text-right font-mono">₹{item.priceAtPurchase}</td>
+                        <td className="p-3 text-right font-mono font-bold text-[#363537]">
+                          ₹{item.subtotal || item.priceAtPurchase * item.quantity}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Financial Summary */}
+            <div className="p-4 rounded-2xl bg-[#fbfbfb] border border-[#e5e5e7] flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-[#363537] block">Payment Method</span>
+                <span className="text-xs text-[#706f73] font-semibold">{selectedOrderDetails.paymentType} • {selectedOrderDetails.paymentStatus}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-xs text-[#9e9da2] uppercase font-bold block">Grand Total</span>
+                <span className="text-2xl font-black text-[#363537]">₹{selectedOrderDetails.grandTotal}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setSelectedOrderDetails(null)}
+              className="w-full py-3 bg-[#363537] hover:bg-[#201f21] text-[#fbfbfb] font-bold text-xs rounded-xl cursor-pointer shadow-sm"
+            >
+              Close Order Inspector
             </button>
           </div>
         </div>

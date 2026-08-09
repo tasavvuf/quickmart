@@ -42,9 +42,12 @@ const broadcastOrderUpdate = (order, eventType = "order:status_updated") => {
     ioInstance.to(`partner:${partnerId}`).emit(eventType, payload);
   }
 
-  // 4. Delivery Pool (When vendor sets READY & status is WAITING)
+  // 4. Delivery Pool (When vendor sets READY & status is WAITING, or remove if REJECTED/CANCELLED)
   if (order.vendorStatus === "READY" && order.deliveryStatus === "WAITING") {
     ioInstance.to("delivery:available").emit("order:available_new", payload);
+  } else if (order.vendorStatus === "REJECTED" || order.deliveryStatus === "CANCELLED") {
+    ioInstance.to("delivery:available").emit("order:removed", { orderId, order });
+    ioInstance.to("delivery:available").emit("order:status_updated", payload);
   }
 
   // 5. Admin Dashboard Room

@@ -101,16 +101,18 @@ const updateOrderStatus = async (storeId, orderId, newVendorStatus, updatedBy = 
     order.acceptedAt = new Date();
   }
 
-  // If order is REJECTED after being ACCEPTED, restore stock
-  if (newVendorStatus === "REJECTED" && currentStatus === "ACCEPTED") {
-    for (const item of order.items) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: item.quantity },
-      });
+  // If order is REJECTED, restore stock if previously accepted, set deliveryStatus to CANCELLED, and clear deliveryPartner
+  if (newVendorStatus === "REJECTED") {
+    if (currentStatus === "ACCEPTED" || currentStatus === "PREPARING" || currentStatus === "READY") {
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: item.quantity },
+        });
+      }
     }
     order.userStatus = "CANCELLED_BY_VENDOR";
-  } else if (newVendorStatus === "REJECTED" && currentStatus === "PENDING") {
-    order.userStatus = "CANCELLED_BY_VENDOR";
+    order.deliveryStatus = "CANCELLED";
+    order.deliveryPartner = null;
   }
 
   if (newVendorStatus === "PREPARING") {

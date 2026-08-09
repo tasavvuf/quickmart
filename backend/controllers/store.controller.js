@@ -275,7 +275,7 @@ const searchStoresAndProducts = async (req, res) => {
       .lean();
 
     const products = matchingProducts
-      .filter((p) => p.store && p.store.isVerifiedByAdmin)
+      .filter((p) => p.store && p.store.isOpen && p.store.isVerifiedByAdmin)
       .map((p) => {
         const storeCoords = p.store.location?.coordinates;
         const distance =
@@ -293,6 +293,7 @@ const searchStoresAndProducts = async (req, res) => {
 
     // 2. Search Stores
     const matchingStores = await Store.find({
+      isOpen: true,
       isVerifiedByAdmin: true,
       $or: [
         { name: searchRegex },

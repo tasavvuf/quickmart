@@ -107,13 +107,6 @@ export default function OrderDetail() {
 
   useEffect(() => {
     fetchOrder();
-
-    // Live auto-polling every 3 seconds for instant status updates
-    const interval = setInterval(() => {
-      fetchOrder(true);
-    }, 3000);
-
-    return () => clearInterval(interval);
   }, [fetchOrder]);
 
   const handleCopyOrderId = () => {

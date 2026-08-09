@@ -47,12 +47,7 @@ function Nav() {
 
   useEffect(() => {
     fetchActiveOrder();
-
-    if (isLoggedIn && !isVendor && !isDeliveryPartner) {
-      const interval = setInterval(fetchActiveOrder, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [fetchActiveOrder, isLoggedIn, isVendor, isDeliveryPartner, location.pathname]);
+  }, [fetchActiveOrder, location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -208,23 +203,30 @@ function Nav() {
 
       {/* Mobile Nav Action Buttons */}
       {!isLoggedIn && !isAuthPage && (
-        <div className="sm:hidden w-full flex justify-center gap-3 px-6 pb-4 pt-1 border-t border-border/40">
+        <div className="sm:hidden w-full flex flex-col gap-2 px-4 pb-3 pt-1 border-t border-border/40">
           {isStorePage ? (
-            <>
+            <div className="flex gap-2">
               <Link to={"/vendor-login"} className="flex-1">
                 <button className="btn-secondary w-full py-2.5 text-xs font-black">Vendor Login</button>
               </Link>
               <Link to={"/vendor-signup"} className="flex-1">
                 <button className="btn-primary w-full py-2.5 text-xs font-black">Register Shop</button>
               </Link>
-            </>
+            </div>
           ) : (
             <>
-              <Link to={"/login"} className="flex-1">
-                <button className="btn-secondary w-full py-2.5 text-xs font-black">User Login</button>
-              </Link>
-              <Link to={"/signup"} className="flex-1">
-                <button className="btn-primary w-full py-2.5 text-xs font-black">User Signup</button>
+              <div className="flex gap-2">
+                <Link to={"/login"} className="flex-1">
+                  <button className="btn-secondary w-full py-2 text-xs font-black">User Login</button>
+                </Link>
+                <Link to={"/signup"} className="flex-1">
+                  <button className="btn-primary w-full py-2 text-xs font-black">User Signup</button>
+                </Link>
+              </div>
+              <Link to={"/delivery/login"} className="w-full">
+                <button className="w-full py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500/20 text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer">
+                  <span>🛵 Delivery Partner Portal</span>
+                </button>
               </Link>
             </>
           )}

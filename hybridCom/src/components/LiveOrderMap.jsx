@@ -40,9 +40,9 @@ const partnerIcon = L.divIcon({
 
 /**
  * Auto-Fit Camera Component
- * Keeps map bounds perfectly centered around all active pins
+ * Keeps map bounds centered around active path while allowing manual adjustment
  */
-function AutoFitBounds({ coordinates = [] }) {
+function MapController({ coordinates = [], resetKey = 0 }) {
   const map = useMap();
 
   useEffect(() => {
@@ -51,12 +51,12 @@ function AutoFitBounds({ coordinates = [] }) {
     );
 
     if (validCoords.length === 1) {
-      map.setView(validCoords[0], 14, { animate: true });
+      map.setView(validCoords[0], 15, { animate: true });
     } else if (validCoords.length > 1) {
       const bounds = L.latLngBounds(validCoords);
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16, animate: true });
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17, animate: true });
     }
-  }, [coordinates, map]);
+  }, [coordinates, map, resetKey]);
 
   return null;
 }
@@ -73,6 +73,7 @@ export default function LiveOrderMap({
 }) {
   const [roadPolyline, setRoadPolyline] = useState([]);
   const [routeData, setRouteData] = useState(null);
+  const [resetKey, setResetKey] = useState(0);
 
   // Validate coordinates
   const validStore = useMemo(
@@ -88,11 +89,12 @@ export default function LiveOrderMap({
     [partnerCoords]
   );
 
-  // Active points array for camera auto-fit
-  const allActiveCoords = useMemo(() => {
-    const points = [validStore, validCustomer];
-    if (validPartner) points.push(validPartner);
-    return points;
+  // Active points array for driving route camera focus
+  const activePathCoords = useMemo(() => {
+    if (validPartner) {
+      return [validPartner, validCustomer];
+    }
+    return [validStore, validCustomer];
   }, [validStore, validCustomer, validPartner]);
 
   // Fetch Road Route Geometry
@@ -130,10 +132,23 @@ export default function LiveOrderMap({
         </div>
       )}
 
+      {/* Re-center / Focus Path Button */}
+      <button
+        type="button"
+        onClick={() => setResetKey((k) => k + 1)}
+        className="absolute bottom-3 right-3 z-[1000] bg-background/90 backdrop-blur-md border border-border hover:bg-muted text-foreground px-3 py-1.5 rounded-xl shadow-md text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+        title="Recenter camera on driving path"
+      >
+        <span className="text-amber-400">📍</span>
+        <span>Focus Path</span>
+      </button>
+
       <MapContainer
         center={mapCenter}
-        zoom={14}
-        scrollWheelZoom={false}
+        zoom={15}
+        scrollWheelZoom={true}
+        dragging={true}
+        doubleClickZoom={true}
         style={{ height, width: "100%" }}
         className="z-0"
       >
@@ -142,8 +157,8 @@ export default function LiveOrderMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Camera Auto-Fit Controller */}
-        <AutoFitBounds coordinates={allActiveCoords} />
+        {/* Camera Controller */}
+        <MapController coordinates={activePathCoords} resetKey={resetKey} />
 
         {/* Store Pin */}
         <Marker position={validStore} icon={storeIcon}>
@@ -179,7 +194,7 @@ export default function LiveOrderMap({
           <Polyline
             positions={roadPolyline}
             color="#f59e0b"
-            weight={4}
+            weight={5}
             opacity={0.85}
             dashArray={validPartner ? "none" : "8, 8"}
           />

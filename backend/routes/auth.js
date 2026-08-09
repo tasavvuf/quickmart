@@ -199,10 +199,28 @@ router.get("/test", verifyToken, async (req, res) => {
   })
 })
 
-router.get("/logout", (req, res) => {
-  res.clearCookie("token")
-  res.json({ message: "Logged out successfully" })
-})
+const handleLogoutRoute = (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
+
+  const optionsList = [
+    { httpOnly: true, secure: isProd, sameSite: isProd ? "none" : "lax", path: "/" },
+    { httpOnly: true, secure: false, sameSite: "lax", path: "/" },
+    { path: "/" },
+  ];
+
+  const cookieNames = ["token", "accessToken", "jwt"];
+
+  for (const name of cookieNames) {
+    for (const opts of optionsList) {
+      res.clearCookie(name, opts);
+    }
+  }
+
+  res.json({ message: "Logged out successfully" });
+};
+
+router.get("/logout", handleLogoutRoute);
+router.post("/logout", handleLogoutRoute);
 
 // Address management routes
 router.get("/addresses", verifyToken, authController.getAddresses)

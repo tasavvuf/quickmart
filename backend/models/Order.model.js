@@ -90,7 +90,7 @@ const OrderSchema = new mongoose.Schema(
     },
     deliveryStatus: {
       type: String,
-      enum: ["WAITING", "ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED"],
+      enum: ["WAITING", "ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
       default: "WAITING",
     },
     deliveryAddress: {

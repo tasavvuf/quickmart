@@ -155,11 +155,6 @@ export default function DeliveryDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    // Auto refresh every 10 seconds for real-time available orders
-    const interval = setInterval(() => {
-      loadDashboardData(false);
-    }, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
