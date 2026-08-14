@@ -5,6 +5,7 @@ import { StoreContext } from "../context/StoreContext";
 import { CartContext } from "../context/CartContext";
 import { api } from "../lib/api";
 import { adaptProduct, adaptStore } from "../lib/adapters";
+import LocationUnavailableNotice from "../components/LocationUnavailableNotice";
 import { SmoothInput } from "../components/ui/skiper-ui/skiper106";
 import { Search, X, MapPin, RefreshCw, Zap, Store as StoreIcon, Star, Plus, Package } from "lucide-react";
 
@@ -394,6 +395,9 @@ export default function HomeUI() {
               )}
             </section>
           </div>
+        ) : !isLoadingStores && stores.length === 0 ? (
+          /* LOCATION UNAVAILABLE STATE (No stores within 10km) */
+          <LocationUnavailableNotice onStoreChangeLocation={rePromptLocationChoice} />
         ) : (
           /* DEFAULT VIEW: FEATURED PRODUCTS & EXPLORE STORES */
           <>
@@ -572,12 +576,6 @@ export default function HomeUI() {
                       </div>
                     );
                   })
-                )}
-
-                {!isLoadingStores && !stores.length && (
-                  <div className="col-span-full app-card rounded-2xl p-8 text-center text-muted-foreground font-bold">
-                    No open nearby stores found right now.
-                  </div>
                 )}
               </div>
             </section>
