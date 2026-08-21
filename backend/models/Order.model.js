@@ -70,7 +70,7 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentType: {
       type: String,
-      enum: ["COD", "UPI"],
+      enum: ["COD"],
       default: "COD",
     },
     paymentStatus: {
@@ -85,13 +85,20 @@ const OrderSchema = new mongoose.Schema(
     },
     vendorStatus: {
       type: String,
-      enum: ["PENDING", "ACCEPTED", "REJECTED", "PREPARING", "READY", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED"],
+      enum: ["PENDING", "ACCEPTED", "REJECTED", "PREPARING", "READY", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
       default: "PENDING",
     },
     deliveryStatus: {
       type: String,
       enum: ["WAITING", "ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"],
       default: "WAITING",
+    },
+    cancelReason: {
+      type: String,
+      default: "",
+    },
+    cancelledAt: {
+      type: Date,
     },
     deliveryAddress: {
       street: { type: String, default: "" },

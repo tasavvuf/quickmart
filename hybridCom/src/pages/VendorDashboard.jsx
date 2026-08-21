@@ -92,10 +92,12 @@ export default function VendorDashboard() {
 
     socket.on("order:status_updated", handleUpdate);
     socket.on("order:new_placed", handleUpdate);
+    socket.on("order:cancelled", handleUpdate);
 
     return () => {
       socket.off("order:status_updated", handleUpdate);
       socket.off("order:new_placed", handleUpdate);
+      socket.off("order:cancelled", handleUpdate);
     };
   }, [store?._id, fetchOrders, fetchDashboard]);
 

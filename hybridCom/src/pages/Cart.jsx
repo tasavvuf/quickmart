@@ -428,41 +428,36 @@ function Cart() {
           </div>
         </section>
 
-        {/* Payment Method Selector */}
+        {/* Payment Method - COD Only */}
         <section className="app-card mt-6 rounded-2xl p-5">
-          <h2 className="text-xl font-bold mb-3">Payment Method</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setPaymentType("COD")}
-              className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                paymentType === "COD"
-                  ? "border-amber-400 bg-amber-400/10 ring-1 ring-amber-400"
-                  : "border-border bg-card hover:bg-muted"
-              }`}
-            >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="font-extrabold text-sm">💵 Cash On Delivery (COD)</span>
-                {paymentType === "COD" && <Check className="text-amber-400" size={16} />}
-              </div>
-              <span className="app-muted text-xs">Pay cash when your order arrives</span>
-            </button>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold">Payment Method</h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+              COD Only
+            </span>
+          </div>
+          <div className="p-4 rounded-2xl border-2 border-amber-400/60 bg-amber-400/10 ring-1 ring-amber-400/50 flex items-center justify-between">
+            <div>
+              <span className="font-extrabold text-sm block text-foreground">💵 Cash On Delivery (COD)</span>
+              <span className="app-muted text-xs mt-0.5 block">Pay cash in-hand to the delivery partner when your items arrive</span>
+            </div>
+            <Check className="text-amber-500 shrink-0" size={20} />
+          </div>
+        </section>
 
-            <button
-              type="button"
-              onClick={() => setPaymentType("UPI")}
-              className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                paymentType === "UPI"
-                  ? "border-amber-400 bg-amber-400/10 ring-1 ring-amber-400"
-                  : "border-border bg-card hover:bg-muted"
-              }`}
-            >
-              <div className="flex items-center justify-between w-full mb-1">
-                <span className="font-extrabold text-sm">⚡ Online UPI</span>
-                {paymentType === "UPI" && <Check className="text-amber-400" size={16} />}
-              </div>
-              <span className="app-muted text-xs">Pay instantly via Google Pay, PhonePe, UPI</span>
-            </button>
+        {/* ⚠️ Mandatory Order Commitment & Cancellation Policy Notice */}
+        <section className="mt-6 p-4 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 space-y-2 text-xs">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-sm">
+            <AlertTriangle size={18} className="shrink-0" />
+            <span>Order Commitment & Cancellation Policy</span>
+          </div>
+          <div className="space-y-1 text-foreground leading-relaxed font-medium">
+            <p>
+              • You can cancel this order only while the store is preparing it. <strong>Once marked "Ready for Delivery", cancellation is permanently disabled.</strong>
+            </p>
+            <p>
+              • By placing this order, you agree that you <strong>cannot deny receiving the product</strong> once dispatched, nor <strong>refuse to pay the cash amount</strong> upon delivery.
+            </p>
           </div>
         </section>
 

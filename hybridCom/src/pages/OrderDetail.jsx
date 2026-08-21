@@ -18,6 +18,9 @@ import {
   ShieldCheck,
   MapPin,
   Navigation,
+  XCircle,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -52,6 +55,12 @@ export default function OrderDetail() {
   const [error, setError] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [partnerLocation, setPartnerLocation] = useState(null);
+
+  // Cancellation State
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("Placed by mistake");
+  const [customReason, setCustomReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const fetchOrder = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -116,6 +125,23 @@ export default function OrderDetail() {
     }
   };
 
+  const handleCancelOrder = async () => {
+    const finalReason = cancelReason === "Other" && customReason.trim() ? customReason.trim() : cancelReason;
+    setIsCancelling(true);
+    try {
+      const res = await api.patch(`/orders/${orderId}/cancel`, { reason: finalReason });
+      if (res.data?.success) {
+        toast.success(res.data.message || "Order cancelled successfully");
+        setOrder(res.data.order);
+        setShowCancelModal(false);
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to cancel order"));
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   if (loading && !order) {
     return (
       <div className="app-page p-6 flex flex-col items-center justify-center min-h-[60vh]">
@@ -143,7 +169,13 @@ export default function OrderDetail() {
 
   const currentRank = getStatusRank(order);
   const activeStepNumber = currentRank + 1;
-  const isCancelled = order.userStatus?.includes("CANCELLED") || order.vendorStatus === "REJECTED";
+  const isCancelled =
+    order.userStatus?.includes("CANCELLED") ||
+    order.vendorStatus === "REJECTED" ||
+    order.vendorStatus === "CANCELLED" ||
+    order.deliveryStatus === "CANCELLED";
+  const isCancellable = !isCancelled && ["PENDING", "ACCEPTED", "PREPARING"].includes(order.vendorStatus);
+  const isLockedForCancel = !isCancelled && !isCancellable && ["READY", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED"].includes(order.vendorStatus);
   const orderIdString = String(order._id);
   const storeName = order.store?.name || "Store";
   const storePhone = order.store?.emergencyContact || order.store?.phone || "";
@@ -184,25 +216,55 @@ export default function OrderDetail() {
                 <Copy size={14} />
               </button>
               {isCancelled && (
-                <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full">
-                  Cancelled / Rejected
+                <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                  <XCircle size={13} /> Cancelled
                 </span>
               )}
             </div>
             <p className="text-sm font-semibold text-amber-500 mt-1">{storeName}</p>
           </div>
 
-          <div className="sm:text-right">
-            <span className="text-2xl font-mono font-extrabold text-amber-500">
-              ₹{order.grandTotal?.toFixed(2)}
-            </span>
-            <p className="app-muted text-xs mt-1">
-              {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(order.createdAt).toLocaleDateString()}
-            </p>
+          <div className="flex flex-col sm:items-end gap-2">
+            <div>
+              <span className="text-2xl font-mono font-extrabold text-amber-500">
+                ₹{order.grandTotal?.toFixed(2)}
+              </span>
+              <p className="app-muted text-xs mt-0.5">
+                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(order.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+
+            {isCancellable && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="px-3.5 py-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <XCircle size={14} />
+                <span>Cancel Order</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Live Order Status Stepper */}
+        {isLockedForCancel && (
+          <div className="p-3.5 rounded-2xl bg-secondary/50 border border-border flex items-start gap-2.5 text-xs text-muted-foreground">
+            <ShieldCheck size={16} className="text-amber-500 shrink-0 mt-0.5" />
+            <span>
+              <strong>Cancellation Locked:</strong> This order is marked as <strong>{order.vendorStatus}</strong>. Per Vingo commitment policy, orders in delivery phase cannot be cancelled, nor can payment be denied upon delivery.
+            </span>
+          </div>
+        )}
+
+        {isCancelled && order.cancelReason && (
+          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold">Cancellation Reason: </span>
+              <span>{order.cancelReason}</span>
+            </div>
+          </div>
+        )}
+
         <div className="py-2">
           <h2 className="text-xs font-extrabold uppercase tracking-wider app-muted mb-4 text-center">
             LIVE ORDER STATUS
@@ -210,7 +272,7 @@ export default function OrderDetail() {
 
           {isCancelled ? (
             <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center text-red-400 text-sm font-bold">
-              Order has been cancelled or rejected by vendor.
+              This order was cancelled. Items will not be delivered.
             </div>
           ) : (
             <div className="w-full">
@@ -247,7 +309,6 @@ export default function OrderDetail() {
           )}
         </div>
 
-        {/* Delivery OTP Verification Card for Customer */}
         {order.deliveryOtp && !isCancelled && order.deliveryStatus !== "DELIVERED" && (
           <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 my-4">
             <div className="flex items-center gap-3">
@@ -282,7 +343,6 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* Real-time Live Order Map */}
         {!isCancelled && (
           <div className="space-y-2 my-4">
             <div className="flex items-center justify-between">
@@ -326,12 +386,9 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* Divider */}
         <div className="pt-2 border-t border-border" />
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Delivery Partner */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <div className="app-card p-4 rounded-2xl border border-border">
             <div className="flex items-center gap-2 mb-1">
               <UserCheck size={16} className="text-amber-500" />
@@ -352,7 +409,6 @@ export default function OrderDetail() {
             )}
           </div>
 
-          {/* Store Info */}
           <div className="app-card p-4 rounded-2xl border border-border">
             <div className="flex items-center gap-2 mb-1">
               <StoreIcon size={16} className="text-amber-500" />
@@ -373,16 +429,15 @@ export default function OrderDetail() {
             )}
           </div>
 
-          {/* Payment */}
           <div className="app-card p-4 rounded-2xl border border-border">
             <div className="flex items-center gap-2 mb-1">
               <CreditCard size={16} className="text-amber-500" />
               <span className="text-xs font-bold uppercase tracking-wider app-muted">
-                Payment
+                Payment Method
               </span>
             </div>
             <p className="text-sm font-semibold mt-1">
-              {order.paymentType === "UPI" ? "Online UPI" : "Cash on Delivery"}
+              Cash on Delivery (COD)
             </p>
             <span
               className={`inline-block text-[11px] font-extrabold px-2.5 py-0.5 rounded-full mt-1 ${
@@ -396,7 +451,6 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* Ordered Items Summary */}
         <div className="pt-4 border-t border-border">
           <h3 className="text-xs font-extrabold uppercase tracking-wider app-muted mb-3 flex items-center gap-2">
             <Package size={14} /> Items Ordered ({order.items?.length || 0})
@@ -419,6 +473,89 @@ export default function OrderDetail() {
           </div>
         </div>
       </div>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="app-card w-full max-w-md rounded-3xl p-6 shadow-2xl border border-red-500/30 bg-background text-foreground space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2 text-red-400">
+                <AlertTriangle size={20} />
+                <h3 className="text-lg font-bold">Cancel Order</h3>
+              </div>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="app-control w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Are you sure you want to cancel this order? This action cannot be undone and your items will not be prepared.
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider app-muted block">
+                Reason for cancellation
+              </label>
+              {[
+                "Placed by mistake",
+                "Store preparation taking too long",
+                "Ordered wrong items or quantity",
+                "Changed mind / No longer needed",
+                "Other",
+              ].map((reason) => (
+                <label
+                  key={reason}
+                  className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-medium cursor-pointer transition ${
+                    cancelReason === reason
+                      ? "border-red-500/60 bg-red-500/10 text-red-400 font-bold"
+                      : "border-border bg-secondary/30 hover:bg-secondary/60 text-foreground"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="cancelReason"
+                    value={reason}
+                    checked={cancelReason === reason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="text-red-500 focus:ring-red-500"
+                  />
+                  <span>{reason}</span>
+                </label>
+              ))}
+
+              {cancelReason === "Other" && (
+                <textarea
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Please specify reason..."
+                  rows={2}
+                  className="app-input w-full p-3 rounded-xl text-xs mt-2"
+                />
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 min-h-11 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold text-xs border border-border transition cursor-pointer"
+              >
+                Keep Order
+              </button>
+              <button
+                type="button"
+                disabled={isCancelling}
+                onClick={handleCancelOrder}
+                className="flex-1 min-h-11 rounded-xl bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs transition shadow-md shadow-red-500/20 active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isCancelling ? "Cancelling..." : "Confirm Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,5 +8,7 @@ router.use(verifyToken);
 
 router.get("/", orderController.getUserOrders);
 router.get("/:orderId", orderController.getOrderById);
+router.patch("/:orderId/cancel", orderController.cancelUserOrder);
+router.post("/:orderId/cancel", orderController.cancelUserOrder);
 
 module.exports = router;

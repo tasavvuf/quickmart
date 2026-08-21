@@ -40,7 +40,7 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
   const filteredOrders = orders.filter((order) => {
     const matchesStatus =
       selectedFilter === "ALL" ? true
-        : selectedFilter === "REJECTED" ? order.vendorStatus === "REJECTED" || order.userStatus?.includes("CANCELLED")
+        : selectedFilter === "REJECTED" ? order.vendorStatus === "REJECTED" || order.vendorStatus === "CANCELLED" || order.userStatus?.includes("CANCELLED")
           : order.vendorStatus === selectedFilter;
     const matchesSearch = searchQuery
       ? order.deliveryAddress?.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -51,7 +51,7 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
   });
 
   const getStatusBadge = (vendorStatus, userStatus) => {
-    if (userStatus?.includes("CANCELLED")) {
+    if (userStatus?.includes("CANCELLED") || vendorStatus === "CANCELLED") {
       return <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/30 flex items-center gap-1.5"><XCircle size={14} /> Cancelled</span>;
     }
     const map = {
@@ -63,6 +63,7 @@ export default function VendorOrdersTab({ orders, loading, onUpdateOrderStatus, 
       OUT_FOR_DELIVERY: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/30", icon: <PackageCheck size={14} />, label: "Out for Delivery" },
       DELIVERED: { bg: "bg-green-500/10", text: "text-green-400", border: "border-green-500/30", icon: <CheckCircle size={14} />, label: "Delivered ✓" },
       REJECTED: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30", icon: <XCircle size={14} />, label: "Rejected" },
+      CANCELLED: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30", icon: <XCircle size={14} />, label: "Cancelled" },
     };
     const s = map[vendorStatus] || { bg: "bg-muted", text: "app-muted", border: "border-border", icon: null, label: vendorStatus };
     return (
