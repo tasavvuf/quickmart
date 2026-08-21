@@ -8,6 +8,8 @@ import {
   ShoppingBag,
   Package,
   Store as StoreIcon,
+  QrCode,
+  Share2,
 } from "lucide-react";
 
 import VendorOverviewTab from "../components/vendor/VendorOverviewTab";
@@ -15,6 +17,7 @@ import VendorOrdersTab from "../components/vendor/VendorOrdersTab";
 import VendorProductsTab from "../components/vendor/VendorProductsTab";
 import VendorStoreTab from "../components/vendor/VendorStoreTab";
 import UnverifiedNotice from "../components/UnverifiedNotice";
+import StoreQrModal from "../components/vendor/StoreQrModal";
 
 export default function VendorDashboard() {
   const { user } = useContext(UserContext);
@@ -25,6 +28,7 @@ export default function VendorDashboard() {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const [loadingDashboard, setLoadingDashboard] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -201,6 +205,16 @@ export default function VendorDashboard() {
               </p>
             </div>
           </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowQrModal(true)}
+              className="app-control px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 hover:border-amber-500 hover:text-amber-500 transition-all shadow-xs cursor-pointer"
+            >
+              <QrCode size={16} className="text-amber-500" />
+              <span>Share & QR Standee</span>
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -240,6 +254,13 @@ export default function VendorDashboard() {
           )}
         </div>
       </div>
+
+      {/* Store QR & Standee Modal */}
+      <StoreQrModal
+        store={store}
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+      />
     </div>
   );
 }

@@ -77,28 +77,33 @@ function Nav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
         {/* Brand Logo */}
         <Link to={getBrandDestination()} className="group flex items-center gap-2.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-black text-2xl shadow-md border-2 border-border group-hover:scale-105 transition-transform">
-            E
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400/10 border-2 border-border group-hover:border-[#FF9933] overflow-hidden shadow-md transition-all duration-300 shrink-0">
+            <img src="/vingo.png" alt="Vingo Logo" className="h-full w-full object-cover" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-            {isVendor ? (
-              <span className="flex items-center gap-2">
-                Local Ecom 
-                <span className="badge-yellow text-xs px-2.5 py-0.5">
-                  Vendor
+          <div className="flex flex-col">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight group-hover:text-[#FF9933] transition-colors duration-300">
+              {isVendor ? (
+                <span className="flex items-center gap-2">
+                  Vingo 
+                  <span className="badge-yellow text-xs px-2.5 py-0.5">
+                    Vendor
+                  </span>
                 </span>
-              </span>
-            ) : isDeliveryPartner ? (
-              <span className="flex items-center gap-2">
-                Local Ecom 
-                <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                  Partner
+              ) : isDeliveryPartner ? (
+                <span className="flex items-center gap-2">
+                  Vingo 
+                  <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                    Partner
+                  </span>
                 </span>
-              </span>
-            ) : (
-              <span>Local Ecom</span>
-            )}
-          </h1>
+              ) : (
+                <span>Vingo</span>
+              )}
+            </h1>
+            <span className="text-[10px] text-muted-foreground font-bold tracking-tight hidden sm:block group-hover:text-[#FF9933]/80 transition-colors duration-300">
+              Local Dukaan, Digital Udaan.
+            </span>
+          </div>
         </Link>
 
         <div className="flex items-center gap-3">

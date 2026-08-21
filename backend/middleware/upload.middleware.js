@@ -70,4 +70,44 @@ const uploadDeliveryDocuments = (req, res, next) => {
   })
 }
 
-module.exports = { uploadProfilePhoto, uploadDeliveryDocuments }
+const uploadProductImages = (req, res, next) => {
+  upload.fields([
+    { name: "images", maxCount: 5 },
+    { name: "image", maxCount: 1 },
+  ])(req, res, (error) => {
+    if (!error) {
+      return next()
+    }
+
+    if (error instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, message: "Product image upload failed", error: error.message })
+    }
+
+    return res.status(400).json({ success: false, message: error.message })
+  })
+}
+
+const uploadStoreMedia = (req, res, next) => {
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "banner", maxCount: 1 },
+    { name: "storePhoto", maxCount: 1 },
+  ])(req, res, (error) => {
+    if (!error) {
+      return next()
+    }
+
+    if (error instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, message: "Store media upload failed", error: error.message })
+    }
+
+    return res.status(400).json({ success: false, message: error.message })
+  })
+}
+
+module.exports = {
+  uploadProfilePhoto,
+  uploadDeliveryDocuments,
+  uploadProductImages,
+  uploadStoreMedia,
+}

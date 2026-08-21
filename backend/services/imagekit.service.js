@@ -87,5 +87,75 @@ const uploadDeliveryDocument = async (file, partnerId, docType) => {
   }
 }
 
-module.exports = { uploadProfilePhoto, uploadStorePhoto, uploadDeliveryDocument }
+const uploadProductImage = async (file, storeId) => {
+  if (!file) {
+    return null
+  }
+
+  const extension = file.originalname?.split(".").pop() || "jpg"
+  const result = await getImageKit().upload({
+    file: file.buffer,
+    fileName: `product-${storeId}-${Date.now()}.${extension}`,
+    folder: `/HOME/products/${storeId}`,
+    useUniqueFileName: true
+  })
+
+  return {
+    url: result.url,
+    fileId: result.fileId,
+    name: result.name,
+    thumbnailUrl: result.thumbnailUrl
+  }
+}
+
+const uploadStoreLogo = async (file, storeId) => {
+  if (!file) {
+    return null
+  }
+
+  const extension = file.originalname?.split(".").pop() || "jpg"
+  const result = await getImageKit().upload({
+    file: file.buffer,
+    fileName: `logo-${storeId}-${Date.now()}.${extension}`,
+    folder: `/HOME/stores/${storeId}`,
+    useUniqueFileName: true
+  })
+
+  return {
+    url: result.url,
+    fileId: result.fileId,
+    name: result.name,
+    thumbnailUrl: result.thumbnailUrl
+  }
+}
+
+const uploadStoreBanner = async (file, storeId) => {
+  if (!file) {
+    return null
+  }
+
+  const extension = file.originalname?.split(".").pop() || "jpg"
+  const result = await getImageKit().upload({
+    file: file.buffer,
+    fileName: `banner-${storeId}-${Date.now()}.${extension}`,
+    folder: `/HOME/stores/${storeId}`,
+    useUniqueFileName: true
+  })
+
+  return {
+    url: result.url,
+    fileId: result.fileId,
+    name: result.name,
+    thumbnailUrl: result.thumbnailUrl
+  }
+}
+
+module.exports = {
+  uploadProfilePhoto,
+  uploadStorePhoto,
+  uploadDeliveryDocument,
+  uploadProductImage,
+  uploadStoreLogo,
+  uploadStoreBanner
+}
 

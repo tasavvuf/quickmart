@@ -7,7 +7,7 @@ import { StoreContext } from "../context/StoreContext";
 import { UserContext } from "../context/UserContext";
 import { api, getApiErrorMessage } from "../lib/api";
 import { adaptProduct } from "../lib/adapters";
-import { Plus, MapPin, CheckCircle2, Home, Navigation, PlusCircle, X, Check } from "lucide-react";
+import { Plus, MapPin, CheckCircle2, Home, Navigation, PlusCircle, X, Check, ShoppingBag, AlertTriangle } from "lucide-react";
 
 function Cart() {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ function Cart() {
     store: cartStore,
   } = useContext(CartContext);
   const { stores } = useContext(StoreContext);
-  const { user, setActiveAddress, addAddress, setDefaultAddress } = useContext(UserContext);
+  const { user, isLoggedIn, setActiveAddress, addAddress, setDefaultAddress } = useContext(UserContext);
   const { lat, lng, locationSource, calculateDistance } = useContext(LocationDataContext);
   const store = cartStore || stores.find((s) => s.id === activeStore);
   const cartItemIds = new Set(items.map((item) => item.id));
@@ -62,6 +62,11 @@ function Cart() {
 
     if (store && !store.isOpen) {
       toast.error(`Store "${store.name}" is currently closed. Orders cannot be placed right now.`);
+      return;
+    }
+
+    if (distance > 10) {
+      toast.error(`Delivery address is ${distance}km away. Orders are strictly limited to within 10km of "${store?.name}".`);
       return;
     }
 
@@ -160,6 +165,38 @@ function Cart() {
   const gst = Math.round(totalPrice * 0.05);
   const grandTotal = totalPrice + deliveryFee + platformFee + gst;
 
+  if (!isLoggedIn) {
+    return (
+      <div className="app-page px-6 py-12">
+        <div className="app-card mx-auto flex max-w-md flex-col items-center justify-center gap-5 rounded-3xl p-8 text-center shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+            <ShoppingBag size={32} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold app-heading">Login Required</h1>
+            <p className="app-muted text-sm mt-1">
+              Please login or create an account to access your shopping cart and place orders.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
+            <Link
+              to={`/login?redirect=${encodeURIComponent("/cart")}`}
+              className="flex-1 min-h-11 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm flex items-center justify-center shadow-md transition"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="flex-1 min-h-11 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold text-sm border border-border flex items-center justify-center transition"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!items.length || !store) {
     return (
       <div className="app-page px-6 py-10">
@@ -205,6 +242,13 @@ function Cart() {
             {!store.isOpen && (
               <div className="mt-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-2">
                 ⚠️ Store is currently CLOSED. Ordering is disabled for this store.
+              </div>
+            )}
+
+            {distance > 10 && (
+              <div className="mt-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-2">
+                <AlertTriangle size={15} className="shrink-0" />
+                <span>Delivery address is {distance}km away. Orders can only be placed within the 10km hyperlocal delivery radius.</span>
               </div>
             )}
           </div>
@@ -471,7 +515,7 @@ function Cart() {
 
         <button
           onClick={handleProceedToCheckout}
-          disabled={isPlacingOrder || (store && !store.isOpen)}
+          disabled={isPlacingOrder || (store && !store.isOpen) || distance > 10}
           className="mt-6 w-full cursor-pointer rounded-2xl bg-amber-400 hover:bg-amber-300 text-black px-5 py-4 text-lg font-extrabold transition shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPlacingOrder ? (
@@ -481,6 +525,8 @@ function Cart() {
             </>
           ) : store && !store.isOpen ? (
             "Store Closed (Orders Disabled) 🛑"
+          ) : distance > 10 ? (
+            `Delivery Unavailable (${distance}km > 10km Limit) 🛑`
           ) : (
             "Proceed To Checkout 🚀"
           )}

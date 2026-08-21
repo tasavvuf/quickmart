@@ -45,6 +45,21 @@ const createProduct = async (storeId, productData) => {
     throw error;
   }
 
+  const isFeatured = Boolean(featured);
+  if (isFeatured) {
+    const featuredCount = await Product.countDocuments({
+      store: storeId,
+      featured: true,
+    });
+    if (featuredCount >= 3) {
+      const error = new Error(
+        "Maximum 3 products per vendor store can be marked as featured."
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   return Product.create({
     store: storeId,
     name,
@@ -53,7 +68,7 @@ const createProduct = async (storeId, productData) => {
     stock: Number(stock),
     images: Array.isArray(images) ? images : [],
     category,
-    featured: Boolean(featured),
+    featured: isFeatured,
     status: status || "active",
   });
 };
@@ -64,6 +79,24 @@ const updateProduct = async (storeId, productId, updateData) => {
     const error = new Error("Product not found or unauthorized");
     error.statusCode = 404;
     throw error;
+  }
+
+  if (updateData.featured !== undefined) {
+    const isFeatured = Boolean(updateData.featured);
+    if (isFeatured && !product.featured) {
+      const featuredCount = await Product.countDocuments({
+        store: storeId,
+        featured: true,
+        _id: { $ne: productId },
+      });
+      if (featuredCount >= 3) {
+        const error = new Error(
+          "Maximum 3 products per vendor store can be marked as featured."
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+    }
   }
 
   const fields = [
@@ -81,6 +114,8 @@ const updateProduct = async (storeId, productId, updateData) => {
     if (updateData[field] !== undefined) {
       if (field === "price" || field === "stock") {
         product[field] = Number(updateData[field]);
+      } else if (field === "featured") {
+        product[field] = Boolean(updateData[field]);
       } else {
         product[field] = updateData[field];
       }

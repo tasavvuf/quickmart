@@ -1,10 +1,12 @@
 import { useContext } from 'react';
 import { CartContext } from "../context/CartContext";
 import { StoreContext } from "../context/StoreContext";
+import { UserContext } from "../context/UserContext";
 import { Link, useLocation } from "react-router-dom";
 
 function FloatingCart() {
   const location = useLocation();
+  const { isLoggedIn } = useContext(UserContext);
   const {
     items,
     totalItems,
@@ -14,7 +16,7 @@ function FloatingCart() {
   } = useContext(CartContext);  
   const { stores } = useContext(StoreContext);
 
-  if (items.length === 0 || location.pathname === "/cart") {
+  if (!isLoggedIn || items.length === 0 || location.pathname === "/cart") {
     return null;
   }
 

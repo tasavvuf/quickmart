@@ -1,33 +1,93 @@
-import React, { useState, useEffect } from "react";
-import { Store, MapPin, Clock, Image as ImageIcon, Save, Tag, Phone } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Store, MapPin, Clock, Image as ImageIcon, Save, Tag, Phone, Upload, QrCode, Share2 } from "lucide-react";
+import { toast } from "react-toastify";
+import StoreQrModal from "./StoreQrModal";
 
 export default function VendorStoreTab({ store, onUpdateStore }) {
   const [formData, setFormData] = useState({
-    name: "", description: "", category: "", logo: "", minOrderAmount: "", deliveryTime: "",
+    name: "", description: "", category: "", logo: "", banner: "", minOrderAmount: "", deliveryTime: "",
     phone: "", city: "", street: "", area: "",
   });
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  const logoInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
 
   useEffect(() => {
     if (store) {
       setFormData({
         name: store.name || "", description: store.description || "", category: store.category || "",
-        logo: store.logo || "", minOrderAmount: store.minOrderAmount || "", deliveryTime: store.deliveryTime || "",
-        phone: store.phone || "", city: store.address?.city || "", street: store.address?.street || "",
+        logo: store.logo || "", banner: store.banner || "", minOrderAmount: store.minOrderAmount || "", deliveryTime: store.deliveryTime || "",
+        phone: store.phone || store.contactPhone || "", city: store.address?.city || "", street: store.address?.street || "",
         area: store.address?.area || "",
       });
+      setLogoPreview(store.logo || null);
+      setBannerPreview(store.banner || null);
+      setLogoFile(null);
+      setBannerFile(null);
     }
   }, [store]);
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image for the store logo");
+        return;
+      }
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image for the store banner");
+        return;
+      }
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     try {
-      await onUpdateStore({
-        name: formData.name, description: formData.description, category: formData.category,
-        logo: formData.logo, minOrderAmount: Number(formData.minOrderAmount), deliveryTime: formData.deliveryTime,
-        phone: formData.phone, address: { city: formData.city, street: formData.street, area: formData.area },
-      });
+      if (logoFile || bannerFile) {
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("description", formData.description);
+        data.append("category", formData.category);
+        data.append("phone", formData.phone);
+        data.append("contactPhone", formData.phone);
+        if (formData.minOrderAmount) data.append("minOrderAmount", Number(formData.minOrderAmount));
+        if (formData.deliveryTime) data.append("deliveryTime", formData.deliveryTime);
+        data.append("address", JSON.stringify({ city: formData.city, street: formData.street, area: formData.area }));
+
+        if (logoFile) data.append("logo", logoFile);
+        else if (formData.logo) data.append("logo", formData.logo);
+
+        if (bannerFile) data.append("banner", bannerFile);
+        else if (formData.banner) data.append("banner", formData.banner);
+
+        await onUpdateStore(data);
+      } else {
+        await onUpdateStore({
+          name: formData.name, description: formData.description, category: formData.category,
+          logo: formData.logo, banner: formData.banner,
+          minOrderAmount: Number(formData.minOrderAmount) || 0, deliveryTime: formData.deliveryTime,
+          phone: formData.phone, contactPhone: formData.phone,
+          address: { city: formData.city, street: formData.street, area: formData.area },
+        });
+      }
     } finally { setIsSaving(false); }
   };
 
@@ -37,20 +97,43 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Store Preview Card */}
-      <div className="app-card p-6 rounded-3xl space-y-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-500/30 bg-muted flex items-center justify-center shadow-lg shadow-amber-500/10">
-            {formData.logo ? (
-              <img src={formData.logo} alt="Store logo" className="w-full h-full object-cover" />
-            ) : (
-              <Store size={28} className="app-muted" />
-            )}
-          </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-extrabold app-heading">{formData.name || "Store Name"}</h2>
-            <p className="text-xs app-muted flex items-center gap-1.5">
-              <Tag size={12} className="text-amber-500" /> {formData.category || "Category"} • {store?.isOpen ? "🟢 Open" : "🔴 Closed"}
-            </p>
+      <div className="app-card rounded-3xl overflow-hidden shadow-md">
+        {/* Banner Preview */}
+        <div className="relative w-full h-36 bg-secondary/50 flex items-center justify-center overflow-hidden border-b border-border">
+          {bannerPreview ? (
+            <img src={bannerPreview} alt="Store banner" className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex items-center gap-2 app-muted text-xs font-semibold">
+              <ImageIcon size={18} /> Store Banner Preview
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="flex items-center gap-4 -mt-12">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-card bg-muted flex items-center justify-center shadow-xl">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Store logo" className="w-full h-full object-cover" />
+              ) : (
+                <Store size={32} className="app-muted" />
+              )}
+            </div>
+            <div className="flex-1 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold app-heading">{formData.name || "Store Name"}</h2>
+                <p className="text-xs app-muted flex items-center gap-1.5 mt-0.5">
+                  <Tag size={12} className="text-amber-500" /> {formData.category || "Category"} • {store?.isOpen ? "🟢 Open" : "🔴 Closed"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowQrModal(true)}
+                className="app-control shrink-0 px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 hover:border-amber-500 hover:text-amber-500 transition-all shadow-xs cursor-pointer"
+              >
+                <QrCode size={15} className="text-amber-500" />
+                <span>Share Store & QR</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -90,18 +173,86 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
           </div>
         </div>
 
-        {/* Media & Branding */}
+        {/* Media & Branding (ImageKit Uploads) */}
         <div className="app-card p-6 rounded-3xl space-y-5">
           <div className="flex items-center gap-3 pb-3 border-b border-border">
             <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
               <ImageIcon size={20} />
             </div>
-            <h3 className="font-bold app-heading text-base">Media & Branding</h3>
+            <h3 className="font-bold app-heading text-base">Media & Branding (ImageKit Setup)</h3>
           </div>
-          <div>
-            <label className={labelClass}>Logo URL</label>
-            <input type="url" value={formData.logo} onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-              className={inputClass} placeholder="https://res.cloudinary.com/..." />
+
+          {/* Store Logo Upload */}
+          <div className="space-y-2">
+            <label className={labelClass}>Store Logo</label>
+            <div className="flex items-center gap-4">
+              <div
+                onClick={() => logoInputRef.current?.click()}
+                className="w-20 h-20 rounded-2xl border-2 border-dashed border-border hover:border-amber-500/50 flex flex-col items-center justify-center cursor-pointer bg-secondary/30 hover:bg-secondary/50 transition-all overflow-hidden shrink-0"
+              >
+                <input type="file" ref={logoInputRef} onChange={handleLogoChange} accept="image/*" className="hidden" />
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Upload size={20} className="text-amber-500" />
+                )}
+              </div>
+              <div className="flex-1 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground text-xs font-bold border border-border cursor-pointer flex items-center gap-1.5"
+                >
+                  <Upload size={13} /> {logoFile ? "Change Selected Logo" : "Upload Store Logo"}
+                </button>
+                <p className="text-[10px] app-muted">Upload square PNG/JPG up to 5MB (Uploaded to ImageKit)</p>
+                <input
+                  type="url"
+                  value={formData.logo}
+                  onChange={(e) => {
+                    setFormData({ ...formData, logo: e.target.value });
+                    if (!logoFile) setLogoPreview(e.target.value || null);
+                  }}
+                  placeholder="Or paste direct logo URL"
+                  className="app-input w-full px-3 py-1.5 text-xs rounded-xl mt-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Store Banner Upload */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <label className={labelClass}>Store Banner</label>
+            <div
+              onClick={() => bannerInputRef.current?.click()}
+              className="w-full h-28 rounded-2xl border-2 border-dashed border-border hover:border-amber-500/50 flex flex-col items-center justify-center cursor-pointer bg-secondary/30 hover:bg-secondary/50 transition-all overflow-hidden relative group"
+            >
+              <input type="file" ref={bannerInputRef} onChange={handleBannerChange} accept="image/*" className="hidden" />
+              {bannerPreview ? (
+                <>
+                  <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-1.5">
+                    <Upload size={14} /> Change Banner
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-center p-3">
+                  <Upload size={20} className="text-amber-500" />
+                  <p className="text-xs font-bold text-foreground">Click to upload store banner</p>
+                  <p className="text-[10px] app-muted">Wide cover photo (1200x400 recommended, uploaded to ImageKit)</p>
+                </div>
+              )}
+            </div>
+            <input
+              type="url"
+              value={formData.banner}
+              onChange={(e) => {
+                setFormData({ ...formData, banner: e.target.value });
+                if (!bannerFile) setBannerPreview(e.target.value || null);
+              }}
+              placeholder="Or paste direct banner URL"
+              className="app-input w-full px-3 py-2 text-xs rounded-xl"
+            />
           </div>
         </div>
 
@@ -149,10 +300,18 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
         <div className="flex justify-end">
           <button type="submit" disabled={isSaving}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer disabled:opacity-50">
-            <Save size={18} /> {isSaving ? "Saving..." : "Save Store Settings"}
+            <Save size={18} /> {isSaving ? "Saving to ImageKit & Database..." : "Save Store Settings"}
           </button>
         </div>
       </form>
+
+      {/* Store QR & Standee Modal */}
+      <StoreQrModal
+        store={store}
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+      />
     </div>
   );
 }
+

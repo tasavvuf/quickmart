@@ -1,10 +1,53 @@
 const vendorService = require("../services/vendor.service");
 const productService = require("../services/product.service");
 const orderService = require("../services/order.service");
+const {
+  uploadProductImage,
+  uploadStoreLogo,
+  uploadStoreBanner,
+  uploadStorePhoto,
+} = require("../services/imagekit.service");
 
 // Helper to extract store for current authenticated user
 const getStoreForUser = async (req) => {
   return vendorService.getStoreByOwner(req.user._id);
+};
+
+const processUploadedProductImages = async (req, storeId) => {
+  const uploadedUrls = [];
+
+  const imageFiles = [];
+  if (req.files) {
+    if (Array.isArray(req.files.images)) imageFiles.push(...req.files.images);
+    if (Array.isArray(req.files.image)) imageFiles.push(...req.files.image);
+  } else if (req.file) {
+    imageFiles.push(req.file);
+  }
+
+  for (const file of imageFiles) {
+    const uploaded = await uploadProductImage(file, storeId);
+    if (uploaded?.url) {
+      uploadedUrls.push(uploaded.url);
+    }
+  }
+
+  let existingImages = [];
+  if (req.body.images) {
+    if (Array.isArray(req.body.images)) {
+      existingImages = req.body.images;
+    } else if (typeof req.body.images === "string") {
+      try {
+        const parsed = JSON.parse(req.body.images);
+        existingImages = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        existingImages = [req.body.images];
+      }
+    }
+  } else if (req.body.imageUrl) {
+    existingImages = [req.body.imageUrl];
+  }
+
+  return [...uploadedUrls, ...existingImages].filter(Boolean);
 };
 
 const getDashboard = async (req, res) => {
@@ -35,7 +78,44 @@ const getStore = async (req, res) => {
 const updateStore = async (req, res) => {
   try {
     const store = await getStoreForUser(req);
-    const updatedStore = await vendorService.updateStore(store._id, req.body);
+    const updateData = { ...req.body };
+
+    // Handle uploaded logo
+    if (req.files?.logo?.[0]) {
+      const uploadedLogo = await uploadStoreLogo(req.files.logo[0], store._id);
+      if (uploadedLogo?.url) updateData.logo = uploadedLogo.url;
+    }
+
+    // Handle uploaded banner
+    if (req.files?.banner?.[0]) {
+      const uploadedBanner = await uploadStoreBanner(req.files.banner[0], store._id);
+      if (uploadedBanner?.url) updateData.banner = uploadedBanner.url;
+    }
+
+    // Handle uploaded storePhoto
+    if (req.files?.storePhoto?.[0]) {
+      const uploadedPhoto = await uploadStorePhoto(req.files.storePhoto[0], store._id);
+      if (uploadedPhoto) updateData.storePhoto = uploadedPhoto;
+    }
+
+    // Parse stringified JSON fields if sent via FormData
+    if (typeof updateData.address === "string") {
+      try {
+        updateData.address = JSON.parse(updateData.address);
+      } catch (e) {}
+    }
+    if (typeof updateData.openingHours === "string") {
+      try {
+        updateData.openingHours = JSON.parse(updateData.openingHours);
+      } catch (e) {}
+    }
+    if (typeof updateData.categories === "string") {
+      try {
+        updateData.categories = JSON.parse(updateData.categories);
+      } catch (e) {}
+    }
+
+    const updatedStore = await vendorService.updateStore(store._id, updateData);
     res.status(200).json({ success: true, store: updatedStore });
   } catch (error) {
     res.status(error.statusCode || 500).json({
@@ -61,7 +141,20 @@ const getProducts = async (req, res) => {
 const createProduct = async (req, res) => {
   try {
     const store = await getStoreForUser(req);
-    const product = await productService.createProduct(store._id, req.body);
+    const images = await processUploadedProductImages(req, store._id);
+
+    const productPayload = {
+      name: req.body.name,
+      description: req.body.description || "",
+      price: req.body.price,
+      stock: req.body.stock,
+      category: req.body.category,
+      images,
+      featured: req.body.featured === true || req.body.featured === "true",
+      status: req.body.status || "active",
+    };
+
+    const product = await productService.createProduct(store._id, productPayload);
     res.status(201).json({ success: true, product });
   } catch (error) {
     res.status(error.statusCode || 500).json({
@@ -74,10 +167,23 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const store = await getStoreForUser(req);
+    const updatePayload = { ...req.body };
+
+    const images = await processUploadedProductImages(req, store._id);
+    if (images.length > 0 || req.files?.images || req.files?.image) {
+      updatePayload.images = images;
+    }
+
+    if (updatePayload.price !== undefined) updatePayload.price = Number(updatePayload.price);
+    if (updatePayload.stock !== undefined) updatePayload.stock = Number(updatePayload.stock);
+    if (updatePayload.featured !== undefined) {
+      updatePayload.featured = updatePayload.featured === true || updatePayload.featured === "true";
+    }
+
     const product = await productService.updateProduct(
       store._id,
       req.params.id,
-      req.body
+      updatePayload
     );
     res.status(200).json({ success: true, product });
   } catch (error) {

@@ -1,9 +1,11 @@
 import { useContext, useEffect, useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { LocationDataContext } from "../context/LocationContext";
 import { CartContext } from "../context/CartContext";
+import { UserContext } from "../context/UserContext";
 import { api, getApiErrorMessage } from "../lib/api";
 import { adaptStore, formatAddress } from "../lib/adapters";
+import { toast } from "react-toastify";
 import {
   ShoppingCart,
   Trash2,
@@ -19,6 +21,9 @@ import {
   Phone,
   Plus,
   Minus,
+  Share2,
+  QrCode,
+  Check,
 } from "lucide-react";
 
 function SkeletonCard() {
@@ -36,7 +41,9 @@ function SkeletonCard() {
 
 export default function Vendor() {
   const { vendorId } = useParams();
+  const navigate = useNavigate();
   const { lat, lng, calculateDistance } = useContext(LocationDataContext);
+  const { user, isLoggedIn } = useContext(UserContext);
   const {
     addToCart,
     removeFromCart,
@@ -49,10 +56,49 @@ export default function Vendor() {
   const [vendorProducts, setVendorProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Search & Category Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
+
+  const handleShareStore = async () => {
+    const storeUrl = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${vendor?.name || 'Store'} on Vingo`,
+          text: `Order fresh products directly from ${vendor?.name || 'this store'} on Vingo!`,
+          url: storeUrl,
+        });
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          navigator.clipboard?.writeText(storeUrl);
+          setCopiedLink(true);
+          toast.success("Store link copied!");
+          setTimeout(() => setCopiedLink(false), 2000);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(storeUrl);
+        setCopiedLink(true);
+        toast.success("Store link copied to clipboard!");
+        setTimeout(() => setCopiedLink(false), 2000);
+      } catch {
+        toast.error("Failed to copy link");
+      }
+    }
+  };
+
+  const handleAddToCartGated = (productId, storeId) => {
+    if (!isLoggedIn) {
+      toast.info("Please login to add items to your cart and place orders");
+      navigate(`/login?redirect=${encodeURIComponent(`/vendor/${vendorId}`)}`);
+      return;
+    }
+    addToCart(productId, storeId);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -270,9 +316,47 @@ export default function Vendor() {
                 )}
               </div>
             </div>
+
+            {/* Quick Share Store Button */}
+            <div className="sm:self-center shrink-0">
+              <button
+                onClick={handleShareStore}
+                className="app-control px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 hover:border-amber-500 hover:text-amber-500 transition-all shadow-xs cursor-pointer"
+                title="Share this store"
+              >
+                {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
+                <span>{copiedLink ? "Link Copied!" : "Share Store"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* 👤 Guest User Notice Banner */}
+      {!isLoggedIn && (
+        <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md">
+          <div className="flex items-center gap-2.5 text-foreground font-semibold">
+            <Sparkles size={18} className="text-amber-500 shrink-0" />
+            <span>
+              You are browsing <strong>{vendor.name}</strong> as a guest. Login or sign up to add items to your cart and place orders.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+            <Link
+              to={`/login?redirect=${encodeURIComponent(`/vendor/${vendorId}`)}`}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition shadow-xs cursor-pointer"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="px-4 py-2 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold text-xs border border-border transition cursor-pointer"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* 🚫 Store Closed Notice Banner */}
       {isClosed && (
@@ -445,7 +529,7 @@ export default function Vendor() {
                   ) : (
                     <button
                       disabled={isDisabled}
-                      onClick={() => !isDisabled && addToCart(elem.id, vendor.id)}
+                      onClick={() => !isDisabled && handleAddToCartGated(elem.id, vendor.id)}
                       className={`w-full py-2 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer ${
                         isDisabled
                           ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-50"

@@ -1,6 +1,6 @@
-# Local Ecom
+# Vingo — Local Dukaan, Digital Udaan.
 
-Local Ecom is a React + Vite storefront prototype for browsing nearby Rajkot stores, featured products, vendor inventory, and auth flows. The app uses local seed data for stores/products, browser geolocation for distance and delivery estimates, and FreeAPI endpoints for signup/login.
+Vingo is a React + Vite hyperlocal storefront and delivery platform for browsing nearby stores, featured products, vendor inventory, live order tracking, and delivery dispatching.
 
 This README is the main map. Every component, context, page, data module, important state value, function, and responsibility is documented in separate linked files under `docs/`.
 

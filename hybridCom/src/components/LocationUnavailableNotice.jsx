@@ -20,7 +20,7 @@ export default function LocationUnavailableNotice({ onStoreChangeLocation, compa
             We are not available at your location yet
           </h2>
           <p className="text-muted-foreground text-xs sm:text-sm font-medium leading-relaxed">
-            QuickMart operates within a 10km delivery radius from partner stores. Stay tuned as we expand to your neighborhood soon!
+            Vingo operates within a 10km delivery radius from partner stores. Stay tuned as we expand to your neighborhood soon!
           </p>
         </div>
 

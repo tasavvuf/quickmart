@@ -184,7 +184,7 @@ exports.checkout = async (req, res) => {
     }
 
     let coords = [70.7915, 22.2904];
-    if (deliveryAddressPayload.location?.coordinates) {
+    if (deliveryAddressPayload.location?.coordinates && Array.isArray(deliveryAddressPayload.location.coordinates)) {
       coords = deliveryAddressPayload.location.coordinates;
     } else if (
       deliveryAddressPayload.location?.lat != null &&
@@ -194,6 +194,34 @@ exports.checkout = async (req, res) => {
         Number(deliveryAddressPayload.location.lng),
         Number(deliveryAddressPayload.location.lat),
       ];
+    }
+
+    // 🚨 10km Hyperlocal Delivery Radius Constraint
+    if (storeObj.location?.coordinates && Array.isArray(storeObj.location.coordinates) && coords) {
+      const [userLng, userLat] = coords;
+      const [storeLng, storeLat] = storeObj.location.coordinates;
+
+      if (userLat != null && userLng != null && storeLat != null && storeLng != null) {
+        const toRad = (v) => (v * Math.PI) / 180;
+        const R = 6371; // Earth's radius in km
+        const dLat = toRad(storeLat - userLat);
+        const dLng = toRad(storeLng - userLng);
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(toRad(userLat)) *
+            Math.cos(toRad(storeLat)) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distanceKm = Number((R * c).toFixed(2));
+
+        if (distanceKm > 10) {
+          return res.status(400).json({
+            success: false,
+            message: `Delivery address is ${distanceKm}km away from "${storeObj.name || 'the store'}". Orders can only be placed within the 10km hyperlocal delivery radius.`,
+          });
+        }
+      }
     }
 
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();

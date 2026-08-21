@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Plus, Search, Edit2, Trash2, Star, Package,
   AlertTriangle, CheckCircle, XCircle, X, Image as ImageIcon,
+  Upload, Sparkles
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export default function VendorProductsTab({ products, loading, onCreateProduct, onUpdateProduct, onDeleteProduct }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,18 +17,25 @@ export default function VendorProductsTab({ products, loading, onCreateProduct, 
   const [formData, setFormData] = useState({
     name: "", description: "", price: "", stock: "", category: "Grocery", imageUrl: "", featured: false, status: "active",
   });
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
+  const fileInputRef = useRef(null);
 
   const categories = ["all", "Grocery", "Fruits & Vegetables", "Beverages", "Snacks & Munchies", "Dairy & Bakery", "Personal Care", "Household"];
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
+    setSelectedImageFile(null);
+    setImagePreview(null);
     setFormData({ name: "", description: "", price: "", stock: "", category: "Grocery", imageUrl: "", featured: false, status: "active" });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (product) => {
     setEditingProduct(product);
+    setSelectedImageFile(null);
+    setImagePreview(product.images?.[0] || null);
     setFormData({
       name: product.name, description: product.description || "", price: product.price, stock: product.stock,
       category: product.category, imageUrl: product.images?.[0] || "", featured: product.featured || false, status: product.status || "active",
@@ -34,22 +43,71 @@ export default function VendorProductsTab({ products, loading, onCreateProduct, 
     setIsModalOpen(true);
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image file");
+        return;
+      }
+      setSelectedImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmitForm = async (e) => {
     e.preventDefault();
+
+    // Enforce Featured Products Rule: Max 3
+    if (formData.featured) {
+      const currentFeaturedCount = products.filter(
+        (p) => p.featured && (!editingProduct || p._id !== editingProduct._id)
+      ).length;
+      if (currentFeaturedCount >= 3) {
+        toast.error("Maximum 3 products per store can be featured. Please unmark another product first.");
+        return;
+      }
+    }
+
     setFormSubmitting(true);
     try {
-      const payload = {
-        name: formData.name, description: formData.description, price: Number(formData.price),
-        stock: Number(formData.stock), category: formData.category,
-        images: formData.imageUrl ? [formData.imageUrl] : [], featured: formData.featured, status: formData.status,
-      };
-      if (editingProduct) await onUpdateProduct(editingProduct._id, payload);
-      else await onCreateProduct(payload);
+      if (selectedImageFile) {
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("description", formData.description || "");
+        data.append("price", formData.price);
+        data.append("stock", formData.stock);
+        data.append("category", formData.category);
+        data.append("featured", formData.featured);
+        data.append("status", formData.status);
+        data.append("images", selectedImageFile);
+
+        if (editingProduct) await onUpdateProduct(editingProduct._id, data);
+        else await onCreateProduct(data);
+      } else {
+        const payload = {
+          name: formData.name, description: formData.description, price: Number(formData.price),
+          stock: Number(formData.stock), category: formData.category,
+          images: formData.imageUrl ? [formData.imageUrl] : (editingProduct?.images || []),
+          featured: formData.featured, status: formData.status,
+        };
+        if (editingProduct) await onUpdateProduct(editingProduct._id, payload);
+        else await onCreateProduct(payload);
+      }
       setIsModalOpen(false);
     } finally { setFormSubmitting(false); }
   };
 
-  const handleToggleFeatured = async (product) => { await onUpdateProduct(product._id, { featured: !product.featured }); };
+  const handleToggleFeatured = async (product) => {
+    if (!product.featured) {
+      const currentFeatured = products.filter((p) => p.featured && p._id !== product._id).length;
+      if (currentFeatured >= 3) {
+        toast.error("Maximum 3 products per store can be featured.");
+        return;
+      }
+    }
+    await onUpdateProduct(product._id, { featured: !product.featured });
+  };
   const handleToggleActive = async (product) => { await onUpdateProduct(product._id, { status: product.status === "active" ? "inactive" : "active" }); };
   const handleDeleteConfirm = async (productId) => { await onDeleteProduct(productId); setDeletingProductId(null); };
 
@@ -217,10 +275,56 @@ export default function VendorProductsTab({ products, loading, onCreateProduct, 
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block font-semibold mb-1">Product Image URL</label>
-                <input type="url" value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://images.unsplash.com/..." className="app-input w-full px-3 py-2 rounded-xl" />
+              {/* Product Image Selection: File Upload (ImageKit) or URL */}
+              <div className="space-y-2">
+                <label className="block font-semibold">Product Image (ImageKit Upload or URL)</label>
+                
+                {/* File Upload Zone */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-border hover:border-amber-500/50 rounded-2xl p-4 text-center cursor-pointer bg-secondary/30 hover:bg-secondary/50 transition-all flex flex-col items-center justify-center gap-2"
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  {imagePreview ? (
+                    <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-border shadow-sm group">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
+                        Change
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                        <Upload size={20} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground">Click to upload product image</p>
+                        <p className="text-[10px] app-muted">PNG, JPG, WEBP up to 5MB (Uploaded to ImageKit)</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Optional Fallback URL */}
+                <div className="pt-1">
+                  <span className="text-[10px] app-muted block mb-1">Or paste direct image URL:</span>
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => {
+                      setFormData({ ...formData, imageUrl: e.target.value });
+                      if (!selectedImageFile) setImagePreview(e.target.value || null);
+                    }}
+                    placeholder="https://images.unsplash.com/..."
+                    className="app-input w-full px-3 py-2 rounded-xl"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block font-semibold mb-1">Description</label>

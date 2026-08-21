@@ -184,7 +184,7 @@ export default function AdminDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#363537]">
-                QuickMart Admin
+                Vingo Admin
               </h1>
               <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
                 Root Access

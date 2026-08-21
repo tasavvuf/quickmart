@@ -54,7 +54,7 @@ export default function AdminLogin() {
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-black tracking-tight text-[#363537]">
-              QuickMart Admin
+              Vingo Admin
             </h1>
             <p className="text-xs text-[#706f73] font-medium">
               System Control & Operations Console

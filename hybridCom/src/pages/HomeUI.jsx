@@ -131,8 +131,8 @@ export default function HomeUI() {
         <div className="mx-auto max-w-4xl flex flex-col items-center text-center gap-5">
           {/* Header Title */}
           <div>
-            <span className="badge-yellow mb-3 inline-flex">
-              <Zap size={14} className="fill-current text-[#0B132B]" /> Express Local Delivery
+            <span className="badge-yellow mb-3 inline-flex items-center gap-1.5 font-extrabold">
+              <Zap size={14} className="fill-current text-[#0B132B]" /> Vingo — Local Dukaan, Digital Udaan.
             </span>
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground">
               Groceries & Essentials, <br className="hidden sm:inline" />
@@ -141,7 +141,7 @@ export default function HomeUI() {
               </span>
             </h1>
             <p className="app-muted text-xs sm:text-sm mt-2 max-w-xl mx-auto font-medium">
-              Order directly from verified hyperlocal merchants near your address with real-time live routing.
+              Order directly from verified hyperlocal merchants near your address with Vingo express delivery.
             </p>
           </div>
 

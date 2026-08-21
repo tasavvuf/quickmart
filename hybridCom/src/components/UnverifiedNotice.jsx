@@ -25,7 +25,7 @@ export default function UnverifiedNotice({ type = "vendor", name = "", onRefresh
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             {isVendor
-              ? `Hello ${name || "Merchant"}! Your store registration is under review by QuickMart Admin. Access to store management and product listing will open as soon as admin approves your account.`
+              ? `Hello ${name || "Merchant"}! Your store registration is under review by Vingo Admin. Access to store management and product listing will open as soon as admin approves your account.`
               : `Hello ${name || "Rider"}! Your delivery partner application and documents are currently under admin review. Access to live order pools will open upon admin approval.`}
           </p>
         </div>
