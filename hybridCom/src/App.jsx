@@ -26,6 +26,7 @@ import AddressBook from "./pages/AddressBook";
 import OrderHistory from "./pages/OrderHistory";
 import OrderDetail from "./pages/OrderDetail";
 import Footer from "./components/Footer";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const { user, isLoggedIn, isCheckingAuth } = useContext(UserContext);
@@ -64,6 +65,7 @@ function App() {
           </Routes>
         </div>
         <ToastContainer />
+        <Analytics />
       </div>
     );
   }
@@ -85,6 +87,7 @@ function App() {
           </Routes>
         </div>
         <ToastContainer />
+        <Analytics />
       </div>
     );
   }
@@ -101,6 +104,7 @@ function App() {
           </Routes>
         </div>
         <ToastContainer />
+        <Analytics />
       </div>
     );
   }
@@ -153,6 +157,7 @@ function App() {
       <Footer />
       <ToastContainer />
       <FloatingCart />
+      <Analytics />
     </div>
   );
 }
