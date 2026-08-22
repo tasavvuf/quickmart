@@ -8,8 +8,19 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isAllowed =
+      origin === "https://vingo-beta-v1.vercel.app" ||
+      origin.endsWith(".vercel.app") ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:");
+    callback(null, true); // Allow for Beta 1.0
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With", "Accept"],
+  exposedHeaders: ["Set-Cookie"],
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))

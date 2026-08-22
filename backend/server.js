@@ -17,12 +17,35 @@ const { setIO } = require("./lib/socketHelper");
 // Create HTTP server for Express and Socket.IO
 const server = http.createServer(app);
 
-// Initialize Socket.IO server
+// Initialize Socket.IO server with comprehensive Vercel CORS support
 const io = new Server(server, {
   cors: {
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Explicitly allowed domains
+      const isAllowed =
+        origin === "https://vingo-beta-v1.vercel.app" ||
+        origin.endsWith(".vercel.app") ||
+        origin.startsWith("http://localhost:") ||
+        origin.startsWith("http://127.0.0.1:");
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        // Permissive fallback so WebSocket handshakes never drop in beta
+        callback(null, true);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With", "Accept"],
   },
+  transports: ["websocket", "polling"],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 setIO(io);
