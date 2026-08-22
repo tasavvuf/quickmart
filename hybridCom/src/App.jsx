@@ -25,6 +25,7 @@ import UserPage from "./pages/UserPage";
 import AddressBook from "./pages/AddressBook";
 import OrderHistory from "./pages/OrderHistory";
 import OrderDetail from "./pages/OrderDetail";
+import Footer from "./components/Footer";
 
 function App() {
   const { user, isLoggedIn, isCheckingAuth } = useContext(UserContext);
@@ -109,7 +110,7 @@ function App() {
     <div className="app-shell">
       <SeamlessPillBackground />
       <Nav />
-      <div className="flex-1 min-h-0 relative z-10">
+      <main className="flex-1 relative z-10">
         <Routes>
           <Route path="/" element={<HomeUI />} />
           <Route path="/store" element={<Store />} />
@@ -148,7 +149,8 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </div>
+      </main>
+      <Footer />
       <ToastContainer />
       <FloatingCart />
     </div>

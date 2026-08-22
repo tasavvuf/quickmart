@@ -114,6 +114,7 @@ exports.cancelUserOrder = async (req, res) => {
     order.userStatus = "CANCELLED_BY_USER";
     order.vendorStatus = "CANCELLED";
     order.deliveryStatus = "CANCELLED";
+    order.paymentStatus = "CANCELLED";
     order.cancelReason = cancelReason;
     order.cancelledAt = new Date();
     order.statusHistory.push({

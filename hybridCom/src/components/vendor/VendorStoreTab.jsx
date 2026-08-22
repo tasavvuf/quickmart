@@ -5,8 +5,24 @@ import StoreQrModal from "./StoreQrModal";
 
 export default function VendorStoreTab({ store, onUpdateStore }) {
   const [formData, setFormData] = useState({
-    name: "", description: "", category: "", logo: "", banner: "", minOrderAmount: "", deliveryTime: "",
-    phone: "", city: "", street: "", area: "",
+    name: "",
+    description: "",
+    category: "",
+    logo: "",
+    banner: "",
+    minOrderAmount: "",
+    deliveryTime: "",
+    phone: "",
+    street: "",
+    area: "",
+    city: "",
+    state: "Gujarat",
+    pincode: "",
+    landmark: "",
+    emergencyContact: "",
+    gstNumber: "",
+    openingHoursOpen: "09:00 AM",
+    openingHoursClose: "09:00 PM",
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -21,10 +37,24 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
   useEffect(() => {
     if (store) {
       setFormData({
-        name: store.name || "", description: store.description || "", category: store.category || "",
-        logo: store.logo || "", banner: store.banner || "", minOrderAmount: store.minOrderAmount || "", deliveryTime: store.deliveryTime || "",
-        phone: store.phone || store.contactPhone || "", city: store.address?.city || "", street: store.address?.street || "",
+        name: store.name || "",
+        description: store.description || "",
+        category: store.category || "",
+        logo: store.logo || "",
+        banner: store.banner || "",
+        minOrderAmount: store.minOrderAmount || "",
+        deliveryTime: store.deliveryTime || "",
+        phone: store.contactPhone || store.phone || "",
+        street: store.address?.street || "",
         area: store.address?.area || "",
+        city: store.address?.city || "",
+        state: store.address?.state || "Gujarat",
+        pincode: store.address?.pincode || "",
+        landmark: store.address?.landmark || "",
+        emergencyContact: store.emergencyContact || "",
+        gstNumber: store.gstNumber || "",
+        openingHoursOpen: store.openingHours?.open || "09:00 AM",
+        openingHoursClose: store.openingHours?.close || "09:00 PM",
       });
       setLogoPreview(store.logo || null);
       setBannerPreview(store.banner || null);
@@ -59,8 +89,31 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!formData.name?.trim()) {
+      toast.error("Store name is required");
+      return;
+    }
+    if (!formData.street?.trim() || !formData.area?.trim() || !formData.city?.trim() || !formData.pincode?.trim()) {
+      toast.error("Complete store address (Street, Area, City, and 6-digit Pincode) is required");
+      return;
+    }
+
     setIsSaving(true);
     try {
+      const addressObj = {
+        street: formData.street.trim(),
+        area: formData.area.trim(),
+        city: formData.city.trim(),
+        state: formData.state.trim() || "Gujarat",
+        pincode: formData.pincode.trim(),
+        landmark: formData.landmark?.trim() || "",
+      };
+
+      const openingHoursObj = {
+        open: formData.openingHoursOpen || "09:00 AM",
+        close: formData.openingHoursClose || "09:00 PM",
+      };
+
       if (logoFile || bannerFile) {
         const data = new FormData();
         data.append("name", formData.name);
@@ -68,9 +121,12 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
         data.append("category", formData.category);
         data.append("phone", formData.phone);
         data.append("contactPhone", formData.phone);
+        data.append("emergencyContact", formData.emergencyContact);
+        data.append("gstNumber", formData.gstNumber);
+        data.append("openingHours", JSON.stringify(openingHoursObj));
         if (formData.minOrderAmount) data.append("minOrderAmount", Number(formData.minOrderAmount));
         if (formData.deliveryTime) data.append("deliveryTime", formData.deliveryTime);
-        data.append("address", JSON.stringify({ city: formData.city, street: formData.street, area: formData.area }));
+        data.append("address", JSON.stringify(addressObj));
 
         if (logoFile) data.append("logo", logoFile);
         else if (formData.logo) data.append("logo", formData.logo);
@@ -81,14 +137,24 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
         await onUpdateStore(data);
       } else {
         await onUpdateStore({
-          name: formData.name, description: formData.description, category: formData.category,
-          logo: formData.logo, banner: formData.banner,
-          minOrderAmount: Number(formData.minOrderAmount) || 0, deliveryTime: formData.deliveryTime,
-          phone: formData.phone, contactPhone: formData.phone,
-          address: { city: formData.city, street: formData.street, area: formData.area },
+          name: formData.name,
+          description: formData.description,
+          category: formData.category,
+          logo: formData.logo,
+          banner: formData.banner,
+          minOrderAmount: Number(formData.minOrderAmount) || 0,
+          deliveryTime: formData.deliveryTime,
+          phone: formData.phone,
+          contactPhone: formData.phone,
+          emergencyContact: formData.emergencyContact,
+          gstNumber: formData.gstNumber,
+          openingHours: openingHoursObj,
+          address: addressObj,
         });
       }
-    } finally { setIsSaving(false); }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const inputClass = "app-input w-full px-4 py-3 rounded-xl text-sm";
@@ -262,45 +328,174 @@ export default function VendorStoreTab({ store, onUpdateStore }) {
             <div className="p-2.5 rounded-xl bg-green-500/10 text-green-500 border border-green-500/20">
               <MapPin size={20} />
             </div>
-            <h3 className="font-bold app-heading text-base">Store Address</h3>
+            <div>
+              <h3 className="font-bold app-heading text-base">Store Address</h3>
+              <p className="text-[11px] app-muted">Ensure 6-digit Pincode and full address are provided</p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div><label className={labelClass}>Street</label>
-              <input type="text" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} className={inputClass} /></div>
-            <div><label className={labelClass}>Area</label>
-              <input type="text" value={formData.area} onChange={(e) => setFormData({ ...formData, area: e.target.value })} className={inputClass} /></div>
-            <div><label className={labelClass}>City</label>
-              <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className={inputClass} /></div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Street Address *</label>
+              <input
+                type="text"
+                required
+                value={formData.street}
+                onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                placeholder="Shop No, Building Name, Street"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Area / Locality *</label>
+              <input
+                type="text"
+                required
+                value={formData.area}
+                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                placeholder="Ring Road, Vesu, etc."
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className={labelClass}>City *</label>
+              <input
+                type="text"
+                required
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                placeholder="Surat"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>State *</label>
+              <input
+                type="text"
+                required
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                placeholder="Gujarat"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Pincode (6 Digits) *</label>
+              <input
+                type="text"
+                required
+                maxLength={6}
+                value={formData.pincode}
+                onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                placeholder="395007"
+                className={`${inputClass} font-mono font-bold`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Landmark (Optional)</label>
+            <input
+              type="text"
+              value={formData.landmark}
+              onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
+              placeholder="Near City Center Mall"
+              className={inputClass}
+            />
           </div>
         </div>
 
-        {/* Delivery Settings */}
+        {/* Contact, Timings & Business Info */}
         <div className="app-card p-6 rounded-3xl space-y-5">
           <div className="flex items-center gap-3 pb-3 border-b border-border">
             <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20">
               <Clock size={20} />
             </div>
-            <h3 className="font-bold app-heading text-base">Delivery & Order Settings</h3>
+            <h3 className="font-bold app-heading text-base">Operating Hours & Business Info</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Opening Time</label>
+              <input
+                type="text"
+                value={formData.openingHoursOpen}
+                onChange={(e) => setFormData({ ...formData, openingHoursOpen: e.target.value })}
+                className={inputClass}
+                placeholder="09:00 AM"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Closing Time</label>
+              <input
+                type="text"
+                value={formData.openingHoursClose}
+                onChange={(e) => setFormData({ ...formData, openingHoursClose: e.target.value })}
+                className={inputClass}
+                placeholder="09:00 PM"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
+            <div>
+              <label className={labelClass}>Emergency Contact Phone</label>
+              <input
+                type="text"
+                value={formData.emergencyContact}
+                onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
+                className={inputClass}
+                placeholder="+91 99XXXXXXXX"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>GST Number (Optional)</label>
+              <input
+                type="text"
+                value={formData.gstNumber}
+                onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
+                className={`${inputClass} font-mono`}
+                placeholder="24AAAAA0000A1Z5"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
             <div>
               <label className={labelClass}>Min Order Amount (₹)</label>
-              <input type="number" min="0" value={formData.minOrderAmount} onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
-                className={`${inputClass} font-mono`} placeholder="0" />
+              <input
+                type="number"
+                min="0"
+                value={formData.minOrderAmount}
+                onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
+                className={`${inputClass} font-mono`}
+                placeholder="0"
+              />
             </div>
             <div>
               <label className={labelClass}>Estimated Delivery Time</label>
-              <input type="text" value={formData.deliveryTime} onChange={(e) => setFormData({ ...formData, deliveryTime: e.target.value })}
-                className={inputClass} placeholder="30-45 mins" />
+              <input
+                type="text"
+                value={formData.deliveryTime}
+                onChange={(e) => setFormData({ ...formData, deliveryTime: e.target.value })}
+                className={inputClass}
+                placeholder="30-45 mins"
+              />
             </div>
           </div>
         </div>
 
         {/* Save */}
         <div className="flex justify-end">
-          <button type="submit" disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition-all shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer disabled:opacity-50">
-            <Save size={18} /> {isSaving ? "Saving to ImageKit & Database..." : "Save Store Settings"}
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm transition-all shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            <Save size={18} /> {isSaving ? "Saving to ImageKit & Database..." : "Save Store Details"}
           </button>
         </div>
       </form>

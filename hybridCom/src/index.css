@@ -124,11 +124,11 @@
 
 @layer components {
   .app-shell {
-    @apply flex h-screen flex-col bg-transparent text-foreground transition-colors duration-300 relative z-10;
+    @apply min-h-screen flex flex-col bg-transparent text-foreground transition-colors duration-300 relative z-10;
   }
 
   .app-page {
-    @apply h-full overflow-y-auto bg-transparent text-foreground transition-colors duration-300 relative z-10;
+    @apply flex-1 bg-transparent text-foreground transition-colors duration-300 relative z-10;
   }
 
   .app-band {

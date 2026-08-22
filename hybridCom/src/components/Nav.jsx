@@ -74,25 +74,25 @@ function Nav() {
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-border bg-background/95 backdrop-blur-md transition-colors duration-300">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-4">
         {/* Brand Logo */}
-        <Link to={getBrandDestination()} className="group flex items-center gap-2.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400/10 border-2 border-border group-hover:border-[#FF9933] overflow-hidden shadow-md transition-all duration-300 shrink-0">
+        <Link to={getBrandDestination()} className="group flex items-center gap-2">
+          <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-amber-400/10 border-2 border-border group-hover:border-[#FF9933] overflow-hidden shadow-md transition-all duration-300 shrink-0">
             <img src="/vingo.png" alt="Vingo Logo" className="h-full w-full object-cover" />
           </div>
-          <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground leading-tight group-hover:text-[#FF9933] transition-colors duration-300">
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-xl sm:text-3xl font-black tracking-tight text-foreground leading-tight group-hover:text-[#FF9933] transition-colors duration-300 truncate">
               {isVendor ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 sm:gap-2">
                   Vingo 
-                  <span className="badge-yellow text-xs px-2.5 py-0.5">
+                  <span className="badge-yellow text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5">
                     Vendor
                   </span>
                 </span>
               ) : isDeliveryPartner ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 sm:gap-2">
                   Vingo 
-                  <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold">
                     Partner
                   </span>
                 </span>
@@ -106,7 +106,7 @@ function Nav() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Active Order Button on Nav if customer has an ongoing order */}
           {isLoggedIn && !isVendor && !isDeliveryPartner && activeOrder && (
             <Link

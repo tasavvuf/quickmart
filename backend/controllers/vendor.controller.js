@@ -271,6 +271,23 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const getRevenueAnalytics = async (req, res) => {
+  try {
+    const store = await getStoreForUser(req);
+    const { startDate, endDate } = req.query;
+    const analytics = await vendorService.getVendorRevenueAnalytics(store._id, {
+      startDate,
+      endDate,
+    });
+    res.status(200).json({ success: true, ...analytics });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Failed to fetch revenue analytics",
+    });
+  }
+};
+
 module.exports = {
   getDashboard,
   getStore,
@@ -282,4 +299,5 @@ module.exports = {
   getOrders,
   getOrderById,
   updateOrderStatus,
+  getRevenueAnalytics,
 };

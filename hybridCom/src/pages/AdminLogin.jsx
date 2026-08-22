@@ -9,8 +9,8 @@ export default function AdminLogin() {
   const navigate = useNavigate();
   const { setUser, setIsLoggedIn } = useContext(UserContext);
 
-  const [email, setEmail] = useState("admin@ecom.com");
-  const [password, setPassword] = useState("adminpassword");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleAdminLogin = async (e) => {

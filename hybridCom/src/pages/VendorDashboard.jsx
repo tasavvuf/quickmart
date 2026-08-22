@@ -10,12 +10,14 @@ import {
   Store as StoreIcon,
   QrCode,
   Share2,
+  IndianRupee,
 } from "lucide-react";
 
 import VendorOverviewTab from "../components/vendor/VendorOverviewTab";
 import VendorOrdersTab from "../components/vendor/VendorOrdersTab";
 import VendorProductsTab from "../components/vendor/VendorProductsTab";
 import VendorStoreTab from "../components/vendor/VendorStoreTab";
+import VendorRevenueTab from "../components/vendor/VendorRevenueTab";
 import UnverifiedNotice from "../components/UnverifiedNotice";
 import StoreQrModal from "../components/vendor/StoreQrModal";
 
@@ -235,6 +237,9 @@ export default function VendorDashboard() {
           <button onClick={() => setActiveTab("products")} className={tabClasses("products")}>
             <Package size={16} /> Products ({products.length})
           </button>
+          <button onClick={() => setActiveTab("revenue")} className={tabClasses("revenue")}>
+            <IndianRupee size={16} /> Revenue & Calendar
+          </button>
           <button onClick={() => setActiveTab("store")} className={tabClasses("store")}>
             <StoreIcon size={16} /> Store Settings
           </button>
@@ -250,6 +255,9 @@ export default function VendorDashboard() {
           )}
           {activeTab === "products" && (
             <VendorProductsTab products={products} loading={loadingProducts} onCreateProduct={handleCreateProduct} onUpdateProduct={handleUpdateProduct} onDeleteProduct={handleDeleteProduct} />
+          )}
+          {activeTab === "revenue" && (
+            <VendorRevenueTab store={store} />
           )}
           {activeTab === "store" && (
             <VendorStoreTab store={store} onUpdateStore={handleUpdateStore} />

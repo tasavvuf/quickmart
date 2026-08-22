@@ -36,6 +36,12 @@ const OrderSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        mrpAtPurchase: {
+          type: Number,
+          default: function () {
+            return this.priceAtPurchase;
+          },
+        },
         quantity: {
           type: Number,
           required: true,
@@ -75,7 +81,7 @@ const OrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+      enum: ["PENDING", "PAID", "FAILED", "REFUNDED", "CANCELLED"],
       default: "PENDING",
     },
     userStatus: {

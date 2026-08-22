@@ -137,16 +137,13 @@ exports.checkout = async (req, res) => {
         productName: p?.name || "Product",
         productImage: p?.images?.[0] || p?.image || "",
         priceAtPurchase: price,
+        mrpAtPurchase: price,
         quantity: qty,
         subtotal: price * qty,
       };
     });
 
     const totalAmount = orderItems.reduce((sum, i) => sum + i.subtotal, 0);
-    const deliveryFee = 30;
-    const platformFee = 5;
-    const discount = 0;
-    const grandTotal = totalAmount + deliveryFee + platformFee - discount;
 
     let deliveryAddressPayload = req.body.deliveryAddress;
     if (!deliveryAddressPayload) {
@@ -196,6 +193,7 @@ exports.checkout = async (req, res) => {
       ];
     }
 
+    let distanceKm = 2;
     // 🚨 10km Hyperlocal Delivery Radius Constraint
     if (storeObj.location?.coordinates && Array.isArray(storeObj.location.coordinates) && coords) {
       const [userLng, userLat] = coords;
@@ -213,7 +211,7 @@ exports.checkout = async (req, res) => {
             Math.sin(dLng / 2) *
             Math.sin(dLng / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distanceKm = Number((R * c).toFixed(2));
+        distanceKm = Number((R * c).toFixed(2));
 
         if (distanceKm > 10) {
           return res.status(400).json({
@@ -223,6 +221,14 @@ exports.checkout = async (req, res) => {
         }
       }
     }
+
+    // 🚀 Hyperlocal Distance-Based Delivery Fee Logic:
+    // <= 5km -> ₹10
+    // 5km to 10km -> ₹15
+    const deliveryFee = distanceKm <= 5 ? 10 : 15;
+    const platformFee = 0; // ₹0 Special Beta Testing Version 1.0 Promotion
+    const discount = 0;
+    const grandTotal = totalAmount + deliveryFee + platformFee - discount;
 
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
 

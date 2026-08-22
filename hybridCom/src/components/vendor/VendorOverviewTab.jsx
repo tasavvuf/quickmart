@@ -33,7 +33,8 @@ export default function VendorOverviewTab({
     { title: "Ready for Pickup", value: stats.readyOrders || 0, icon: CheckCircle2, accent: "text-green-500" },
     { title: "Total Products", value: stats.totalProducts || 0, icon: Package, accent: "text-cyan-500" },
     { title: "Low Stock Items", value: stats.lowStockProducts || 0, icon: AlertTriangle, accent: "text-red-500", highlight: stats.lowStockProducts > 0 },
-    { title: "Today's Revenue", value: `₹${(stats.revenue || 0).toLocaleString()}`, icon: IndianRupee, accent: "text-amber-500" },
+    { title: "Low Stock Items", value: stats.lowStockProducts || 0, icon: AlertTriangle, accent: "text-red-500", highlight: stats.lowStockProducts > 0 },
+    { title: "Today's Revenue", value: `₹${(stats.revenue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, icon: IndianRupee, accent: "text-emerald-500", tabTarget: "revenue" },
     { title: "Store Status", value: stats.isOpen ? "OPEN" : "CLOSED", icon: StoreIcon, accent: stats.isOpen ? "text-green-500" : "text-muted-foreground", isStatusToggle: true },
   ];
 
@@ -47,7 +48,7 @@ export default function VendorOverviewTab({
           </div>
           <div>
             <h2 className="text-xl font-bold app-heading">Vendor Operations Dashboard</h2>
-            <p className="text-sm app-muted">Manage live orders placed by real customers, inventory stock, and store availability in real-time.</p>
+            <p className="text-sm app-muted">Manage live orders placed by real customers, inventory stock, revenue profit, and store availability in real-time.</p>
           </div>
         </div>
       </div>
@@ -59,7 +60,10 @@ export default function VendorOverviewTab({
           return (
             <div
               key={idx}
-              className="app-card app-card-hover p-5 rounded-2xl transition-all hover:translate-y-[-2px] relative overflow-hidden"
+              onClick={() => card.tabTarget && onNavigateTab(card.tabTarget)}
+              className={`app-card app-card-hover p-5 rounded-2xl transition-all hover:translate-y-[-2px] relative overflow-hidden ${
+                card.tabTarget ? "cursor-pointer" : ""
+              }`}
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wider app-muted">{card.title}</span>
@@ -79,6 +83,11 @@ export default function VendorOverviewTab({
                     Toggle {stats.isOpen ? "Close" : "Open"}
                   </button>
                 )}
+                {card.tabTarget && (
+                  <span className="text-xs text-amber-500 font-bold hover:underline">
+                    View →
+                  </span>
+                )}
               </div>
               {card.highlight && (
                 <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
@@ -89,7 +98,7 @@ export default function VendorOverviewTab({
       </div>
 
       {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div onClick={() => onNavigateTab("orders")} className="app-card app-card-hover p-6 rounded-2xl cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -129,6 +138,26 @@ export default function VendorOverviewTab({
             <span>Total: <strong className="text-cyan-500">{stats.totalProducts}</strong></span>
             <span>•</span>
             <span>Low Stock: <strong className="text-red-500">{stats.lowStockProducts}</strong></span>
+          </div>
+        </div>
+
+        <div onClick={() => onNavigateTab("revenue")} className="app-card app-card-hover p-6 rounded-2xl cursor-pointer group">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                <IndianRupee size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold app-heading group-hover:text-emerald-500 transition-colors">Revenue & Calendar</h3>
+                <p className="text-xs app-muted">Daily profit & sales breakdown</p>
+              </div>
+            </div>
+            <ArrowRight size={20} className="app-muted group-hover:text-emerald-500 transition-all group-hover:translate-x-1" />
+          </div>
+          <div className="flex items-center gap-4 text-xs font-medium app-muted pt-2 border-t border-border">
+            <span>Today: <strong className="text-emerald-500">₹{(stats.revenue || 0).toLocaleString()}</strong></span>
+            <span>•</span>
+            <span>Delivered: <strong className="text-foreground">Lifetime Sales</strong></span>
           </div>
         </div>
       </div>

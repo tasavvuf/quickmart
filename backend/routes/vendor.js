@@ -12,6 +12,10 @@ router.get("/dashboard", vendorController.getDashboard);
 router.get("/store", vendorController.getStore);
 router.patch("/store", uploadStoreMedia, vendorController.updateStore);
 
+// Revenue Analytics APIs
+router.get("/revenue", vendorController.getRevenueAnalytics);
+router.get("/analytics/revenue", vendorController.getRevenueAnalytics);
+
 // Products APIs
 router.get("/products", vendorController.getProducts);
 router.post("/products", uploadProductImages, vendorController.createProduct);

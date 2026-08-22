@@ -18,18 +18,22 @@ import {
   X,
   ExternalLink,
   ChevronRight,
+  IndianRupee,
+  AlertTriangle,
+  UserCheck,
 } from "lucide-react";
 import { api, getApiErrorMessage } from "../lib/api";
 import { socket } from "../lib/socket";
 import { UserContext } from "../context/UserContext";
 import { formatAddress } from "../lib/adapters";
 import LiveOrderMap from "../components/LiveOrderMap";
+import AdminRevenueTab from "../components/admin/AdminRevenueTab";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { user, setUser, setIsLoggedIn } = useContext(UserContext);
 
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'stores' | 'vendors' | 'delivery' | 'orders'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'revenue' | 'stores' | 'vendors' | 'delivery' | 'orders'
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -44,6 +48,12 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+
+  // Action Modals State
+  const [cancelModalOrder, setCancelModalOrder] = useState(null);
+  const [cancelReasonInput, setCancelReasonInput] = useState("");
+  const [reassignModalOrder, setReassignModalOrder] = useState(null);
+  const [selectedNewPartnerId, setSelectedNewPartnerId] = useState("");
 
   // Load Admin Console Data
   const loadAdminData = async (showToast = false) => {
@@ -91,10 +101,20 @@ export default function AdminDashboard() {
 
     socket.on("order:status_updated", handleUpdate);
     socket.on("order:new_placed", handleUpdate);
+    socket.on("order:cancelled", handleUpdate);
+    socket.on("order:removed", handleUpdate);
+    socket.on("store:new", handleUpdate);
+    socket.on("store:status_updated", handleUpdate);
+    socket.on("delivery:status_updated", handleUpdate);
 
     return () => {
       socket.off("order:status_updated", handleUpdate);
       socket.off("order:new_placed", handleUpdate);
+      socket.off("order:cancelled", handleUpdate);
+      socket.off("order:removed", handleUpdate);
+      socket.off("store:new", handleUpdate);
+      socket.off("store:status_updated", handleUpdate);
+      socket.off("delivery:status_updated", handleUpdate);
     };
   }, []);
 
@@ -119,6 +139,53 @@ export default function AdminDashboard() {
       loadAdminData();
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Verification update failed"));
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleAdminCancelOrder = async (e) => {
+    e.preventDefault();
+    if (!cancelModalOrder) return;
+    setActionLoadingId(cancelModalOrder._id);
+    try {
+      const res = await api.patch(`/admin/orders/${cancelModalOrder._id}/cancel`, {
+        reason: cancelReasonInput.trim() || "Cancelled by Platform Administrator",
+      });
+      toast.success(res.data?.message || "Order cancelled by Admin");
+      setCancelModalOrder(null);
+      setCancelReasonInput("");
+      if (selectedOrderDetails?._id === cancelModalOrder._id) {
+        setSelectedOrderDetails(null);
+      }
+      loadAdminData();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to cancel order"));
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleAdminReassignPartner = async (e) => {
+    e.preventDefault();
+    if (!reassignModalOrder || !selectedNewPartnerId) {
+      toast.info("Please select a delivery partner to assign");
+      return;
+    }
+    setActionLoadingId(reassignModalOrder._id);
+    try {
+      const res = await api.patch(`/admin/orders/${reassignModalOrder._id}/reassign-partner`, {
+        newPartnerId: selectedNewPartnerId,
+      });
+      toast.success(res.data?.message || "Delivery partner transferred successfully");
+      setReassignModalOrder(null);
+      setSelectedNewPartnerId("");
+      if (selectedOrderDetails?._id === reassignModalOrder._id) {
+        setSelectedOrderDetails(null);
+      }
+      loadAdminData();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Failed to transfer delivery partner"));
     } finally {
       setActionLoadingId(null);
     }
@@ -220,6 +287,7 @@ export default function AdminDashboard() {
       <nav className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#e5e5e7] overflow-x-auto max-w-full min-w-0 shadow-sm no-scrollbar">
         {[
           { key: "overview", label: "Overview", icon: Shield, badge: null },
+          { key: "revenue", label: "Revenue & Financials", icon: IndianRupee, badge: null },
           { key: "stores", label: "Store Approvals", icon: StoreIcon, badge: overviewData?.metrics?.pendingStores },
           { key: "vendors", label: "Vendors Roster", icon: Users, badge: null },
           { key: "delivery", label: "Delivery Fleet", icon: Bike, badge: overviewData?.metrics?.pendingPartners },
@@ -347,12 +415,30 @@ export default function AdminDashboard() {
                       <td className="p-3 font-semibold text-[#363537]">{order.customer?.name || "Customer"}</td>
                       <td className="p-3 text-[#706f73] font-medium">{order.store?.name || "Store"}</td>
                       <td className="p-3">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                          order.vendorStatus === "CANCELLED" || order.userStatus?.includes("CANCELLED")
+                            ? "bg-red-500/10 text-red-600 border-red-500/30 font-black"
+                            : order.vendorStatus === "DELIVERED"
+                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                            : order.vendorStatus === "READY"
+                            ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                            : order.vendorStatus === "ACCEPTED" || order.vendorStatus === "PREPARING"
+                            ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                            : "bg-[#f6f6f7] text-[#363537] border-[#e5e5e7]"
+                        }`}>
                           {order.vendorStatus}
                         </span>
                       </td>
                       <td className="p-3">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                          order.deliveryStatus === "CANCELLED" || order.userStatus?.includes("CANCELLED")
+                            ? "bg-red-500/10 text-red-600 border-red-500/30 font-black"
+                            : order.deliveryStatus === "DELIVERED"
+                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                            : order.deliveryStatus === "OUT_FOR_DELIVERY" || order.deliveryStatus === "PICKED_UP"
+                            ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                            : "bg-[#f6f6f7] text-[#363537] border-[#e5e5e7]"
+                        }`}>
                           {order.deliveryStatus}
                         </span>
                       </td>
@@ -364,6 +450,11 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB: REVENUE & FINANCIALS */}
+      {activeTab === "revenue" && (
+        <AdminRevenueTab />
       )}
 
       {/* TAB 2: STORE APPROVALS */}
@@ -573,7 +664,7 @@ export default function AdminDashboard() {
             <h2 className="text-lg font-bold text-[#363537]">Platform Order Stream ({orders.length})</h2>
 
             <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-[#e5e5e7] text-xs shadow-sm overflow-x-auto max-w-full no-scrollbar">
-              {["ALL", "PENDING", "ACCEPTED", "PREPARING", "READY", "DELIVERED", "REJECTED"].map((f) => (
+              {["ALL", "PENDING", "ACCEPTED", "PREPARING", "READY", "DELIVERED", "CANCELLED", "REJECTED"].map((f) => (
                 <button
                   key={f}
                   onClick={() => setOrderStatusFilter(f)}
@@ -590,11 +681,15 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-3">
-            {filteredOrders.map((order) => (
+            {filteredOrders.map((order) => {
+              const isCancelled = order.vendorStatus === "CANCELLED" || order.userStatus?.includes("CANCELLED");
+              return (
               <div
                 key={order._id}
                 onClick={() => setSelectedOrderDetails(order)}
-                className="bg-white border border-[#e5e5e7] hover:border-[#363537] rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer transition"
+                className={`bg-white border rounded-3xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer transition ${
+                  isCancelled ? "border-red-500/30 hover:border-red-500 bg-red-500/[0.02]" : "border-[#e5e5e7] hover:border-[#363537]"
+                }`}
                 title="Click to view numbers, details & live map"
               >
                 <div className="space-y-1.5 min-w-0 flex-1">
@@ -602,12 +697,29 @@ export default function AdminDashboard() {
                     <span className="font-mono font-extrabold text-[#363537] text-xs bg-[#fbfbfb] px-2.5 py-1 rounded-lg border border-[#e5e5e7]">
                       #{order._id.substring(order._id.length - 8).toUpperCase()}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                      isCancelled
+                        ? "bg-red-500/10 text-red-600 border-red-500/30 font-black"
+                        : order.vendorStatus === "DELIVERED"
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                        : "bg-[#f6f6f7] text-[#363537] border-[#e5e5e7]"
+                    }`}>
                       Vendor: {order.vendorStatus}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                      isCancelled
+                        ? "bg-red-500/10 text-red-600 border-red-500/30 font-black"
+                        : order.deliveryStatus === "DELIVERED"
+                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                        : "bg-[#f6f6f7] text-[#363537] border-[#e5e5e7]"
+                    }`}>
                       Delivery: {order.deliveryStatus}
                     </span>
+                    {isCancelled && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white">
+                        {order.userStatus === "CANCELLED_BY_USER" ? "CANCELLED BY USER" : "CANCELLED"}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-[#363537] break-words">
                     Store: <strong className="text-[#363537]">{order.store?.name}</strong> • Customer: <strong className="text-[#363537]">{order.customer?.name}</strong> ({order.customer?.phoneNumber || "N/A"})
@@ -615,26 +727,67 @@ export default function AdminDashboard() {
                   <p className="text-[11px] text-[#706f73]">
                     Assigned Rider: {order.deliveryPartner?.name || "Unassigned"}
                   </p>
+                  {isCancelled && order.cancelReason && (
+                    <p className="text-[11px] text-red-600 font-medium">
+                      Cancellation Reason: {order.cancelReason}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between md:flex-col md:items-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[#eeeeef] shrink-0">
+                <div className="flex items-center justify-between md:flex-col md:items-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-[#eeeeef] shrink-0 gap-2">
                   <div className="text-right">
                     <span className="text-lg font-black text-[#363537]">₹{order.grandTotal}</span>
-                    <span className="block text-[10px] font-bold text-[#706f73] uppercase">{order.paymentType} • {order.paymentStatus}</span>
+                    <span className={`block text-[10px] font-bold uppercase ${
+                      isCancelled ? "text-red-500 font-extrabold" : "text-[#706f73]"
+                    }`}>
+                      {order.paymentType} • {isCancelled ? "CANCELLED" : order.paymentStatus}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedOrderDetails(order);
-                    }}
-                    className="mt-1 px-3 py-1.5 rounded-xl bg-[#363537] hover:bg-[#201f21] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1"
-                  >
-                    <Eye size={13} /> Inspect Order
-                  </button>
+                  
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {order.vendorStatus !== "DELIVERED" && order.vendorStatus !== "CANCELLED" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReassignModalOrder(order);
+                            setSelectedNewPartnerId(order.deliveryPartner?._id || "");
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-amber-500/30"
+                          title="Transfer / Reassign Delivery Partner"
+                        >
+                          <Bike size={12} /> Transfer Rider
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCancelModalOrder(order);
+                            setCancelReasonInput("");
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-red-500/30"
+                          title="Cancel Order as Admin"
+                        >
+                          <X size={12} /> Cancel
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedOrderDetails(order);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#363537] hover:bg-[#201f21] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Eye size={13} /> Inspect
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
       )}
@@ -710,12 +863,29 @@ export default function AdminDashboard() {
                   <span className="font-mono font-black text-sm bg-[#363537] text-white px-3 py-1 rounded-xl">
                     #{selectedOrderDetails._id.substring(selectedOrderDetails._id.length - 8).toUpperCase()}
                   </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
+                    selectedOrderDetails.vendorStatus === "CANCELLED" || selectedOrderDetails.userStatus?.includes("CANCELLED")
+                      ? "bg-red-500/10 text-red-600 border-red-500/30 font-black"
+                      : selectedOrderDetails.vendorStatus === "DELIVERED"
+                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                      : "bg-[#f6f6f7] text-[#363537] border-[#e5e5e7]"
+                  }`}>
                     Vendor: {selectedOrderDetails.vendorStatus}
                   </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
+                    selectedOrderDetails.deliveryStatus === "CANCELLED" || selectedOrderDetails.userStatus?.includes("CANCELLED")
+                      ? "bg-red-500/10 text-red-600 border-red-500/30 font-black"
+                      : selectedOrderDetails.deliveryStatus === "DELIVERED"
+                      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                      : "bg-[#f6f6f7] text-[#363537] border-[#e5e5e7]"
+                  }`}>
                     Delivery: {selectedOrderDetails.deliveryStatus}
                   </span>
+                  {(selectedOrderDetails.vendorStatus === "CANCELLED" || selectedOrderDetails.userStatus?.includes("CANCELLED")) && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black bg-red-600 text-white">
+                      {selectedOrderDetails.userStatus === "CANCELLED_BY_USER" ? "CANCELLED BY CUSTOMER" : "CANCELLED"}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-[#706f73] font-medium mt-1">
                   Placed on {new Date(selectedOrderDetails.createdAt).toLocaleString()}
@@ -729,8 +899,28 @@ export default function AdminDashboard() {
               </button>
             </div>
 
+            {/* Cancellation Notice Banner if Cancelled */}
+            {(selectedOrderDetails.vendorStatus === "CANCELLED" || selectedOrderDetails.userStatus?.includes("CANCELLED")) && (
+              <div className="p-4 rounded-2xl bg-red-500/10 border-2 border-red-500/30 space-y-1 text-red-700">
+                <div className="flex items-center gap-2 font-black text-sm">
+                  <AlertTriangle size={18} className="shrink-0 text-red-600" />
+                  <span>Order Cancelled</span>
+                </div>
+                <p className="text-xs leading-relaxed font-medium">
+                  {selectedOrderDetails.cancelReason
+                    ? `Reason: ${selectedOrderDetails.cancelReason}`
+                    : "This order was cancelled prior to completion. Inventory was rolled back and delivery rider liberated."}
+                </p>
+                {selectedOrderDetails.cancelledAt && (
+                  <p className="text-[10px] text-red-500 font-bold">
+                    Cancelled at: {new Date(selectedOrderDetails.cancelledAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* OTP Alert (if generated) */}
-            {selectedOrderDetails.deliveryOtp && (
+            {selectedOrderDetails.deliveryOtp && selectedOrderDetails.vendorStatus !== "CANCELLED" && (
               <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 font-extrabold text-xs flex items-center justify-between">
                 <span>Delivery Verification OTP</span>
                 <span className="font-mono text-sm tracking-widest bg-amber-500 text-black px-3 py-1 rounded-xl">
@@ -874,12 +1064,211 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Admin Order Control Actions */}
+            {selectedOrderDetails.vendorStatus !== "DELIVERED" && selectedOrderDetails.vendorStatus !== "CANCELLED" && (
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-black text-[#363537] block">Admin Order Actions</span>
+                  <span className="text-[11px] text-[#706f73]">Reassign assigned delivery partner or cancel active order</span>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReassignModalOrder(selectedOrderDetails);
+                      setSelectedNewPartnerId(selectedOrderDetails.deliveryPartner?._id || "");
+                    }}
+                    className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Bike size={14} /> Transfer Rider
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCancelModalOrder(selectedOrderDetails);
+                      setCancelReasonInput("");
+                    }}
+                    className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <X size={14} /> Cancel Order
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => setSelectedOrderDetails(null)}
               className="w-full py-3 bg-[#363537] hover:bg-[#201f21] text-[#fbfbfb] font-bold text-xs rounded-xl cursor-pointer shadow-sm"
             >
               Close Order Inspector
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN CANCEL ORDER MODAL */}
+      {cancelModalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-red-500/30 w-full max-w-md rounded-3xl p-6 sm:p-8 text-[#363537] space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eeeeef]">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 flex items-center justify-center">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-[#363537]">Cancel Platform Order</h3>
+                  <p className="text-xs text-[#706f73]">Order #{cancelModalOrder._id.substring(cancelModalOrder._id.length - 8).toUpperCase()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCancelModalOrder(null)}
+                className="p-2 rounded-xl bg-[#f6f6f7] text-[#706f73] hover:text-[#363537] cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#706f73] leading-relaxed">
+              Are you sure you want to cancel this order as Admin? This will immediately sync across Customer, Store ({cancelModalOrder.store?.name || "Vendor"}), and Delivery Partner views, release reserved inventory, and free any assigned rider.
+            </p>
+
+            <form onSubmit={handleAdminCancelOrder} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-extrabold uppercase tracking-wider text-[#706f73] mb-1">
+                  Cancellation Reason
+                </label>
+                <textarea
+                  value={cancelReasonInput}
+                  onChange={(e) => setCancelReasonInput(e.target.value)}
+                  placeholder="e.g., Customer requested urgent cancellation / Store unreachable"
+                  rows={3}
+                  className="w-full p-3 rounded-xl bg-[#fbfbfb] border border-[#e5e5e7] text-xs focus:outline-none focus:border-red-500 font-medium"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCancelModalOrder(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-[#f6f6f7] hover:bg-[#e5e5e7] text-[#363537] font-bold text-xs transition cursor-pointer"
+                >
+                  Go Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoadingId === cancelModalOrder._id}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md shadow-red-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {actionLoadingId === cancelModalOrder._id ? "Cancelling..." : "Confirm Cancellation"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN TRANSFER / REASSIGN DELIVERY PARTNER MODAL */}
+      {reassignModalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-[#e5e5e7] w-full max-w-lg rounded-3xl p-6 sm:p-8 text-[#363537] space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#eeeeef]">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <Bike size={20} />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-[#363537]">Transfer / Reassign Rider</h3>
+                  <p className="text-xs text-[#706f73]">Order #{reassignModalOrder._id.substring(reassignModalOrder._id.length - 8).toUpperCase()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReassignModalOrder(null)}
+                className="p-2 rounded-xl bg-[#f6f6f7] text-[#706f73] hover:text-[#363537] cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#fbfbfb] border border-[#e5e5e7] text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-[#706f73]">Current Assigned Rider:</span>
+                <strong className="text-[#363537]">{reassignModalOrder.deliveryPartner?.name || "None / Unassigned"}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#706f73]">Store:</span>
+                <strong className="text-[#363537]">{reassignModalOrder.store?.name || "Store"}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#706f73]">Customer:</span>
+                <strong className="text-[#363537]">{reassignModalOrder.customer?.name || "Customer"}</strong>
+              </div>
+            </div>
+
+            <form onSubmit={handleAdminReassignPartner} className="space-y-4">
+              <div className="space-y-2">
+                <label className="block text-[11px] font-extrabold uppercase tracking-wider text-[#706f73]">
+                  Select New Delivery Partner ({partners.filter((p) => p.deliveryPartnerProfile?.isVerified).length} Verified Riders)
+                </label>
+                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                  {partners
+                    .filter((p) => p.deliveryPartnerProfile?.isVerified)
+                    .map((p) => {
+                      const isSelected = selectedNewPartnerId === p._id;
+                      const isCurrent = reassignModalOrder.deliveryPartner?._id === p._id;
+                      return (
+                        <div
+                          key={p._id}
+                          onClick={() => setSelectedNewPartnerId(p._id)}
+                          className={`p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer text-xs ${
+                            isSelected
+                              ? "border-[#363537] bg-[#363537]/10 ring-2 ring-[#363537]"
+                              : "border-[#e5e5e7] bg-[#fbfbfb] hover:bg-white hover:border-[#363537]"
+                          }`}
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#363537]">{p.name}</span>
+                              {isCurrent && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#f6f6f7] text-[#706f73] border border-[#e5e5e7]">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-[#706f73] block">
+                              {p.phoneNumber || "No Phone"} • {p.deliveryPartnerProfile?.vehicleType || "Bike"} ({p.deliveryPartnerProfile?.vehicleNumber || "No RC"})
+                            </span>
+                          </div>
+
+                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${
+                            p.deliveryPartnerProfile?.isAvailable
+                              ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
+                              : "bg-amber-500/10 text-amber-600 border border-amber-500/30"
+                          }`}>
+                            {p.deliveryPartnerProfile?.isAvailable ? "Available" : "Busy"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReassignModalOrder(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-[#f6f6f7] hover:bg-[#e5e5e7] text-[#363537] font-bold text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoadingId === reassignModalOrder._id || !selectedNewPartnerId}
+                  className="flex-1 py-2.5 rounded-xl bg-[#363537] hover:bg-[#201f21] text-white font-extrabold text-xs transition cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {actionLoadingId === reassignModalOrder._id ? "Reassigning..." : "Confirm Transfer"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -71,6 +71,7 @@ function Login({
               <input
                 type="text"
                 name="username"
+                autoComplete="username"
                 placeholder="e.g. john_doe"
                 value={username}
                 onChange={(e) => {
@@ -87,6 +88,7 @@ function Login({
               <input
                 type="password"
                 name="password"
+                autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => {

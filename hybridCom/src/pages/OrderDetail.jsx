@@ -451,25 +451,101 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        <div className="pt-4 border-t border-border">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider app-muted mb-3 flex items-center gap-2">
+        {/* Post-dispatch / Post-delivery Help Support Contact Banners (8469191292) */}
+        {(order.deliveryStatus === "OUT_FOR_DELIVERY" || order.vendorStatus === "OUT_FOR_DELIVERY") && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-blue-500/10 border-2 border-blue-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-blue-500/20 text-blue-500 flex items-center justify-center font-black shrink-0">
+                <Phone size={20} className="animate-bounce" />
+              </div>
+              <div>
+                <span className="text-xs font-black text-blue-500 uppercase tracking-wider block">
+                  Out For Delivery — Need Help?
+                </span>
+                <p className="text-xs text-foreground mt-0.5 font-medium leading-relaxed">
+                  Your order is on the way! For delivery coordination, timing questions, or address assistance, contact customer support at <strong>8469191292</strong>.
+                </p>
+              </div>
+            </div>
+            <a
+              href="tel:8469191292"
+              className="shrink-0 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+            >
+              <Phone size={14} /> Call 8469191292
+            </a>
+          </div>
+        )}
+
+        {(order.deliveryStatus === "DELIVERED" || order.vendorStatus === "DELIVERED") && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center font-black shrink-0">
+                <Phone size={20} />
+              </div>
+              <div>
+                <span className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
+                  Order Delivered — Order Issues or Feedback?
+                </span>
+                <p className="text-xs text-foreground mt-0.5 font-medium leading-relaxed">
+                  If anything is wrong with your delivered order, missing items, or quality issues, please contact our support team immediately at <strong>8469191292</strong>.
+                </p>
+              </div>
+            </div>
+            <a
+              href="tel:8469191292"
+              className="shrink-0 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+            >
+              <Phone size={14} /> Call Support: 8469191292
+            </a>
+          </div>
+        )}
+
+        <div className="pt-4 border-t border-border space-y-4">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider app-muted mb-2 flex items-center gap-2">
             <Package size={14} /> Items Ordered ({order.items?.length || 0})
           </h3>
           <div className="space-y-2">
-            {order.items?.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-mono text-xs app-muted font-bold">{item.quantity}x</span>
-                  <span className="font-medium truncate">{item.productName}</span>
+            {order.items?.map((item, idx) => {
+              const unitPrice = item.mrpAtPurchase ?? item.priceAtPurchase ?? (item.subtotal / (item.quantity || 1)) ?? 0;
+              return (
+                <div key={idx} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-b-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-secondary text-foreground">
+                      {item.quantity}x
+                    </span>
+                    <div>
+                      <span className="font-medium text-foreground block truncate max-w-xs">{item.productName}</span>
+                      <span className="text-[11px] font-mono app-muted">MRP ₹{unitPrice} per unit</span>
+                    </div>
+                  </div>
+                  <span className="font-mono font-bold text-foreground">₹{(item.subtotal || unitPrice * item.quantity).toFixed(2)}</span>
                 </div>
-                <span className="font-mono font-semibold">₹{item.subtotal}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-border flex justify-between text-sm font-bold">
-            <span>Grand Total</span>
-            <span className="font-mono text-amber-500 text-base">₹{order.grandTotal?.toFixed(2)}</span>
+          <div className="space-y-1.5 pt-2 border-t border-border text-xs">
+            <div className="flex justify-between app-muted">
+              <span>Items Total (MRP)</span>
+              <span className="font-mono font-bold text-foreground">₹{Number(order.totalAmount || 0).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between app-muted">
+              <span>Delivery Fee</span>
+              <span className="font-mono font-bold text-foreground">₹{Number(order.deliveryFee ?? 10).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between app-muted items-center">
+              <div className="flex items-center gap-1.5">
+                <span>Platform Fee</span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                  Beta 1.0 Free
+                </span>
+              </div>
+              <span className="font-mono font-bold text-emerald-500">₹0.00</span>
+            </div>
+            <div className="flex justify-between text-base font-extrabold pt-2 border-t border-border">
+              <span>Grand Total</span>
+              <span className="font-mono text-amber-500 text-lg">₹{order.grandTotal?.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -159,11 +159,13 @@ function Cart() {
       ? Number(
           calculateDistance(lat, lng, store.location.lat, store.location.lng),
         )
-      : 3;
-  const deliveryFee = Math.round(distance * 7);
-  const platformFee = 30;
-  const gst = Math.round(totalPrice * 0.05);
-  const grandTotal = totalPrice + deliveryFee + platformFee + gst;
+      : 2;
+  // 🚀 Hyperlocal Distance-Based Delivery Fee:
+  // <= 5km -> ₹10
+  // 5km to 10km -> ₹15
+  const deliveryFee = distance <= 5 ? 10 : 15;
+  const platformFee = 0; // ₹0 Beta Testing Version 1.0 Offer
+  const grandTotal = totalPrice + deliveryFee + platformFee;
 
   if (!isLoggedIn) {
     return (
@@ -405,17 +407,21 @@ function Cart() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="app-muted">
-                  Delivery Fee ({distance.toFixed(1)} km x ₹7)
+                  Delivery Fee ({distance.toFixed(1)} km • {distance <= 5 ? "≤5km @ ₹10" : "5–10km @ ₹15"})
                 </span>
-                <span className="font-mono">₹{deliveryFee}</span>
+                <span className="font-mono font-semibold">₹{deliveryFee.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="app-muted">Platform Fee</span>
-                <span className="font-mono">₹{platformFee}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="app-muted">GST</span>
-                <span className="font-mono">₹{gst}</span>
+                <div className="flex items-center gap-2">
+                  <span className="app-muted">Platform Fee</span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                    FREE (Beta 1.0 Offer)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono">
+                  <span className="line-through text-xs app-muted">₹10</span>
+                  <span className="font-bold text-emerald-500">₹0.00</span>
+                </div>
               </div>
             </div>
           )}

@@ -153,8 +153,9 @@ const { verifyToken, verifyAdmin } = require("../middleware/auth.middleware");
 router.use(verifyToken);
 router.use(verifyAdmin);
 
-// 1. Overview Analytics
+// 1. Overview Analytics & Revenue
 router.get("/overview", adminController.getDashboardOverview);
+router.get("/revenue", adminController.getRevenueAnalytics);
 
 // 2. Store Approvals & Management
 router.get("/stores", adminController.getAllStores);
@@ -167,7 +168,9 @@ router.get("/vendors", adminController.getAllVendors);
 router.get("/delivery-partners", adminController.getAllDeliveryPartners);
 router.patch("/delivery-partners/:partnerId/verify", adminController.verifyDeliveryPartner);
 
-// 5. Cross-Store Platform Order Tracking
+// 5. Cross-Store Platform Order Tracking & Administration
 router.get("/orders", adminController.getAllPlatformOrders);
+router.patch("/orders/:orderId/cancel", adminController.cancelOrder);
+router.patch("/orders/:orderId/reassign-partner", adminController.reassignDeliveryPartner);
 
 module.exports = router;

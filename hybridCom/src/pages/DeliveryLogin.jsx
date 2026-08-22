@@ -79,6 +79,7 @@ export default function DeliveryLogin() {
               <input
                 type="text"
                 name="email"
+                autoComplete="username"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="rahul@delivery.com"
@@ -97,6 +98,7 @@ export default function DeliveryLogin() {
               <input
                 type="password"
                 name="password"
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"

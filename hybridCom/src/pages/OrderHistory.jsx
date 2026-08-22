@@ -111,9 +111,9 @@ export default function OrderHistory() {
                 <div
                   key={order._id}
                   onClick={() => navigate(`/orders/${order._id}`)}
-                  className="app-card app-card-hover p-5 rounded-2xl border border-border cursor-pointer transition-all hover:translate-y-[-2px]"
+                  className="app-card app-card-hover p-5 rounded-2xl border border-border cursor-pointer transition-all hover:translate-y-[-2px] space-y-3"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-extrabold text-base">Order #{shortId}</span>
@@ -130,12 +130,36 @@ export default function OrderHistory() {
                     </div>
                   </div>
 
+                  {/* Purchased Items with locked MRP */}
+                  {order.items && order.items.length > 0 && (
+                    <div className="p-3 rounded-xl bg-secondary/30 border border-border/50 space-y-1.5 text-xs">
+                      {order.items.slice(0, 3).map((item, idx) => {
+                        const price = item.mrpAtPurchase ?? item.priceAtPurchase ?? 0;
+                        return (
+                          <div key={idx} className="flex items-center justify-between text-muted-foreground">
+                            <span className="truncate max-w-[200px] sm:max-w-xs font-medium text-foreground">
+                              {item.quantity}x {item.productName}
+                            </span>
+                            <span className="font-mono text-[11px]">
+                              ₹{price} each (₹{item.subtotal || price * item.quantity})
+                            </span>
+                          </div>
+                        );
+                      })}
+                      {order.items.length > 3 && (
+                        <div className="text-[11px] text-amber-500 font-bold pt-0.5">
+                          +{order.items.length - 3} more item{order.items.length - 3 > 1 ? "s" : ""}...
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-xs app-muted pt-2 border-t border-border">
                     <span>
-                      {itemCount} item{itemCount > 1 ? "s" : ""} • {order.paymentType === "UPI" ? "Online UPI" : "COD"}
+                      {itemCount} item{itemCount > 1 ? "s" : ""} • {order.paymentType === "UPI" ? "Online UPI" : "Cash on Delivery (COD)"}
                     </span>
                     <span>
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 </div>
