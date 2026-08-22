@@ -28,10 +28,19 @@ const broadcastOrderUpdate = (order, eventType = "order:status_updated") => {
 
   // 1. Order Room (Customer & Rider tracking page)
   ioInstance.to(`order:${orderId}`).emit(eventType, payload);
+  ioInstance.to(`order:${orderId}`).emit("order:status_updated", payload);
+
+  // 1.1 Customer Personal Room (For Order History & Notifications)
+  const customerId = order.customer ? String(order.customer._id || order.customer) : null;
+  if (customerId) {
+    ioInstance.to(`user:${customerId}`).emit(eventType, payload);
+    ioInstance.to(`user:${customerId}`).emit("order:status_updated", payload);
+  }
 
   // 2. Vendor Store Room
   if (storeId) {
     ioInstance.to(`store:${storeId}`).emit(eventType, payload);
+    ioInstance.to(`store:${storeId}`).emit("order:status_updated", payload);
     if (order.vendorStatus === "PENDING") {
       ioInstance.to(`store:${storeId}`).emit("order:new_placed", payload);
     }
@@ -40,11 +49,13 @@ const broadcastOrderUpdate = (order, eventType = "order:status_updated") => {
   // 3. Delivery Partner Personal Room
   if (partnerId) {
     ioInstance.to(`partner:${partnerId}`).emit(eventType, payload);
+    ioInstance.to(`partner:${partnerId}`).emit("order:status_updated", payload);
   }
 
   // 4. Delivery Pool (When vendor sets READY & status is WAITING, or remove if REJECTED/CANCELLED)
   if (order.vendorStatus === "READY" && order.deliveryStatus === "WAITING") {
     ioInstance.to("delivery:available").emit("order:available_new", payload);
+    ioInstance.to("delivery:available").emit("order:status_updated", payload);
   } else if (
     order.vendorStatus === "REJECTED" ||
     order.vendorStatus === "CANCELLED" ||
@@ -58,6 +69,7 @@ const broadcastOrderUpdate = (order, eventType = "order:status_updated") => {
 
   // 5. Admin Dashboard Room
   ioInstance.to("admin:dashboard").emit(eventType, payload);
+  ioInstance.to("admin:dashboard").emit("order:status_updated", payload);
 };
 
 module.exports = {

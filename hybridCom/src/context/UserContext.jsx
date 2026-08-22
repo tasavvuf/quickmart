@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useEffect, useState } from "react";
 import { api } from "../lib/api";
+import { socket } from "../lib/socket";
 import { adaptUser } from "../lib/adapters";
 
 export const UserContext = createContext();
@@ -16,9 +17,13 @@ export function UserContextProvider({ children }) {
   const [refreshToken, setRefreshToken] = useState(null);
 
   const applyAuthenticatedUser = (nextUser, token = null) => {
-    setUser(adaptUser(nextUser));
+    const adapted = adaptUser(nextUser);
+    setUser(adapted);
     setIsLoggedIn(true);
     setAccessToken(token);
+    if (adapted?._id || adapted?.id) {
+      socket.emit("user:join", { userId: adapted._id || adapted.id });
+    }
   };
 
   useEffect(() => {

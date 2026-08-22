@@ -54,71 +54,45 @@ setIO(io);
 const dbUpdateThrottles = new Map();
 
 io.on("connection", (socket) => {
-  // Event 1: Securely join order room
+  // Event 1: Join order room (Customer & Rider live tracking)
   socket.on("order:join", async (data, callback) => {
     try {
-      const { orderId, token } = data || {};
+      const orderId = typeof data === "string" ? data : data?.orderId;
       if (!orderId) {
         if (callback) callback({ success: false, message: "orderId is required" });
-        return;
-      }
-
-      let userId = null;
-      let userRole = null;
-
-      const authToken = token || socket.handshake.auth?.token;
-      if (authToken) {
-        try {
-          const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-          userId = decoded.id;
-        } catch {
-          // Token verification error
-        }
-      }
-
-      if (!userId) {
-        if (callback) callback({ success: false, message: "Unauthorized: Invalid socket token" });
-        return;
-      }
-
-      const user = await User.findById(userId);
-      if (!user) {
-        if (callback) callback({ success: false, message: "Unauthorized: User not found" });
-        return;
-      }
-
-      userRole = user.role;
-
-      const order = await Order.findById(orderId);
-      if (!order) {
-        if (callback) callback({ success: false, message: "Order not found" });
-        return;
-      }
-
-      // Room Authorization Check
-      const isCustomer = String(order.customer) === String(userId);
-      const isPartner = order.deliveryPartner && String(order.deliveryPartner) === String(userId);
-      const isAdmin = userRole === "admin";
-
-      if (!isCustomer && !isPartner && !isAdmin) {
-        if (callback) callback({ success: false, message: "Forbidden: Not authorized for this order room" });
         return;
       }
 
       const roomName = `order:${orderId}`;
       socket.join(roomName);
 
-      if (callback) callback({ success: true, room: roomName, isCustomer, isPartner });
+      if (callback) callback({ success: true, room: roomName });
     } catch (error) {
       if (callback) callback({ success: false, message: error.message });
     }
   });
 
+  // Event 1.1: Customer joins personal user room for their orders & notifications
+  socket.on("user:join", (data, callback) => {
+    let userId = data?.userId;
+    if (!userId && socket.handshake.auth?.token) {
+      try {
+        const decoded = jwt.verify(socket.handshake.auth.token, process.env.JWT_SECRET);
+        userId = decoded.id;
+      } catch {}
+    }
+    if (userId) {
+      socket.join(`user:${userId}`);
+      if (callback) callback({ success: true, room: `user:${userId}` });
+    }
+  });
+
   // Event 2: Vendor joins store room
   socket.on("store:join", (data, callback) => {
-    if (data?.storeId) {
-      socket.join(`store:${data.storeId}`);
-      if (callback) callback({ success: true, room: `store:${data.storeId}` });
+    const storeId = typeof data === "string" ? data : data?.storeId;
+    if (storeId) {
+      socket.join(`store:${storeId}`);
+      if (callback) callback({ success: true, room: `store:${storeId}` });
     }
   });
 

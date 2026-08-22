@@ -86,33 +86,43 @@ export default function OrderDetail() {
   useEffect(() => {
     if (!orderId) return;
 
-    socket.emit("order:join", { orderId }, (res) => {
-      if (res?.success) {
-        console.log(`[Socket.IO] Joined order room: ${res.room}`);
-      }
-    });
+    const joinRoom = () => {
+      socket.emit("order:join", { orderId }, (res) => {
+        if (res?.success) {
+          console.log(`[Socket.IO] Joined order room: ${res.room}`);
+        }
+      });
+    };
 
-    socket.on("delivery:location", (data) => {
+    joinRoom();
+    socket.on("connect", joinRoom);
+
+    const handleLocation = (data) => {
       if (data && data.latitude && data.longitude) {
         setPartnerLocation([data.latitude, data.longitude]);
       }
-    });
+    };
 
     const handleStatusUpdate = (payload) => {
-      if (payload && payload.order) {
+      console.log("[Socket.IO] Realtime order event received:", payload);
+      if (payload && payload.order && (String(payload.order._id) === String(orderId) || String(payload.orderId) === String(orderId))) {
         setOrder(payload.order);
       } else {
         fetchOrder(true);
       }
     };
 
+    socket.on("delivery:location", handleLocation);
     socket.on("order:status_updated", handleStatusUpdate);
+    socket.on("order:cancelled", handleStatusUpdate);
 
     return () => {
-      socket.off("delivery:location");
+      socket.off("connect", joinRoom);
+      socket.off("delivery:location", handleLocation);
       socket.off("order:status_updated", handleStatusUpdate);
+      socket.off("order:cancelled", handleStatusUpdate);
     };
-  }, [orderId]);
+  }, [orderId, fetchOrder]);
 
   useEffect(() => {
     fetchOrder();

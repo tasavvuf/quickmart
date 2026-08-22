@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, History, Package, ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
 import { api, getApiErrorMessage } from "../lib/api";
+import { socket } from "../lib/socket";
+import { UserContext } from "../context/UserContext";
 
 export default function OrderHistory() {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchOrders = async () => {
-    setLoading(true);
+  const fetchOrders = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setError(null);
     try {
       const res = await api.get("/orders");
@@ -18,15 +21,34 @@ export default function OrderHistory() {
         setOrders(res.data.orders);
       }
     } catch (err) {
-      setError(getApiErrorMessage(err, "Failed to load orders"));
+      if (!isSilent) setError(getApiErrorMessage(err, "Failed to load orders"));
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+
+    if (user?._id || user?.id) {
+      const userId = user._id || user.id;
+      socket.emit("user:join", { userId });
+    }
+
+    const handleOrderUpdate = () => {
+      fetchOrders(true);
+    };
+
+    socket.on("order:status_updated", handleOrderUpdate);
+    socket.on("order:cancelled", handleOrderUpdate);
+    socket.on("order:new_placed", handleOrderUpdate);
+
+    return () => {
+      socket.off("order:status_updated", handleOrderUpdate);
+      socket.off("order:cancelled", handleOrderUpdate);
+      socket.off("order:new_placed", handleOrderUpdate);
+    };
+  }, [fetchOrders, user]);
 
   const totalSpent = orders
     .filter((order) => !order.userStatus?.includes("CANCELLED") && order.vendorStatus !== "REJECTED")
