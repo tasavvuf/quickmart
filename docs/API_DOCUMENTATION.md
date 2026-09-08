@@ -167,3 +167,47 @@ Approves rider verification status.
 
 ### `GET /api/admin/orders?status=ALL|PENDING|READY|DELIVERED|REJECTED`
 Lists all platform orders across all stores with populated `deliveryOtp`, customer phone & address, store emergency contact & location, delivery partner phone & vehicle profile, and items roster.
+
+---
+
+## 📬 8. Area Expansion Wishlist Module (`/api/wishlist`)
+
+### `POST /api/wishlist`
+Registers the email address and detected location coordinates of a customer outside current store delivery coverage.
+- **Access**: Public
+- **Payload**:
+  ```json
+  {
+    "email": "customer@example.com",
+    "lat": 23.0225,
+    "lng": 72.5714
+  }
+  ```
+- **Response** `201 Created`:
+  ```json
+  {
+    "success": true,
+    "message": "You've been added to our area expansion wishlist! We'll notify you when we launch nearby.",
+    "wishlist": {
+      "_id": "...",
+      "email": "customer@example.com",
+      "location": {
+        "type": "Point",
+        "coordinates": [72.5714, 23.0225]
+      },
+      "createdAt": "2026-09-08T18:15:00.000Z"
+    }
+  }
+  ```
+
+### `GET /api/wishlist`
+Returns all registered wishlist subscribers and their locations for expansion analysis.
+- **Access**: Admin only (`verifyAdmin` middleware)
+- **Response** `200 OK`:
+  ```json
+  {
+    "success": true,
+    "count": 42,
+    "wishlist": [...]
+  }
+  ```

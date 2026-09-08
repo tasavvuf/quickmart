@@ -186,6 +186,11 @@ $$\text{haversine}(c_1, c_2) = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \t
 - `vendorStatus` (`PENDING` | `ACCEPTED` | `REJECTED` | `PREPARING` | `READY` | `PICKED_UP` | `OUT_FOR_DELIVERY` | `DELIVERED`), `deliveryStatus` (`WAITING` | `ASSIGNED` | `PICKED_UP` | `OUT_FOR_DELIVERY` | `DELIVERED` | `CANCELLED`), `paymentType` (`COD` | `UPI`), `paymentStatus` (`PENDING` | `PAID`).
 - `statusHistory`: Timestamped audit trail of status changes.
 
+### `Wishlist` (`models/Wishlist.model.js`)
+- `email`: String (required, lowercase, trimmed, validated email regex).
+- `location`: GeoJSON `Point` (`coordinates: [lng, lat]`) indexed with `2dsphere` for geographic expansion demand mapping.
+- `timestamps`: `createdAt`, `updatedAt`.
+
 ---
 
 ## 5. Media Upload Pipeline (Multer + ImageKit)

@@ -21,6 +21,7 @@ import {
   IndianRupee,
   AlertTriangle,
   UserCheck,
+  Mail,
 } from "lucide-react";
 import { api, getApiErrorMessage } from "../lib/api";
 import { socket } from "../lib/socket";
@@ -48,6 +49,8 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const [wishlist, setWishlist] = useState([]);
+  const [wishlistSearch, setWishlistSearch] = useState("");
 
   // Action Modals State
   const [cancelModalOrder, setCancelModalOrder] = useState(null);
@@ -60,12 +63,13 @@ export default function AdminDashboard() {
     try {
       if (showToast) setRefreshing(true);
 
-      const [overviewRes, storesRes, vendorsRes, partnersRes, ordersRes] = await Promise.allSettled([
+      const [overviewRes, storesRes, vendorsRes, partnersRes, ordersRes, wishlistRes] = await Promise.allSettled([
         api.get("/admin/overview"),
         api.get("/admin/stores"),
         api.get("/admin/vendors"),
         api.get("/admin/delivery-partners"),
         api.get("/admin/orders"),
+        api.get("/wishlist"),
       ]);
 
       if (overviewRes.status === "fulfilled") setOverviewData(overviewRes.value.data.data);
@@ -73,6 +77,7 @@ export default function AdminDashboard() {
       if (vendorsRes.status === "fulfilled") setVendors(vendorsRes.value.data.vendors || []);
       if (partnersRes.status === "fulfilled") setPartners(partnersRes.value.data.partners || []);
       if (ordersRes.status === "fulfilled") setOrders(ordersRes.value.data.orders || []);
+      if (wishlistRes.status === "fulfilled") setWishlist(wishlistRes.value.data.wishlist || []);
 
       if (showToast) toast.success("Console refreshed");
     } catch (err) {
@@ -292,6 +297,7 @@ export default function AdminDashboard() {
           { key: "vendors", label: "Vendors Roster", icon: Users, badge: null },
           { key: "delivery", label: "Delivery Fleet", icon: Bike, badge: overviewData?.metrics?.pendingPartners },
           { key: "orders", label: "Platform Orders", icon: ShoppingBag, badge: null },
+          { key: "wishlist", label: "Area Wishlist", icon: MapPin, badge: wishlist.length },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.key;
@@ -789,6 +795,164 @@ export default function AdminDashboard() {
             );
           })}
           </div>
+        </div>
+      )}
+
+      {/* TAB 7: AREA EXPANSION WISHLIST */}
+      {activeTab === "wishlist" && (
+        <div className="space-y-6">
+          {/* Header & Search */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-black text-[#363537] flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-[#363537]" />
+                <span>Area Expansion Wishlist</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-black bg-[#f6f6f7] text-[#363537] border border-[#e5e5e7]">
+                  {wishlist.length} Registrations
+                </span>
+              </h2>
+              <p className="text-xs text-[#706f73] font-medium mt-0.5">
+                Emails and GPS coordinates of customers who attempted to browse/order outside our active delivery radius
+              </p>
+            </div>
+
+            <div className="w-full sm:w-72">
+              <input
+                type="text"
+                placeholder="Search email..."
+                value={wishlistSearch}
+                onChange={(e) => setWishlistSearch(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-[#e5e5e7] text-[#363537] placeholder:text-[#9e9da2] focus:outline-none focus:border-[#363537]"
+              />
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white border border-[#e5e5e7] rounded-3xl p-5 shadow-sm space-y-1">
+              <span className="text-[10px] text-[#9e9da2] uppercase font-extrabold tracking-wider block">
+                Total Wishlist Users
+              </span>
+              <div className="text-2xl font-black text-[#363537]">
+                {wishlist.length}
+              </div>
+              <span className="text-[11px] text-[#706f73] font-medium block">
+                Interested in out-of-area expansion
+              </span>
+            </div>
+
+            <div className="bg-white border border-[#e5e5e7] rounded-3xl p-5 shadow-sm space-y-1">
+              <span className="text-[10px] text-[#9e9da2] uppercase font-extrabold tracking-wider block">
+                GPS Coordinates Logged
+              </span>
+              <div className="text-2xl font-black text-[#363537]">
+                {wishlist.filter((w) => {
+                  const lng = w.location?.coordinates?.[0];
+                  const lat = w.location?.coordinates?.[1];
+                  return (lat != null && lng != null && (lat !== 0 || lng !== 0));
+                }).length}
+              </div>
+              <span className="text-[11px] text-[#706f73] font-medium block">
+                Precise geographic pins
+              </span>
+            </div>
+
+            <div className="bg-white border border-[#e5e5e7] rounded-3xl p-5 shadow-sm space-y-1">
+              <span className="text-[10px] text-[#9e9da2] uppercase font-extrabold tracking-wider block">
+                Latest Signup
+              </span>
+              <div className="text-sm font-black text-[#363537] truncate">
+                {wishlist.length > 0
+                  ? new Date(wishlist[0].createdAt).toLocaleDateString()
+                  : "No signups yet"}
+              </div>
+              <span className="text-[11px] text-[#706f73] font-medium block">
+                Most recent interest logged
+              </span>
+            </div>
+          </div>
+
+          {/* Wishlist Records Table */}
+          {wishlist.length === 0 ? (
+            <div className="bg-white border border-[#e5e5e7] rounded-3xl p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-[#f6f6f7] text-[#706f73] mx-auto flex items-center justify-center">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-bold text-[#363537]">No wishlist entries yet</p>
+              <p className="text-xs text-[#706f73] max-w-sm mx-auto font-medium">
+                When users outside the delivery radius submit their emails via CurvedInput, their entries will show up here.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white border border-[#e5e5e7] rounded-3xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#fbfbfb] border-b border-[#e5e5e7] text-[#706f73] font-extrabold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="py-3.5 px-5">User Email</th>
+                      <th className="py-3.5 px-5">Latitude</th>
+                      <th className="py-3.5 px-5">Longitude</th>
+                      <th className="py-3.5 px-5">Submitted At</th>
+                      <th className="py-3.5 px-5 text-right">Map Pin</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#eeeeef]">
+                    {wishlist
+                      .filter((item) => {
+                        if (!wishlistSearch.trim()) return true;
+                        const query = wishlistSearch.toLowerCase();
+                        return item.email?.toLowerCase().includes(query);
+                      })
+                      .map((item) => {
+                        const lng = item.location?.coordinates?.[0];
+                        const lat = item.location?.coordinates?.[1];
+                        const hasCoords = lat != null && lng != null && (lat !== 0 || lng !== 0);
+
+                        return (
+                          <tr key={item._id} className="hover:bg-[#fbfbfb] transition">
+                            <td className="py-3.5 px-5 font-black text-[#363537]">
+                              <div className="flex items-center gap-2">
+                                <Mail size={14} className="text-[#9e9da2]" />
+                                <a
+                                  href={`mailto:${item.email}`}
+                                  className="hover:underline text-[#363537]"
+                                >
+                                  {item.email}
+                                </a>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-5 font-mono text-[11px] text-[#706f73]">
+                              {hasCoords ? lat.toFixed(6) : "—"}
+                            </td>
+                            <td className="py-3.5 px-5 font-mono text-[11px] text-[#706f73]">
+                              {hasCoords ? lng.toFixed(6) : "—"}
+                            </td>
+                            <td className="py-3.5 px-5 text-[#706f73] font-medium">
+                              {new Date(item.createdAt).toLocaleString()}
+                            </td>
+                            <td className="py-3.5 px-5 text-right">
+                              {hasCoords ? (
+                                <a
+                                  href={`https://www.google.com/maps?q=${lat},${lng}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#363537] hover:underline"
+                                >
+                                  <span>Open Google Maps</span>
+                                  <ExternalLink size={11} />
+                                </a>
+                              ) : (
+                                <span className="text-[#9e9da2]">No GPS</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

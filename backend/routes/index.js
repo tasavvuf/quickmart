@@ -9,6 +9,7 @@ const vendorRoutes = require('./vendor');
 const orderRoutes = require('./order');
 const deliveryRoutes = require('./delivery');
 const adminRoutes = require('./admin');
+const wishlistRoutes = require('./wishlist');
 
 // Basic test route
 router.get('/', (req, res) => {
@@ -40,5 +41,9 @@ router.use('/delivery', deliveryRoutes);
 
 // Admin dashboard routes (Protected by verifyAdmin)
 router.use('/admin', adminRoutes);
+
+// Area expansion wishlist routes
+router.use('/wishlist', wishlistRoutes);
+router.use('/waitlist', wishlistRoutes);
 
 module.exports = router;
