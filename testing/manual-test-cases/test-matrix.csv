@@ -1,0 +1,48 @@
+Test Case ID,Module,Role,Type,Title,Preconditions,Test Steps,Expected Result,Priority
+TC-AUTH-01,Authentication,Customer,POS,Customer Registration with Valid Details & GPS,User on /signup,Fill name phone email pwd allow GPS submit,HTTP 201 Created token saved redirect to /,P1
+TC-AUTH-02,Authentication,Customer,POS,Customer Login with Valid Credentials,Account exists,Enter valid email/pwd click Sign In,HTTP 200 OK profile and cart pill loaded,P1
+TC-AUTH-03,Authentication,Vendor,POS,Vendor Login & Redirect to Vendor Dashboard,Vendor account exists,Enter vendor creds submit,HTTP 200 OK strictly routed to /vendor-dashboard,P1
+TC-AUTH-04,Authentication,DeliveryPartner,POS,Delivery Partner Login & Redirect to Delivery Portal,Rider account exists,Enter delivery creds submit,HTTP 200 OK strictly routed to /delivery/dashboard,P1
+TC-AUTH-05,Authentication,All,NEG,Login with Wrong Password,User exists,Enter valid email wrong password submit,HTTP 401 Unauthorized toast error shown,P1
+TC-AUTH-06,Authentication,Customer,NEG,Customer Attempting to Access Vendor Dashboard,Customer logged in,Type /vendor-dashboard in browser,Redirected to / home page. Direct API returns 403,P1
+TC-AUTH-07,Authentication,Vendor,NEG,Vendor Attempting to Access Delivery Portal,Vendor logged in,Type /delivery/dashboard in browser,Redirected to /vendor-dashboard. API returns 403,P1
+TC-AUTH-08,Authentication,Guest,NEG,Unauthenticated Access to Admin Control Console,No session token,Navigate to /admin/dashboard,Redirected to /admin/login. Direct API returns 401,P1
+TC-AUTH-09,Authentication,Customer/Vendor,SEC,Document Privacy Constraint on Profile Endpoint,Rider documents uploaded,GET /api/auth/test with non-admin token,Documents stripped strictly for non-admin,P1
+TC-AUTH-10,Authentication,All,BND,Token Expiration & Tampered Token Handling,Session in localStorage,Corrupt accessToken string in localStorage,HTTP 401 token cleared redirect to login,P2
+TC-CUST-01,Customer,Customer,POS,Geo-Location Vendor Discovery within Area,Stores seeded in Rajkot,Open / with location in Rajkot,Stores within range displayed with distance/rating,P1
+TC-CUST-02,Customer,Customer,POS,Add Product to Cart & Update Quantity,Customer logged in,Click Add button then click + button,Floating cart displays 2 items with updated total,P1
+TC-CUST-03,Customer,Customer,POS,Cart Checkout with Cash on Delivery (COD),Cart has items within 10km,Select COD click Proceed to Checkout,Order placed HTTP 200 cart cleared redirect to /orders/:id,P1
+TC-CUST-04,Customer,Customer,POS,Real-time Live Order Tracking Status Progress,Order placed,Stay on /orders/:orderId as status changes,Stepper updates PENDING->ACCEPTED->PREPARING->READY->ASSIGNED,P1
+TC-CUST-05,Customer,Guest,NEG,Unauthenticated Add-to-Cart Redirection Guard,Logged out,Click Add to Cart on product card,Toast prompts login redirect to /login?redirect=...,P1
+TC-CUST-06,Customer,Customer,NEG,Checkout Attempt with Empty Cart,Cart is empty,Trigger checkout action,Blocked by UI. Backend returns HTTP 400 Bad Request,P2
+TC-CUST-07,Customer,Customer,NEG,Checkout from Currently Closed Store,Store isOpen is false,Add items then store closes try checkout,Blocked with store closed message HTTP 400,P1
+TC-CUST-08,Customer,Customer,NEG,Checkout Exceeding Store Distance Limit (>10km),Address >10km away,Select distant address try checkout,Blocked with distance limit warning toast,P2
+TC-CUST-09,Customer,Customer,BND,Product Stock Upper Boundary Enforcement,Stock is 5 units,Click + button 6 times,Blocked at 5 units max stock warning,P2
+TC-CUST-10,Customer,Customer,BND,Cart Item Decrement to Zero (Auto-Removal),Item qty is 1,Click - button,Item removed completely from cart array,P2
+TC-CUST-11,Customer,Customer,BND,Out-of-Coverage Area Wishlist Registration,No nearby stores,Enter email on LocationUnavailableNotice,HTTP 201 Created saved with GeoJSON coordinates,P3
+TC-VEND-01,Vendor,Vendor,POS,Vendor Dashboard Metrics & Order Queue View,Vendor logged in,Navigate to /vendor-dashboard,Dashboard overview metrics and orders list loaded,P1
+TC-VEND-02,Vendor,Vendor,POS,Vendor Order State Machine: PENDING to READY,Order is PENDING,Click Accept then Preparing then Mark Ready,Order status advances through states stops at READY,P1
+TC-VEND-03,Vendor,Vendor,POS,Toggle Featured Product (Within 3-Product Limit),Store has 2 featured,Toggle Featured switch on 3rd product,HTTP 200 OK product marked featured star badge shown,P1
+TC-VEND-04,Vendor,Vendor,BND,Strict 4th Featured Product Limit Guard,Store has 3 featured,Attempt to toggle 4th product featured,HTTP 400 Bad Request max 3 featured limit toast,P1
+TC-VEND-05,Vendor,Vendor,NEG,Vendor Attempting to Transition Beyond READY,Order is READY,Vendor PATCH status PICKED_UP or DELIVERED,HTTP 400 Bad Request vendor phase stops at READY,P1
+TC-VEND-06,Vendor,Vendor,NEG,Vendor Rejecting Order,Order is PENDING,Vendor clicks Reject Order,Status REJECTED deliveryStatus CANCELLED stock restored,P2
+TC-VEND-07,Vendor,Customer,NEG,Customer Accessing Vendor Routes,Customer token,GET /api/vendor/dashboard,HTTP 403 Forbidden vendor role required,P1
+TC-VEND-08,Vendor,Vendor,BND,Add Product with Zero or Negative Price,Add Product form,Enter price -50 and save,Form validation blocks HTTP 400 positive price required,P2
+TC-VEND-09,Vendor,Vendor,BND,Add Product with Negative Stock,Add Product form,Enter stock -5 and save,Form validation blocks HTTP 400 non-negative stock,P2
+TC-DELV-01,Delivery,DeliveryPartner,POS,Available Orders Filtered by 20km Haversine Geo-Radius,Partner at location,GET /api/delivery/available-orders,Orders <= 20km returned orders > 20km excluded,P1
+TC-DELV-02,Delivery,DeliveryPartner,POS,Atomic Order Acceptance Concurrency Lock,Order READY WAITING,POST /api/delivery/accept/:orderId,HTTP 200 OK partner assigned status ASSIGNED,P1
+TC-DELV-03,Delivery,DeliveryPartner,POS,Order Delivery Lifecycle: ASSIGNED to DELIVERED,Order assigned,Advance PICKED_UP then OUT_FOR_DELIVERY then DELIVERED with OTP,Transitions completed order delivered stats increment,P1
+TC-DELV-04,Delivery,DeliveryPartner,SEC,Concurrent Acceptance Conflict (Race Condition),2 riders accept same order,Simultaneous acceptance requests,First wins 200 second receives 409 Conflict,P1
+TC-DELV-05,Delivery,DeliveryPartner,NEG,Complete Delivery Without OTP or with Wrong OTP,Order OUT_FOR_DELIVERY,PATCH status DELIVERED with missing or invalid OTP,HTTP 400 Bad Request invalid OTP status remains unchanged,P1
+TC-DELV-06,Delivery,DeliveryPartner,NEG,Delivery Partner Accessing Vendor Dashboard,Rider logged in,Navigate to /vendor-dashboard,Redirected to /delivery/dashboard API returns 403,P1
+TC-DELV-07,Delivery,DeliveryPartner,NEG,Accepting Cancelled or Already Assigned Order,Order CANCELLED,POST /api/delivery/accept/:orderId,HTTP 409 Conflict or 400 Bad Request,P2
+TC-DELV-08,Delivery,DeliveryPartner,BND,Store Distance Boundary Test (20.0km vs 20.1km),Stores at 19.99km and 20.05km,Fetch available orders,19.99km included 20.05km excluded,P2
+TC-DELV-09,Delivery,DeliveryPartner,BND,Unverified Delivery Partner Account Restriction,Rider isVerified=false,Rider tries to accept order,Blocked pending admin approval message shown,P1
+TC-ADMN-01,Admin,Admin,POS,Admin Console Overview & Platform KPIs,Admin logged in,Navigate to /admin/dashboard,Revenue orders active stores delivery fleet loaded,P1
+TC-ADMN-02,Admin,Admin,POS,Review Documents & Approve Delivery Partner,Rider pending,Inspect ImageKit docs and click Verify Partner,HTTP 200 OK rider isVerified set to true,P1
+TC-ADMN-03,Admin,Admin,POS,Store Verification & Approval Workflow,Store unverified,Inspect store details click Approve Store,HTTP 200 OK isVerifiedByAdmin set to true visible in catalog,P1
+TC-ADMN-04,Admin,Customer,NEG,Non-Admin Role Attempting Admin Operations,Customer or Vendor token,GET /api/admin/overview,HTTP 403 Forbidden admin role required,P1
+TC-ADMN-05,Admin,Guest,NEG,Unauthenticated Admin Endpoint Access,No token,GET /api/admin/delivery-partners,HTTP 401 Unauthorized authentication required,P1
+TC-ADMN-06,Admin,Admin,SEC,Inspect Cross-Store Platform Orders Stream with Delivery OTP,Admin logged in,Inspect order in admin orders tab,Full audit trail customer contact and delivery OTP visible,P2
+TC-ADMN-07,Admin,Admin,BND,Area Expansion Wishlist Geographic Density Review,Wishlist items exist,GET /api/wishlist,Returns subscriber list and GeoJSON coordinates,P3
+

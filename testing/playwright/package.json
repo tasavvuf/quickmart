@@ -1,0 +1,30 @@
+{
+  "name": "vingo-playwright-e2e",
+  "version": "1.0.0",
+  "description": "Playwright End-to-End Automated Test Suite for Vingo (4-Role Delivery Platform)",
+  "main": "playwright.config.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:auth": "playwright test e2e/login.spec.js",
+    "test:cart": "playwright test e2e/add-to-cart.spec.js",
+    "test:checkout": "playwright test e2e/checkout.spec.js",
+    "test:rbac": "playwright test e2e/role-access.spec.js"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "vingo",
+    "quickmart"
+  ],
+  "author": "Antigravity QA Team",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}
+

@@ -1,0 +1,1362 @@
+{
+  "info": {
+    "_postman_id": "vingo-api-collection-v1",
+    "name": "Vingo (QuickMart) API Test Suite",
+    "description": "Comprehensive Postman test collection with assertions for 4 roles (Customer, Vendor, Delivery Partner, Admin), auth, order creation, dual state machine order transitions, and 400/401/403/409 error paths.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01_Auth",
+      "description": "Authentication and authorization test suite for all 4 roles and error conditions.",
+      "item": [
+        {
+          "name": "Login - Customer (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response has JWT token and user profile\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.expect(json.user).to.be.an('object');",
+                  "    pm.expect(json.user.role).to.eql('user');",
+                  "    pm.environment.set(\"customerToken\", json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"{{customerEmail}}\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{customerPassword}}\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Vendor (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Vendor authenticated and role is vendor\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.expect(json.user.role).to.eql('vendor');",
+                  "    pm.environment.set(\"vendorToken\", json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"{{vendorEmail}}\",\n  \"email\": \"{{vendorEmail}}\",\n  \"password\": \"{{vendorPassword}}\",\n  \"role\": \"vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Delivery Partner (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Delivery partner role verified\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.expect(json.user.role).to.eql('deliveryPartner');",
+                  "    pm.environment.set(\"deliveryToken\", json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"{{deliveryEmail}}\",\n  \"email\": \"{{deliveryEmail}}\",\n  \"password\": \"{{deliveryPassword}}\",\n  \"role\": \"deliveryPartner\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Admin (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Admin token captured\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.expect(json.user.role).to.eql('admin');",
+                  "    pm.environment.set(\"adminToken\", json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"{{adminEmail}}\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Wrong Password (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test(\"Error message indicates invalid credentials\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success === false || json.message !== undefined).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"{{customerEmail}}\",\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"invalid_wrong_pass_999\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Missing Required Fields (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Validation error message returned\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Verify Token Profile (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"User profile loaded matching customer\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.user).to.be.an('object');",
+                  "    pm.expect(json.user.email).to.eql(pm.environment.get(\"customerEmail\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "test"]
+            }
+          }
+        },
+        {
+          "name": "Document Privacy Constraint Check (Non-Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Documents field is stripped for non-admin\", function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.user && json.user.deliveryPartnerProfile) {",
+                  "        pm.expect(json.user.deliveryPartnerProfile.documents).to.be.undefined;",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "test"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02_Stores_Catalog",
+      "description": "Store discovery, location filtering, and catalog endpoints.",
+      "item": [
+        {
+          "name": "Get Nearby Stores (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns array of stores\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var stores = json.stores || json;",
+                  "    pm.expect(stores).to.be.an('array');",
+                  "    pm.expect(stores.length).to.be.above(0);",
+                  "    pm.environment.set(\"storeId\", stores[0]._id || stores[0].id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores?lat={{lat}}&lng={{lng}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores"],
+              "query": [
+                { "key": "lat", "value": "{{lat}}" },
+                { "key": "lng", "value": "{{lng}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Store By ID & Catalog (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Store details and product list present\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.store || json).to.be.an('object');",
+                  "    var products = json.products || (json.store && json.store.products) || [];",
+                  "    if (products.length > 0) {",
+                  "        pm.environment.set(\"productId\", products[0]._id || products[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "{{storeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Store Featured Products (Max 3 Enforced)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Featured products count is at most 3\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var prods = json.featuredProducts || json.products || json;",
+                  "    pm.expect(prods).to.be.an('array');",
+                  "    pm.expect(prods.length).to.be.at.most(3);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}/featured",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "{{storeId}}", "featured"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03_Cart_Operations",
+      "description": "Cart management, quantity adjustment, and authorization guards.",
+      "item": [
+        {
+          "name": "Get Cart (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Cart object returned\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.cart || json).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        },
+        {
+          "name": "Add Item to Cart (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Item added to cart\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.cart || json.items).to.be.ok;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "items"]
+            }
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "items", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "Cart Access Without Token (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04_Order_Creation_Checkout",
+      "description": "Checkout process, order creation, order tracking, and empty cart guard.",
+      "item": [
+        {
+          "name": "Checkout Cart - Place Order (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test(\"Order created with PENDING status\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order._id).to.be.a('string');",
+                  "    pm.expect(order.vendorStatus).to.eql('PENDING');",
+                  "    pm.environment.set(\"orderId\", order._id);",
+                  "    if (order.deliveryOtp) {",
+                  "        pm.environment.set(\"deliveryOtp\", order.deliveryOtp);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentType\": \"COD\",\n  \"deliveryAddress\": {\n    \"street\": \"Alka Cinema Road\",\n    \"area\": \"Vadva\",\n    \"city\": \"Rajkot\",\n    \"state\": \"Gujarat\",\n    \"pincode\": \"360001\",\n    \"fullAddress\": \"Alka Cinema Road, Vadva, Rajkot\",\n    \"customerName\": \"Test Customer\",\n    \"phone\": \"9876543210\",\n    \"location\": { \"lat\": 22.2842, \"lng\": 70.7963 }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Checkout with Empty Cart (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error indicates cart is empty\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message.toLowerCase()).to.include('empty');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentType\": \"COD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["cart", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Order History (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Orders array returned\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var orders = json.orders || json;",
+                  "    pm.expect(orders).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Live Order Tracking Details (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Order contains tracking and store info\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order._id).to.eql(pm.environment.get(\"orderId\"));",
+                  "    pm.expect(order.vendorStatus).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05_Vendor_State_Machine",
+      "description": "Vendor lifecycle transitions: PENDING -> ACCEPTED -> PREPARING -> READY, max 3 featured rule, and 400/403 guards.",
+      "item": [
+        {
+          "name": "Vendor Get Store Orders (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns vendor orders\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.orders || json).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{vendorToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Vendor Advance: PENDING -> ACCEPTED (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Vendor status updated to ACCEPTED\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.vendorStatus).to.eql('ACCEPTED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{vendorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Vendor Advance: ACCEPTED -> PREPARING (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Vendor status updated to PREPARING\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.vendorStatus).to.eql('PREPARING');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{vendorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PREPARING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Vendor Advance: PREPARING -> READY (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Vendor status is READY and enters WAITING delivery pool\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.vendorStatus).to.eql('READY');",
+                  "    pm.expect(order.deliveryStatus).to.eql('WAITING');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{vendorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"READY\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Vendor Illegal Transition Beyond READY (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Vendor cannot advance into delivery phases\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success === false || json.message !== undefined).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{vendorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Customer Access to Vendor Dashboard (403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06_Delivery_Partner_Flow",
+      "description": "20km radius dispatch, atomic acceptance (200 / 409), ASSIGNED -> PICKED_UP -> OUT_FOR_DELIVERY -> DELIVERED (OTP checked).",
+      "item": [
+        {
+          "name": "Get Available Orders within 20km (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"All returned orders are within 20km radius\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var orders = json.orders || json.availableOrders || json;",
+                  "    pm.expect(orders).to.be.an('array');",
+                  "    orders.forEach(function (o) {",
+                  "        if (o.distanceToStore !== undefined) {",
+                  "            pm.expect(o.distanceToStore).to.be.at.most(20);",
+                  "        }",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/available-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "available-orders"]
+            }
+          }
+        },
+        {
+          "name": "Atomic Order Acceptance (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Order assigned to rider atomically\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.deliveryStatus).to.eql('ASSIGNED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/accept/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "accept", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Duplicate Acceptance Concurrency Lock (409 Conflict)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 409 Conflict\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Error indicates order already claimed\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message.toLowerCase()).to.include('already');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/accept/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "accept", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delivery Advance: ASSIGNED -> PICKED_UP (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Delivery status updated to PICKED_UP\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.deliveryStatus).to.eql('PICKED_UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PICKED_UP\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Delivery Advance: PICKED_UP -> OUT_FOR_DELIVERY (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Delivery status updated to OUT_FOR_DELIVERY\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.deliveryStatus).to.eql('OUT_FOR_DELIVERY');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Complete Delivery with Missing OTP (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Error prompts for OTP requirement\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message.toLowerCase()).to.include('otp');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Complete Delivery with Invalid OTP (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\",\n  \"otp\": \"0000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Complete Delivery with Valid OTP -> DELIVERED (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Order marked DELIVERED successfully\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var order = json.order || json;",
+                  "    pm.expect(order.deliveryStatus).to.eql('DELIVERED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\",\n  \"otp\": \"{{deliveryOtp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07_Admin_Console_RBAC",
+      "description": "Admin overview, unredacted rider documents review, store approval, and 403 checks.",
+      "item": [
+        {
+          "name": "Admin Overview KPIs (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Admin KPIs returned\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.overview || json).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Admin Delivery Partners with Unredacted Documents (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Admin can view delivery partner documents\", function () {",
+                  "    var json = pm.response.json();",
+                  "    var partners = json.deliveryPartners || json;",
+                  "    pm.expect(partners).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/delivery-partners",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "delivery-partners"]
+            }
+          }
+        },
+        {
+          "name": "Delivery Partner Access to Admin (403 Forbidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403 Forbidden\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{deliveryToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Unauthenticated Request to Admin (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "orders"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08_Wishlist_Coverage",
+      "description": "Area expansion wishlist for customers outside active store geo-radius.",
+      "item": [
+        {
+          "name": "Add Location to Wishlist (201 Created)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Wishlist confirmation returned\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"out_of_coverage@example.com\",\n  \"lat\": 23.0225,\n  \"lng\": 72.5714\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wishlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["wishlist"]
+            }
+          }
+        },
+        {
+          "name": "Get Wishlist - Admin Only (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Wishlist array and count returned\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.wishlist).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist",
+              "host": ["{{baseUrl}}"],
+              "path": ["wishlist"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

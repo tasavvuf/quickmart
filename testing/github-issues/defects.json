@@ -1,0 +1,75 @@
+[
+  {
+    "id": "BUG-101",
+    "title": "Race Condition on Simultaneous Order Claiming",
+    "module": "Delivery Dispatch",
+    "role": "deliveryPartner",
+    "severity": "Critical",
+    "priority": "P0",
+    "status": "Verified Fixed",
+    "httpStatus": 409,
+    "rootCause": "Non-atomic findOne followed by save permitted race condition under concurrent order acceptance.",
+    "resolution": "Enforced atomic findOneAndUpdate with lock condition { deliveryPartner: null, deliveryStatus: 'WAITING', vendorStatus: 'READY' }."
+  },
+  {
+    "id": "BUG-102",
+    "title": "Verification Documents Leaked in Non-Admin Profile Payload",
+    "module": "Auth & Security",
+    "role": "all",
+    "severity": "Critical",
+    "priority": "P0",
+    "status": "Verified Fixed",
+    "httpStatus": 200,
+    "rootCause": "formatUserResponse did not strip deliveryPartnerProfile.documents object for non-admin callers.",
+    "resolution": "Enforced strict conditional deletion of documents object unless caller role === 'admin'."
+  },
+  {
+    "id": "BUG-103",
+    "title": "4th Featured Product Limit Bypass via Concurrent Toggles",
+    "module": "Vendor Catalog",
+    "role": "vendor",
+    "severity": "High",
+    "priority": "P1",
+    "status": "Verified Fixed",
+    "httpStatus": 400,
+    "rootCause": "Product.countDocuments() count check was not guarded by transaction or atomic state lock.",
+    "resolution": "Added backend validation rejecting toggle if count of existing featured products is >= 3."
+  },
+  {
+    "id": "BUG-104",
+    "title": "Vendor State Machine Transition Bypass to Delivery Status",
+    "module": "Orders Engine",
+    "role": "vendor",
+    "severity": "High",
+    "priority": "P1",
+    "status": "Verified Fixed",
+    "httpStatus": 400,
+    "rootCause": "Vendor status update endpoint accepted any order status enum without validating role boundary.",
+    "resolution": "Strictly limited vendor transitions to [ACCEPTED, PREPARING, READY, REJECTED] halting vendor control at READY."
+  },
+  {
+    "id": "BUG-105",
+    "title": "Delivery Completion Permitted Without Customer OTP Validation",
+    "module": "Delivery Lifecycle",
+    "role": "deliveryPartner",
+    "severity": "High",
+    "priority": "P1",
+    "status": "Verified Fixed",
+    "httpStatus": 400,
+    "rootCause": "Transition to DELIVERED did not enforce mandatory matching deliveryOtp comparison.",
+    "resolution": "Implemented mandatory OTP verification returning 400 Bad Request if missing or mismatching."
+  },
+  {
+    "id": "BUG-106",
+    "title": "Floating Cart Quantity Desynchronization on Rapid Clicks",
+    "module": "Customer Cart",
+    "role": "user",
+    "severity": "Medium",
+    "priority": "P2",
+    "status": "Verified Fixed",
+    "httpStatus": 200,
+    "rootCause": "Non-debounced asynchronous network requests caused UI badge count to drift from backend total.",
+    "resolution": "Optimistic cart queueing added in CartContext to handle rapid click streams synchronously."
+  }
+]
+
